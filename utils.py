@@ -4,14 +4,19 @@
 ## -----------------------------------------------------------
 
 import os
-import aiofiles, aiohttp
-import sys
+import aiofiles
+import aiohttp
+import asyncio
 import json
 import logging
-from typing import Optional, Callable, Union, Any, Dict
+from typing import Optional, List, Callable, Union, Any, Dict, Tuple
 
+JsonType = Union[int, str, bool, List, Dict]
+JsonFunc = Callable[..., Tuple[bool, str]]
+MAX_RETRIES : int = 3
+SLEEP       : float = 3
 
-async def save_JSON(filename: str, json_data: dict, sort_keys : bool = False, pretty : bool = True) -> bool:
+async def save_JSON(filename: str, json_data: JsonType, sort_keys : bool = False, pretty : bool = True) -> bool:
     """Save JSON data into file"""
     try:        
         dirname = os.path.dirname(filename)
@@ -28,7 +33,7 @@ async def save_JSON(filename: str, json_data: dict, sort_keys : bool = False, pr
     return False
 
 
-async def open_JSON(filename: str, chk_JSON_func : Optional[Callable[object, bool]] = None) -> Optional[dict]:
+async def open_JSON(filename: str, chk_JSON_func : Optional[JsonFunc] = None) -> Optional[Any]:
     try:
         async with aiofiles.open(filename) as fp:
             json_data : Optional[Any] = json.loads(await fp.read())
@@ -41,51 +46,54 @@ async def open_JSON(filename: str, chk_JSON_func : Optional[Callable[object, boo
             else:
                 logging.debug('JSON File has invalid content: ' + filename)
     except Exception as err:
-        error('Unexpected error when reading file: ' + filename, err)
+        logging.error('Unexpected error when reading file: ' + filename, err)
     return None
 
 
-async def get_url_JSON(session: aiohttp.ClientSession, url: str, chk_JSON_func = None, max_tries = MAX_RETRIES) -> dict:
+async def get_url_JSON(session: aiohttp.ClientSession, url: str, 
+                        chk_JSON_func : Optional[JsonFunc] = None, 
+                        max_tries : int = MAX_RETRIES) -> Optional[Any]:
         """Retrieve (GET) an URL and return JSON object"""
-        if session == None:
-            logging.error('Session must be initialized first')
-            sys.exit(1)
-        if url == None:
-            logging.error('url=None parameter given')
-            return None
-        
-        ## To avoid excessive use of servers            
+
+        assert session is not None, 'Session must be initialized first'
+        assert url is not None, 'url cannot be None'
+        assert MAX_RETRIES is not None, 'MAX_RETRIES cannot be None'
+
         for retry in range(1,max_tries+1):
             try:
                 async with session.get(url) as resp:
                     if resp.status == 200:                        
                         logging.debug('HTTP request OK')
                         json_resp = await resp.json()
-                        if json_resp["status"] == "ok":
-                            if (chk_JSON_func == None) or chk_JSON_func(json_resp):
-                                # debug("Received valid JSON: " + str(json_resp))
+                        if json_resp is not None:
+                            if chk_JSON_func is None:
+                                logging.debug("Not testing JSON content: chk_JSON_func is not defined")
                                 return json_resp
+                            json_ok, json_error = chk_JSON_func(json_resp)
+                            if json_ok:
+                                return json_resp
+                            else:
+                                logging.error(json_error)                         
                         else:
-                            wg_error = json_resp["error"]
-                            keys = ['message', 'field', 'value']
-                            logging.error("WG API Error: " + str(wg_error["code"]) + ': ' + [ wg_error.get(key) for key in keys ].join(' : ') )
-                        # Sometimes WG API returns JSON error even a retry gives valid JSON
-                   # elif resp.status == 407:
-                   #     error('WG API returned 407: ' + json_resp['error']['message'])
+                            logging.error(f"API returned None: {url}")
                     else:
-                        logging.error('WG API returned HTTP error ' + str(resp.status))
-                        
+                        logging.error(f'HTTP error {str(resp.status)}')
                     if retry == max_tries:                        
                         break
-                    logging.debug('Retrying URL [' + str(retry) + '/' +  str(max_tries) + ']: ' + url )
+                    logging.debug(f'Retrying URL [ {str(retry)}/{str(max_tries)} ]: {url}' )
                 await asyncio.sleep(SLEEP)    
 
             except aiohttp.ClientError as err:
-                logging.debug("Could not retrieve URL: " + url, exception=err)
+                logging.debug(f"Could not retrieve URL: {url} : {str(err)}")
             except asyncio.CancelledError as err:
-                logging.debug('Queue gets cancelled while still working.', exception=err)
+                logging.debug(f'Queue gets cancelled while still working: {str(err)}')
                 break
             except Exception as err:
-                logging.debug('Unexpected Exception', exception=err)
+                logging.debug(f'Unexpected Exception {str(err)}')
         logging.debug("Could not retrieve URL: " + url)
         return None
+
+# json_error = json_resp["error"]
+# keys = ['message', 'field', 'value']
+# logging.error(f"API Error: {str(json_error['code'])} : {' : '.join([json_error.get(key) for key in keys ])}" )
+# Sometimes WG API returns JSON error even a retry gives valid JSON
