@@ -5,6 +5,8 @@
 ## -----------------------------------------------------------
 
 from typing import Optional, Union
+import logging, aiohttp, json, re, sys, urllib, asyncio
+from bs4 import BeautifulSoup                                      # type: ignore
 from pyutils.throttledclientsession import ThrottledClientSession
 
 class WoTinspector:
@@ -32,7 +34,7 @@ class WoTinspector:
 
     async def close(self):
         if self.session != None:
-            debug('Closing aiohttp session')
+            logging.debug('Closing aiohttp session')
             await self.session.close()
        
 
@@ -61,14 +63,14 @@ class WoTinspector:
                     tanks[str(m.group(1))] = tank
                     n += 1
                 except Exception as err:
-                    error(exception=err)
+                    logging.error(str(err))
             
             tankopedia = {}
             tankopedia['status'] = "ok"
             tankopedia['meta'] = {"count" : n}
             tankopedia['data'] = tanks
             
-            verbose_std("Tankopedia has " + str(n) + " tanks in: " + filename)
+            logging.warning("Tankopedia has " + str(n) + " tanks in: " + filename)
             with open(filename,'w') as outfile:
                 outfile.write(json.dumps(tankopedia, ensure_ascii=False, indent=4, sort_keys=False))
             return None
@@ -82,7 +84,7 @@ class WoTinspector:
             else:
                 return None
         except Exception as err:
-            error('Unexpected Exception', err) 
+            logging.error('Unexpected Exception', err) 
             return None
 
 
@@ -98,7 +100,7 @@ class WoTinspector:
             ##  Testing if the replay has already been posted
             json_resp = await self.get_replay_JSON(replay_id)
             if json_resp != None:
-                debug('Already uploaded: ' + title, id=N)
+                logging.debug('Already uploaded: ' + title, id=N)
                 return json_resp
 
             params = {
@@ -114,29 +116,29 @@ class WoTinspector:
             headers ={'Content-type':  'application/x-www-form-urlencoded'}
             payload = { 'file' : (filename, base64.b64encode(data)) }
         except Exception as err:
-            error('Unexpected Exception', exception=err, id=N)
+            logging.error('Unexpected Exception', exception=err, id=N)
             return None
 
         json_resp  = None
         for retry in range(MAX_RETRIES):
-            debug('Posting: ' + title + ' Try #: ' + str(retry + 1) + '/' + str(MAX_RETRIES), id=N )
+            logging.debug('Posting: ' + title + ' Try #: ' + str(retry + 1) + '/' + str(MAX_RETRIES), id=N )
             try:
                 async with self.session.post(url, headers=headers, data=payload) as resp:
-                    debug('HTTP response: '+ str(resp.status), id=N)
+                    logging.debug('HTTP response: '+ str(resp.status), id=N)
                     if resp.status == 200:								
-                        debug('HTTP POST 200 = Success. Reading response data', id=N)
+                        logging.debug('HTTP POST 200 = Success. Reading response data', id=N)
                         json_resp = await resp.json()
                         if self.chk_JSON_replay(json_resp):
-                            debug('Response data read. Status OK', id=N) 
+                            logging.debug('Response data read. Status OK', id=N) 
                             return json_resp	
-                        debug(title + ' : Receive invalid JSON', id=N)
+                        logging.debug(title + ' : Receive invalid JSON', id=N)
                     else:
-                        debug('Got HTTP/' + str(resp.status), id=N)
+                        logging.debug('Got HTTP/' + str(resp.status), id=N)
             except Exception as err:
-                debug(exception=err, id=N)
+                logging.debug(exception=err, id=N)
             await asyncio.sleep(SLEEP)
             
-        debug(' Could not post replay: ' + title, id=N)
+        logging.debug(' Could not post replay: ' + title, id=N)
         return json_resp
 
 
@@ -166,9 +168,9 @@ class WoTinspector:
                 link = tag.get('href',None)
                 if (link is not None) and link.startswith(cls.URL_REPLAY_DL):
                     replay_links.add(link)
-                    debug('Adding replay link:' + link)
+                    logging.debug('Adding replay link:' + link)
         except Exception as err:
-            error(exception=err)
+            logging.error(exception=err)
         return replay_links
     
 
@@ -183,10 +185,10 @@ class WoTinspector:
         try:
             if ('status' in json_resp) and json_resp['status'] == 'ok' and \
                 (get_JSON_value(json_resp, key='data.summary.exp_base') != None) :
-                debug("JSON check OK")
+                logging.debug("JSON check OK")
                 return True 
         except KeyError as err:
-            debug('Replay JSON check failed', exception=err)
+            logging.debug('Replay JSON check failed', exception=err)
         except:
-            debug("Replay JSON check failed: " + str(json_resp))
+            logging.debug("Replay JSON check failed: " + str(json_resp))
         return False
