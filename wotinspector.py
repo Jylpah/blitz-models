@@ -6,9 +6,24 @@
 
 from typing import Optional, Union
 import logging, aiohttp, json, re, sys, urllib, asyncio
-from bs4 import BeautifulSoup                                      # type: ignore
-from pyutils.throttledclientsession import ThrottledClientSession
+from bs4 import BeautifulSoup                                           # type: ignore
+from pydantic import BaseModel
+from ..pyutils.throttledclientsession import ThrottledClientSession     # type: ignore
+from ..pyutils.utils import get_url, get_url_JSON, get_url_JSON_model   # type: ignore  
+from models import WoTBlitzReplayJSON
+from hashlib import md5
+from urllib.parse import urlencode, quote
+from base64 import b64encode
 
+
+# Setup logging
+logger	= logging.getLogger()
+error 	= logger.error
+message	= logger.warning
+verbose	= logger.info
+debug	= logger.debug
+
+SLEEP : float = 1
 class WoTinspector:
     URL_WI          : str = 'https://replays.wotinspector.com'
     URL_REPLAY_LIST : str = URL_WI + '/en/sort/ut/page/'
@@ -18,6 +33,7 @@ class WoTinspector:
     URL_REPLAY_INFO : str = 'https://api.wotinspector.com/replay/upload?details=full&key='
     URL_TANK_DB     : str = "https://wotinspector.com/static/armorinspector/tank_db_blitz.js"
 
+    MAX_RETRIES     : int = 3
     REPLAY_N = 1
     DEFAULT_RATE_LIMIT = 20/3600  # 20 requests / hour
 
@@ -33,74 +49,35 @@ class WoTinspector:
 
 
     async def close(self):
-        if self.session != None:
-            logging.debug('Closing aiohttp session')
+        if self.session is not None:
+            debug('Closing aiohttp session')
             await self.session.close()
        
 
-    async def get_tankopedia(self, filename = 'tanks.json'):
-        """Retrieve Tankpedia from WoTinspector.com"""
-    
-        async with self.session.get(self.URL_TANK_DB) as r:
-            if r.status == 200:
-                WI_tank_db=await r.text()
-                WI_tank_db = WI_tank_db.split("\n")
-            else:
-                print('Error: Could not get valid HTTPS response. HTTP: ' + str(r.status) )  
-                sys.exit(1) 
-            tanks = {}
-            n = 0
-            p = re.compile('\\s*(\\d+):\\s{"en":"([^"]+)",.*?"tier":(\\d+), "type":(\\d), "premium":(\\d).*')
-            for line in WI_tank_db[1:-1]:
-                try:
-                    m = p.match(line)
-                    tank = {}
-                    tank['tank_id'] = int(m.group(1))
-                    tank['name'] = m.group(2)
-                    tank['tier'] = int(m.group(3))
-                    tank['type'] = WG.TANK_TYPE[int(m.group(4))]
-                    tank['is_premium'] = (int(m.group(5)) == 1)
-                    tanks[str(m.group(1))] = tank
-                    n += 1
-                except Exception as err:
-                    logging.error(str(err))
-            
-            tankopedia = {}
-            tankopedia['status'] = "ok"
-            tankopedia['meta'] = {"count" : n}
-            tankopedia['data'] = tanks
-            
-            logging.warning("Tankopedia has " + str(n) + " tanks in: " + filename)
-            with open(filename,'w') as outfile:
-                outfile.write(json.dumps(tankopedia, ensure_ascii=False, indent=4, sort_keys=False))
-            return None
+    def get_url_replay_JSON(self, id: str) -> str:
+        return f'URL_REPLAY_INFO{id}'
 
-
-    async def get_replay_JSON(self, replay_id: str):
-        json_resp = await get_url_JSON(self.session, self.URL_REPLAY_INFO + replay_id, chk_JSON_func=None)
+    async def get_replay(self, replay_id: str) -> WoTBlitzReplayJSON | None:
         try:
-            if self.chk_JSON_replay(json_resp):
-                return json_resp
-            else:
-                return None
+            return await get_url_JSON_model(self.session, self.get_url_replay_JSON(replay_id), resp_model=WoTBlitzReplayJSON)
         except Exception as err:
-            logging.error('Unexpected Exception', err) 
-            return None
+            error(f'Unexpected Exception: {err}') 
+        return None
 
 
-    async def post_replay(self,  data, filename = 'Replay', account_id = 0, title = 'Replay', priv = False, N = None):
+    async def post_replay(self, data, filename = 'Replay', account_id = 0, title = 'Replay', priv = False, N = None):
         try:
-            N = N if N != None else self.REPLAY_N
+            N = N if N is not None else self.REPLAY_N
             self.REPLAY_N += 1
 
-            hash = hashlib.md5()
+            hash = md5()
             hash.update(data)
             replay_id = hash.hexdigest()
 
             ##  Testing if the replay has already been posted
-            json_resp = await self.get_replay_JSON(replay_id)
-            if json_resp != None:
-                logging.debug('Already uploaded: ' + title, id=N)
+            json_resp = await self.get_replay(replay_id)
+            if json_resp is not None:
+                debug(f'{N}: Already uploaded: {title}')
                 return json_resp
 
             params = {
@@ -111,34 +88,34 @@ class WoTinspector:
                 'key'           : replay_id
             } 
 
-            url = self.URL_REPLAY_UL + urllib.parse.urlencode(params, quote_via=urllib.parse.quote)
+            url = self.URL_REPLAY_UL + urlencode(params, quote_via=quote)
             #debug('URL: ' + url)
             headers ={'Content-type':  'application/x-www-form-urlencoded'}
-            payload = { 'file' : (filename, base64.b64encode(data)) }
+            payload = { 'file' : (filename, b64encode(data)) }
         except Exception as err:
-            logging.error('Unexpected Exception', exception=err, id=N)
+            error(f'Treahd {N}: Unexpected Exception: {err}')
             return None
 
         json_resp  = None
-        for retry in range(MAX_RETRIES):
-            logging.debug('Posting: ' + title + ' Try #: ' + str(retry + 1) + '/' + str(MAX_RETRIES), id=N )
+        for retry in range(self.MAX_RETRIES):
+            debug(f'Thread {id}: Posting: {title} Try #: {retry + 1}/{self.MAX_RETRIES}')
             try:
                 async with self.session.post(url, headers=headers, data=payload) as resp:
-                    logging.debug('HTTP response: '+ str(resp.status), id=N)
+                    debug(f'{N}: HTTP response: {resp.status}')
                     if resp.status == 200:								
-                        logging.debug('HTTP POST 200 = Success. Reading response data', id=N)
+                        debug(f'{N}: HTTP POST 200 = Success. Reading response data')
                         json_resp = await resp.json()
                         if self.chk_JSON_replay(json_resp):
-                            logging.debug('Response data read. Status OK', id=N) 
+                            debug(f'{N}: Response data read. Status OK') 
                             return json_resp	
-                        logging.debug(title + ' : Receive invalid JSON', id=N)
+                        debug(f'{N}: title : Receive invalid JSON')
                     else:
-                        logging.debug('Got HTTP/' + str(resp.status), id=N)
+                        debug(f'{N}: Got HTTP/{resp.status}')
             except Exception as err:
-                logging.debug(exception=err, id=N)
+                debug(f'{N}: Unexpected exception {err}')
             await asyncio.sleep(SLEEP)
             
-        logging.debug(' Could not post replay: ' + title, id=N)
+        debug(f'{N}: Could not post replay: {title}')
         return json_resp
 
 
@@ -148,7 +125,7 @@ class WoTinspector:
 
 
     @classmethod
-    def get_url_replay_listing(cls, page : int):
+    def get_url_replay_listing(cls, page : int) -> str:
         return cls.URL_REPLAY_LIST + str(page) + '?vt=#filters'
 
 
@@ -158,37 +135,27 @@ class WoTinspector:
 
 
     @classmethod
-    def get_replay_links(cls, doc: str):
-        """Get replay download links from WoTinspector.com replay listing page"""
+    def parse_replay_ids(cls, doc: str) -> set[str]:
+        """Get replay ids links from WoTinspector.com replay listing page"""
+        replay_ids : set[str] = set()
         try:
             soup = BeautifulSoup(doc, 'lxml')
             links = soup.find_all('a')
-            replay_links = set()
+            
             for tag in links:
                 link = tag.get('href',None)
-                if (link is not None) and link.startswith(cls.URL_REPLAY_DL):
-                    replay_links.add(link)
-                    logging.debug('Adding replay link:' + link)
+                id : str | None = cls.get_replay_id(link)
+                if id is not None:
+                    replay_ids.add(id)
+                    debug('Adding replay link:' + link)
         except Exception as err:
-            logging.error(exception=err)
-        return replay_links
+            error(f'Failed to parse replay links {err}')
+        return replay_ids
     
 
     @classmethod
-    def get_replay_id(cls, url):
-        return url.rsplit('/', 1)[-1]
-
-
-    @classmethod
-    def chk_JSON_replay(cls, json_resp) -> bool:
-        """"Check String for being a valid JSON file"""
-        try:
-            if ('status' in json_resp) and json_resp['status'] == 'ok' and \
-                (get_JSON_value(json_resp, key='data.summary.exp_base') != None) :
-                logging.debug("JSON check OK")
-                return True 
-        except KeyError as err:
-            logging.debug('Replay JSON check failed', exception=err)
-        except:
-            logging.debug("Replay JSON check failed: " + str(json_resp))
-        return False
+    def get_replay_id(cls, url: str) -> str | None:
+        if (url is not None) and url.startswith(cls.URL_REPLAY_DL):
+            return url.rsplit('/', 1)[-1]
+        else: 
+            return None
