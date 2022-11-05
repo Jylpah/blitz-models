@@ -4,7 +4,7 @@ from typing import Any, Mapping, Optional, Tuple
 from bson.objectid import ObjectId
 from bson.int64 import Int64
 from isort import place_module
-from pydantic import BaseModel, Extra, root_validator, validator, Field, HttpUrl
+from pydantic import BaseModel, Extra, root_validator, validator, Field, HttpUrl, ValidationError
 from pydantic.utils import ValueItems
 import json
 from enum import Enum, IntEnum
@@ -239,10 +239,21 @@ class WoTBlitzReplayJSON(BaseModel):
 		"""Open replay JSON file and return WoTBlitzReplayJSON instance"""
 		try:
 			async with aiofiles.open(filename, 'r') as rf:
-				return cls.parse_raw(await rf.read())
-
+				return cls.from_str(await rf.read())
 		except Exception as err:
 			error(f'Error reading replay: {str(err)}')
+		return None
+
+
+	@classmethod
+	def from_str(cls, content: str) -> Optional['WoTBlitzReplayJSON']:
+		"""Open replay JSON file and return WoTBlitzReplayJSON instance"""
+		try:
+			return cls.parse_raw(content)
+		except ValidationError as err:
+			error(f'Invalid replay format: {str(err)}')
+		except Exception as err:
+			error(f'Could not read replay: {str(err)}')
 		return None
 
 	
