@@ -10,8 +10,8 @@ from aiohttp import ClientResponse
 from asyncio import sleep
 from bs4 import BeautifulSoup                                           # type: ignore
 from pydantic import BaseModel
-from ..pyutils.throttledclientsession import ThrottledClientSession     # type: ignore
-from ..pyutils.utils import get_url, get_url_JSON, get_url_JSON_model   # type: ignore  
+from pyutils.throttledclientsession import ThrottledClientSession     # type: ignore
+from pyutils.utils import get_url, get_url_JSON, get_url_JSON_model   # type: ignore  
 from .models import WoTBlitzReplayJSON
 from hashlib import md5
 from urllib.parse import urlencode, quote
@@ -46,18 +46,18 @@ class WoTinspector:
             headers = dict()
             headers['Authentication'] = 'Token ' + auth_token
 
-        self.session = ThrottledClientSession(rate_limit=rate_limit, filters=[self.URL_REPLAY_DL, self.URL_REPLAY_LIST], 
+        self.session = ThrottledClientSession(rate_limit=rate_limit, filters=[self.URL_REPLAY_INFO, self.URL_REPLAY_DL, self.URL_REPLAY_LIST], 
                                                 re_filter=False, limit_filtered=True, headers = headers)
 
 
-    async def close(self):
+    async def close(self) -> None:
         if self.session is not None:
             debug('Closing aiohttp session')
             await self.session.close()
        
 
     def get_url_replay_JSON(self, id: str) -> str:
-        return f'URL_REPLAY_INFO{id}'
+        return f'{self.URL_REPLAY_INFO}{id}'
 
 
     async def get_replay(self, replay_id: str) -> WoTBlitzReplayJSON | None:
@@ -134,7 +134,7 @@ class WoTinspector:
 
     @classmethod
     def get_url_replay_listing(cls, page : int) -> str:
-        return cls.URL_REPLAY_LIST + str(page) + '?vt=#filters'
+        return f'{cls.URL_REPLAY_LIST}{page}?vt=#filters'
 
 
     @classmethod
