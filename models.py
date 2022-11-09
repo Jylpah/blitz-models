@@ -118,9 +118,9 @@ class WoTBlitzReplayDetail(BaseModel):
 		allow_population_by_field_name = True
 
 
-class WoTBlitzReplaySummary(BaseModel):	
+class WoTBlitzReplaySummary(BaseModel):
 	_TimestampFormat : str = "%Y-%m-%d %H:%M:%S"
-	
+
 	winner_team 	: EnumWinnerTeam 	| None 	= Field(default=..., alias='wt')
 	battle_result 	: EnumBattleResult 	| None 	= Field(default=..., alias='br')
 	room_type		: int | None 	= Field(default=None, alias='rt')
@@ -137,10 +137,10 @@ class WoTBlitzReplaySummary(BaseModel):
 	credits_total	: int | None 	= Field(default=None, alias='ct')
 	credits_base	: int | None 	= Field(default=None, alias='cb')
 	exp_base		: int | None	= Field(default=None, alias='eb')
-	exp_total		: int | None	= Field(default=None, alias='et')	
+	exp_total		: int | None	= Field(default=None, alias='et')
 	battle_start_timestamp : int	= Field(default=..., alias='bts')
 	battle_start_time : str | None	= Field(default=None, repr=False)	# duplicate of 'bts'
-	battle_duration : float			= Field(default=..., alias='bd')	
+	battle_duration : float			= Field(default=..., alias='bd')
 	description		: str |None		= Field(default=None, alias='de')
 	arena_unique_id	: int			= Field(default=..., alias='aid')
 	allies 			: list[int]		= Field(default=..., alias='a')
@@ -157,10 +157,10 @@ class WoTBlitzReplaySummary(BaseModel):
 
 	@validator('vehicle_tier')
 	def check_tier(cls, v):
-		if v > 10 or v < 0:
-			raise ValueError('Tier has to be within [1, 10]')
-		else: 
-			return v
+		if v is not None:
+			if v > 10 or v < 0:
+				raise ValueError('Tier has to be within [1, 10]')
+		return v
 
 	@validator('protagonist_team')
 	def check_protagonist_team(cls, v):
@@ -179,14 +179,14 @@ class WoTBlitzReplaySummary(BaseModel):
 		return values
 
 
-class WoTBlitzReplayData(BaseModel):	
+class WoTBlitzReplayData(BaseModel):
 	view_url	: HttpUrl 		= Field(default=None, alias='v')
 	download_url: HttpUrl 		= Field(default=None, alias='d')
 	id 			: str | None	= Field(default=None)
-	summary		: WoTBlitzReplaySummary  = Field(default=..., alias='s') 
+	summary		: WoTBlitzReplaySummary  = Field(default=..., alias='s')
 
 	_ViewUrlBase : str = 'https://replays.wotinspector.com/en/view/'
-	_DLurlBase	: str = 'https://replays.wotinspector.com/en/download/'	
+	_DLurlBase	: str = 'https://replays.wotinspector.com/en/download/'
 	class Config:
 		arbitrary_types_allowed = True
 		allow_mutation 			= True
@@ -198,27 +198,31 @@ class WoTBlitzReplayData(BaseModel):
 	@root_validator
 	def store_id(cls, values):
 		try:
+			debug('validating: WoTBlitzReplayData()')
 			id : str
 			if values['id'] is not None:
+				debug('data.id found')
 				id = values['id']
 			elif values['view_url'] is not None:
 				id = values['view_url'].split('/')[-1:][0]
 			elif values['download_url'] is not None:
 				id = values['download_url'].split('/')[-1:][0]
 			else:
-				raise ValueError('Replay ID is missing')
+				debug('could not modify id')
+				return values  # could not modify 'id'
+				# raise ValueError('Replay ID is missing')
 			values['id']			= id
 			values['view_url'] 		= f"{cls._ViewUrlBase}{id}"
 			values['download_url'] 	= f"{cls._DLurlBase}{id}"
 			return values
 		except Exception as err:
 			raise ValueError(f'Error reading replay ID: {str(err)}')
-	
-	
+
+		
 class WoTBlitzReplayJSON(BaseModel):
 	id 		: str | None 		= Field(default=None, alias='_id')
-	status	: str				= Field(default="ok", alias='s') 
-	data	: WoTBlitzReplayData= Field(default=..., alias='d') 
+	status	: str				= Field(default="ok", alias='s')
+	data	: WoTBlitzReplayData= Field(default=..., alias='d')
 	error	: dict				= Field(default={}, alias='e')
 	_URL_REPLAY_JSON : str 		= 'https://api.wotinspector.com/replay/upload?details=full&key='
 
@@ -230,13 +234,36 @@ class WoTBlitzReplayJSON(BaseModel):
 		validate_assignment 	= True
 		allow_population_by_field_name = True
 
+
+
 	@root_validator(pre=False)
 	def store_id(cls, values):
 		try:
-			values['id'] = values['data'].id			
+			debug('validating: WoTBlitzReplayJSON(pre=False)')
+			if 'id' not in values or values['id'] is None:
+				values['id'] = values['data'].id
+				debug(f"adding ROOT.id")
+			elif 'id' in values and values['id'] is not None:
+				debug(f"adding data.id from ROOT.id")
+				values['data'].id = values['id']		
 			return values
 		except Exception as err:
-			raise ValueError(f'Could not read replay ID: {str(err)}')
+			raise ValueError(f'Could not store replay ID: {str(err)}')
+
+
+	# @root_validator(pre=True)
+	# def read_id(cls, values):
+	# 	try:
+	# 		debug('validating: WoTBlitzReplayData(pre=True)')
+	# 		if 'id' in values and values['id'] is not None:
+	# 			debug(f"adding data.id from ROOT.id")
+	# 			values['data'].id = values['id']
+	# 		elif '_id' in values and values['_id'] is not None:
+	# 			debug(f"adding data.id from ROOT._id")
+	# 			values['data'].id = values['_id']
+	# 		return values
+	# 	except Exception as err:
+	# 		raise ValueError(f'Could not store replay ID: {str(err)}')
 
 
 	@classmethod
@@ -261,7 +288,7 @@ class WoTBlitzReplayJSON(BaseModel):
 			error(f'Could not read replay: {str(err)}')
 		return None
 
-	
+
 	async def save(self, filename: str) -> int:
 		"""Save replay JSON into a file"""
 		try:
@@ -272,20 +299,32 @@ class WoTBlitzReplayJSON(BaseModel):
 			error(f'Error writing replay {filename}: {str(err)}')
 		return -1
 
+	# IS THIS NEEDED? 
+	@classmethod
+	def parse_db_obj(cls, obj : Any) -> 'WoTBlitzReplayJSON':
+		""""Read from DB """
+		error('DEPRECIATED')
+		model : 'WoTBlitzReplayJSON' = cls.parse_obj(obj)
+		if model is not None:
+			#  debug('assigning model.data.id')
+			model.data.id = model.id
+		return model 
 
-	def json_src(self) -> str:
-		exclude_src : TypeExcludeDict = { 'id': True, 'data': { 'id': True }} 
-		return self.json(exclude=exclude_src, exclude_unset=True, by_alias=False)
+
+	def json_src(self, **kwargs: Any) -> str:
+		exclude_src : TypeExcludeDict = { 'id': True, 'data': { 'id': True }}
+		return self.json(exclude=exclude_src, by_alias=False, **kwargs)
 
 
-	def export_db(self) -> dict:
-		exclude_src : TypeExcludeDict = { 'data': { 
-											'view_url': True, 
-											'download_url': True, 
-											'summary': { 'battle_start_time' } 
+	def export_db(self, **kwargs: Any) -> dict:
+		exclude_src : TypeExcludeDict = { 'data': {
+											'id': True,
+											'view_url': True,
+											'download_url': True,
+											'summary': { 'battle_start_time' }
 											}
-										} 
-		return self.dict(exclude=exclude_src, exclude_defaults=True, by_alias=True)
+										}
+		return self.dict(exclude=exclude_src, exclude_defaults=True, by_alias=True, **kwargs)
 
 
 	def get_id(self) -> str | None:
@@ -296,12 +335,12 @@ class WoTBlitzReplayJSON(BaseModel):
 				return self.data.id
 		except Exception as err:
 			error(f'Could not read replay id: {str(err)}')
-		return None	
+		return None
 
 
 	def get_url_json(self) -> str:
 		return f'{self._URL_REPLAY_JSON}{self.id}'
-		
+
 
 	def get_enemies(self, player: int | None = None) -> list[int]:
 		if player is None or (player in self.data.summary.allies):
@@ -319,35 +358,35 @@ class WoTBlitzReplayJSON(BaseModel):
 			return self.data.summary.enemies
 		else:
 			raise ValueError(f"player {player} not found in replay")
-			
-	
+
+
 	def get_players(self) -> list[int]:
 		return self.get_enemies() + self.get_allies()
 
-	
-	def get_platoons(self, player: int | None = None) -> Tuple[	defaultdict[int, list[int]], 
+
+	def get_platoons(self, player: int | None = None) -> Tuple[	defaultdict[int, list[int]],
 																defaultdict[int, list[int]]]:
 		allied_platoons : defaultdict[int, list[int]] = defaultdict(list)
 		enemy_platoons 	: defaultdict[int, list[int]] = defaultdict(list)
-		
+
 		allies 	= self.get_allies(player)
 
 		for d in self.data.summary.details:
 			if d.squad_index is not None and d.squad_index > 0:
 				account_id = d.dbid
-				if account_id in allies: 
+				if account_id in allies:
 					allied_platoons[d.squad_index].append(account_id)
 				else:
 					enemy_platoons[d.squad_index].append(account_id)
-		
+
 		return allied_platoons, enemy_platoons
 
-	
+
 	def get_battle_result(self, player : int | None = None) -> EnumBattleResult:
 		try:
 			if self.data.summary.battle_result == EnumBattleResult.incomplete:
 				return EnumBattleResult.incomplete
-			
+
 			elif player is not None and player in self.get_enemies():
 				if self.data.summary.battle_result == EnumBattleResult.win:
 					return EnumBattleResult.loss
@@ -355,7 +394,7 @@ class WoTBlitzReplayJSON(BaseModel):
 					return EnumBattleResult.draw
 				else:
 					return EnumBattleResult.win
-			
+
 			elif player is None or player in self.get_allies():
 				if self.data.summary.battle_result == EnumBattleResult.win:
 					return EnumBattleResult.win
