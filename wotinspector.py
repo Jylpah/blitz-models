@@ -44,7 +44,7 @@ class WoTinspector:
         headers : Optional[dict[str, str]] = None
         if auth_token is not None:
             headers = dict()
-            headers['Authentication'] = 'Token ' + auth_token
+            headers['Authorization'] = f'Token {auth_token}'
 
         self.session = ThrottledClientSession(rate_limit=rate_limit, filters=[self.URL_REPLAY_INFO, self.URL_REPLAY_DL, self.URL_REPLAY_LIST], 
                                                 re_filter=False, limit_filtered=True, headers = headers)
