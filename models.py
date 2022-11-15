@@ -30,7 +30,25 @@ class Region(str, Enum):
 
 	@classmethod
 	def API_regions(cls) -> list['Region']:
-		return [Region.eu, Region.com, Region.asia]
+		return [Region.eu, Region.com, Region.asia, Region.ru]
+
+	
+	@classmethod
+	def from_id(cls, account_id : int) -> Optional['Region']:
+		try:
+			if account_id >= 31e8:
+				return Region.china
+			elif account_id >= 20e8:
+				return Region.asia
+			elif account_id >= 10e8:
+				return Region.com
+			elif account_id >= 5e8:
+				return Region.eu
+			else:			
+				return Region.ru
+		except Exception as err:
+			raise ValueError(f'accunt_id {account_id} is out of known id range: {str(err)}')
+		return None
 
 
 TypeExcludeDict = Mapping[int | str, Any]
@@ -251,21 +269,6 @@ class WoTBlitzReplayJSON(BaseModel):
 			raise ValueError(f'Could not store replay ID: {str(err)}')
 
 
-	# @root_validator(pre=True)
-	# def read_id(cls, values):
-	# 	try:
-	# 		debug('validating: WoTBlitzReplayData(pre=True)')
-	# 		if 'id' in values and values['id'] is not None:
-	# 			debug(f"adding data.id from ROOT.id")
-	# 			values['data'].id = values['id']
-	# 		elif '_id' in values and values['_id'] is not None:
-	# 			debug(f"adding data.id from ROOT._id")
-	# 			values['data'].id = values['_id']
-	# 		return values
-	# 	except Exception as err:
-	# 		raise ValueError(f'Could not store replay ID: {str(err)}')
-
-
 	@classmethod
 	async def open(cls, filename: str) -> Optional['WoTBlitzReplayJSON']:
 		"""Open replay JSON file and return WoTBlitzReplayJSON instance"""
@@ -298,17 +301,6 @@ class WoTBlitzReplayJSON(BaseModel):
 		except Exception as err:
 			error(f'Error writing replay {filename}: {str(err)}')
 		return -1
-
-	# IS THIS NEEDED? 
-	@classmethod
-	def parse_db_obj(cls, obj : Any) -> 'WoTBlitzReplayJSON':
-		""""Read from DB """
-		error('DEPRECIATED')
-		model : 'WoTBlitzReplayJSON' = cls.parse_obj(obj)
-		if model is not None:
-			#  debug('assigning model.data.id')
-			model.data.id = model.id
-		return model 
 
 
 	def json_src(self, **kwargs: Any) -> str:
@@ -410,3 +402,105 @@ class WoTBlitzReplayJSON(BaseModel):
 
 
 
+class WGApiError(BaseModel):
+	code: 	str | None
+	message:str | None
+	field: 	str | None
+	value: 	str | None
+
+
+class WGtankStatAll(BaseModel):
+	spotted			: int = Field(..., alias='sp')
+	hits			: int = Field(..., alias='h')
+	frags			: int = Field(..., alias='k')
+	max_xp			: int | None
+	wins 			: int = Field(..., alias='w')
+	losses			: int = Field(..., alias='l')
+	capture_points 	: int = Field(..., alias='cp')
+	battles			: int = Field(..., alias='b')
+	damage_dealt	: int = Field(..., alias='dd')
+	damage_received	: int = Field(..., alias='dr')
+	max_frags		: int = Field(..., alias='mk')
+	shots			: int = Field(..., alias='sp')
+	frags8p			: int | None
+	xp				: int | None
+	win_and_survived: int = Field(..., alias='ws')
+	survived_battles: int = Field(..., alias='sb')
+	dropped_capture_points: int = Field(..., alias='dp')
+
+
+
+class WGtankStat(BaseModel):
+	id					: ObjectId | None = Field(None, alias='_id')
+	_region				: Region | None = Field(None, alias='r')
+	all					: WGtankStatAll = Field(..., alias='a')
+	last_battle_time	: int			= Field(..., alias='lb')
+	account_id			: int			= Field(..., alias='ai')
+	tank_id				: int 			= Field(..., alias='ai')
+	mark_of_mastery		: int 			= Field(..., alias='m')
+	battle_life_time	: int 			= Field(..., alias='l')
+	max_xp				: int | None
+	in_garage_updated	: int | None
+	max_frags			: int | None
+	frags				: int | None
+	in_garage 			: bool | None
+
+	class Config:
+		allow_mutation 			= True
+		validate_assignment 	= True
+		allow_population_by_field_name = True
+
+
+	@root_validator(pre=False)
+	def mk_id(cls, values):
+		try:
+			if values['id'] is None:
+				values['id'] = ObjectId(hex(values['account_id'])[2:].zfill(10) + hex(values['tank_id'])[2:].zfill(6) + hex(values['last_battle_time'])[2:].zfill(8))
+			if values['_region'] is None:
+				values['_region'] = Region.from_id(values['account_id'])
+			return values
+		except Exception as err:
+			raise ValueError(f'Could not store _id: {str(err)}')	
+
+
+
+class WGApiWoTBlitz(BaseModel):
+	status	: str	= Field(default="ok", alias='s')
+	meta	: dict[str, Any] 	| None	
+	error	: WGApiError 		| None
+
+
+class WGApiWoTBlitzTankStats(WGApiWoTBlitz):	
+	data	: dict[str, WGtankStat | None ] = Field(default=..., alias='d')
+
+	class Config:
+		arbitrary_types_allowed = True
+		json_encoders = { ObjectId: str }
+		allow_mutation 			= True
+		validate_assignment 	= True
+		allow_population_by_field_name = True
+
+
+	@root_validator(pre=False)
+	def store_id(cls, values : dict[str, Any]):
+		try:
+			debug('validating:')
+			if 'id' not in values or values['id'] is None:
+				values['id'] = values['data'].id
+				debug(f"adding ROOT.id")
+			elif 'id' in values and values['id'] is not None:
+				debug(f"adding data.id from ROOT.id")
+				values['data'].id = values['id']		
+			return values
+		except Exception as err:
+			raise ValueError(f'Could not store replay ID: {str(err)}')
+
+
+	@validator('protagonist_team')
+	def check_protagonist_team(cls, v):
+		if v == 1 or v == 2:
+			return v
+		else:
+			raise ValueError('protagonist_team has to be within 1 or 2')
+
+	
