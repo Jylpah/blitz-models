@@ -2,7 +2,7 @@ import logging
 from typing import Dict, Tuple, cast
 
 from pydantic import BaseModel
-from .models import Region, WGApiWoTBlitzTankStats
+from .models import Region, WGApiWoTBlitzTankStats, WGtankStat
 from pyutils.throttledclientsession import ThrottledClientSession
 from pyutils.utils import get_url_JSON_model, get_url
 
@@ -48,7 +48,7 @@ class WGApi():
 
 	@classmethod
 	def get_server_url(cls, region: Region) -> str | None:
-		assert region is not None, "region must not be None"
+		assert region is not None, "region must not be None"		
 		try:
 			return cls.URL_SERVER[region.value]
 		except Exception as err:
@@ -57,22 +57,26 @@ class WGApi():
 
 	
 	def tank_stats_get_url(self, account_id : int , region: Region | None = None, 
-				tank_ids: list[int] = [], fields: list[str] = []) -> Tuple[str, Region] | None:
-		assert account_id is not None, "account_id must not be None"
-		assert tank_ids is not None, "tank_ids must not be None"
-		assert fields is not None, "fields must not be None"
-
+							tank_ids: list[int] = [], fields: list[str] = []) -> Tuple[str, Region] | None:
+		assert type(account_id) is int, "account_id must be int"
+		assert type(tank_ids) is list, "tank_ids must be a list"
+		assert type(fields) is list, "fields must be a list"
 		try:
 			URL_WG_TANK_STATS: str = 'tanks/stats/'
 
-			if region is None:
-				region = Region.from_id(account_id)
-			if region is None:
+			account_region : Region | None = Region.from_id(account_id)
+			if account_region is None:
 				raise ValueError('Could not determine region for account_id')
 
-			server : str | None = self.get_server_url(region)
+			if region is None:
+				region = account_region
+			else:
+				if not region.matches(account_region):
+					raise ValueError(f'account_id {account_id} does not match region {region.value}')
+						
+			server : str | None = self.get_server_url(account_region)
 			if server is None:
-				raise ValueError(f'No API server for region {region.value}')
+				raise ValueError(f'No API server for region {account_region.value}')
 			
 			tank_id_str : str = ''
 			if len(tank_ids) > 0:
@@ -82,13 +86,13 @@ class WGApi():
 			if len(fields) > 0:
 				field_str = '&fields=' + '%2C'.join(fields)
 
-			return f'{server}{URL_WG_TANK_STATS}?application_id={self.app_id}&account_id={account_id}{tank_id_str}{field_str}', region
+			return f'{server}{URL_WG_TANK_STATS}?application_id={self.app_id}&account_id={account_id}{tank_id_str}{field_str}', account_region
 		except Exception as err:
-			error(f'Failed to form url for account_id: {account_id}: {str(err)}')
+			debug(f'Failed to form url for account_id: {account_id}: {str(err)}')
 		return None
 
 	
-	async def get_tank_stats(self, account_id: int, region: Region | None = None, 
+	async def get_tank_stats_full(self, account_id: int, region: Region | None = None,
 				tank_ids: list[int] = [], fields: list[str] = [] ) -> WGApiWoTBlitzTankStats | None:
 		assert self.session is not None, "session must be initialized"
 		try:
@@ -107,6 +111,19 @@ class WGApi():
 			error(f'Failed to fetch tank stats for account_id: {account_id}: {str(err)}')
 		return None	
 
+	
+	async def get_tank_stats(self, account_id: int, region: Region | None = None,
+			tank_ids: list[int] = [], fields: list[str] = [] ) -> list[WGtankStat] | None:
+		assert self.session is not None, "session must be initialized"
+		try:
+			resp : WGApiWoTBlitzTankStats | None = await self.get_tank_stats_full(account_id=account_id, region=region, tank_ids=tank_ids, fields=fields)
+			if resp is None:
+				return None
+			else:
+				return list(resp.data.values())[0]
+		except Exception as err:
+			verbose(f'Failed to fetch tank stats for account_id: {account_id}: {str(err)}')	# or DEBUG? 
+		return None	
 		
 
 class Tankopedia():
