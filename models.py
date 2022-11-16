@@ -50,6 +50,17 @@ class Region(str, Enum):
 			raise ValueError(f'accunt_id {account_id} is out of known id range: {str(err)}')
 		return None
 
+	
+	def matches(self, other_region : 'Region') -> bool:
+		assert type(other_region) is type(self), 'other_region is not Region'
+		if self == other_region:
+			return True
+		elif self == Region.API:
+			return other_region in Region.API_regions()
+		elif other_region == Region.API:
+			return self in Region.API_regions()
+		return False
+
 
 TypeExcludeDict = Mapping[int | str, Any]
 
@@ -173,12 +184,14 @@ class WoTBlitzReplaySummary(BaseModel):
 		validate_assignment = True
 		allow_population_by_field_name = True
 
+
 	@validator('vehicle_tier')
 	def check_tier(cls, v):
 		if v is not None:
 			if v > 10 or v < 0:
 				raise ValueError('Tier has to be within [1, 10]')
 		return v
+
 
 	@validator('protagonist_team')
 	def check_protagonist_team(cls, v):
@@ -439,30 +452,44 @@ class WGtankStat(BaseModel):
 	tank_id				: int 			= Field(..., alias='ai')
 	mark_of_mastery		: int 			= Field(..., alias='m')
 	battle_life_time	: int 			= Field(..., alias='l')
-	max_xp				: int | None
-	in_garage_updated	: int | None
-	max_frags			: int | None
-	frags				: int | None
+	max_xp				: int  | None
+	in_garage_updated	: int  | None
+	max_frags			: int  | None
+	frags				: int  | None
 	in_garage 			: bool | None
 
 	class Config:
+		arbitrary_types_allowed = True
+		json_encoders 			= { ObjectId: str }
 		allow_mutation 			= True
 		validate_assignment 	= True
 		allow_population_by_field_name = True
 
 
+	@classmethod
+	def mk_id(cls, account_id: int, last_battle_time: int, tank_id: int = 0) -> ObjectId:
+		return ObjectId(hex(account_id)[2:].zfill(10) + hex(tank_id)[2:].zfill(6) + hex(last_battle_time)[2:].zfill(8))
+
+
 	@root_validator(pre=False)
-	def mk_id(cls, values):
+	def set_id(cls, values):
 		try:
 			if values['id'] is None:
-				values['id'] = ObjectId(hex(values['account_id'])[2:].zfill(10) + hex(values['tank_id'])[2:].zfill(6) + hex(values['last_battle_time'])[2:].zfill(8))
+				values['id'] = cls.mk_id(values['account_id'], values['last_battle_time'], values['tank_id'])				
 			if values['_region'] is None:
 				values['_region'] = Region.from_id(values['account_id'])
 			return values
 		except Exception as err:
-			raise ValueError(f'Could not store _id: {str(err)}')	
+			raise ValueError(f'Could not store _id: {str(err)}')
 
 
+	def json_src(self) -> str:		
+		return self.json(exclude_unset=True, by_alias=False)
+
+
+	def export_db(self) -> dict:
+		return self.dict(exclude_defaults=True, by_alias=True)
+	
 
 class WGApiWoTBlitz(BaseModel):
 	status	: str	= Field(default="ok", alias='s')
@@ -471,36 +498,14 @@ class WGApiWoTBlitz(BaseModel):
 
 
 class WGApiWoTBlitzTankStats(WGApiWoTBlitz):	
-	data	: dict[str, WGtankStat | None ] = Field(default=..., alias='d')
+	data	: dict[str, list[WGtankStat] | None ] = Field(default=..., alias='d')
 
-	class Config:
-		arbitrary_types_allowed = True
-		json_encoders = { ObjectId: str }
+	class Config:		
 		allow_mutation 			= True
 		validate_assignment 	= True
 		allow_population_by_field_name = True
 
 
-	@root_validator(pre=False)
-	def store_id(cls, values : dict[str, Any]):
-		try:
-			debug('validating:')
-			if 'id' not in values or values['id'] is None:
-				values['id'] = values['data'].id
-				debug(f"adding ROOT.id")
-			elif 'id' in values and values['id'] is not None:
-				debug(f"adding data.id from ROOT.id")
-				values['data'].id = values['id']		
-			return values
-		except Exception as err:
-			raise ValueError(f'Could not store replay ID: {str(err)}')
 
-
-	@validator('protagonist_team')
-	def check_protagonist_team(cls, v):
-		if v == 1 or v == 2:
-			return v
-		else:
-			raise ValueError('protagonist_team has to be within 1 or 2')
 
 	
