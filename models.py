@@ -441,6 +441,11 @@ class WGtankStatAll(BaseModel):
 	survived_battles: int = Field(..., alias='sb')
 	dropped_capture_points: int = Field(..., alias='dp')
 
+	class Config:		
+		allow_mutation 			= True
+		validate_assignment 	= True
+		allow_population_by_field_name = True
+
 
 
 class WGtankStat(BaseModel):
@@ -476,7 +481,7 @@ class WGtankStat(BaseModel):
 		try:
 			if values['id'] is None:
 				values['id'] = cls.mk_id(values['account_id'], values['last_battle_time'], values['tank_id'])				
-			if values['_region'] is None:
+			if '_region' not in values or values['_region'] is None:
 				values['_region'] = Region.from_id(values['account_id'])
 			return values
 		except Exception as err:
