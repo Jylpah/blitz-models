@@ -20,6 +20,10 @@ message	= logger.warning
 verbose	= logger.info
 debug	= logger.debug
 
+
+TypeExcludeDict = Mapping[int | str, Any]
+
+
 class Region(str, Enum):
 	ru 		= 'ru'
 	eu 		= 'eu'
@@ -62,9 +66,6 @@ class Region(str, Enum):
 		return False
 
 
-TypeExcludeDict = Mapping[int | str, Any]
-
-
 class EnumWinnerTeam(IntEnum):
 	draw = 0
 	one = 1
@@ -77,7 +78,7 @@ class EnumBattleResult(IntEnum):
 	loss = 2
 	draw = 3
 
-	def __str__(self):
+	def __str__(self) -> str:
 		return f'{self.name}'.capitalize()
 
 
@@ -87,7 +88,7 @@ class EnumVehicleType(IntEnum):
 	heavy_tank 	= 2
 	tank_destroyer = 3
 
-	def __str__(self):
+	def __str__(self) -> str:
 		return f'{self.name}'.replace('_', ' ').capitalize()
 
 
@@ -186,7 +187,7 @@ class WoTBlitzReplaySummary(BaseModel):
 
 
 	@validator('vehicle_tier')
-	def check_tier(cls, v):
+	def check_tier(cls, v : int | None) -> int | None:
 		if v is not None:
 			if v > 10 or v < 0:
 				raise ValueError('Tier has to be within [1, 10]')
@@ -194,18 +195,20 @@ class WoTBlitzReplaySummary(BaseModel):
 
 
 	@validator('protagonist_team')
-	def check_protagonist_team(cls, v):
+	def check_protagonist_team(cls, v : int) -> int:
 		if v == 1 or v == 2:
 			return v
 		else:
 			raise ValueError('protagonist_team has to be within 1 or 2')
 
+
 	@validator('battle_start_time')
-	def return_none(cls, v):
+	def return_none(cls, v : str) -> None:
 		return None
 
+
 	@root_validator(skip_on_failure=True)
-	def root(cls, values):
+	def root(cls, values : dict[str, Any]) ->  dict[str, Any]:
 		values['battle_start_time'] = datetime.fromtimestamp(values['battle_start_timestamp']).strftime(cls._TimestampFormat)
 		return values
 
@@ -227,7 +230,7 @@ class WoTBlitzReplayData(BaseModel):
 
 
 	@root_validator
-	def store_id(cls, values):
+	def store_id(cls, values : dict[str, Any]) -> dict[str, Any]:
 		try:
 			debug('validating: WoTBlitzReplayData()')
 			id : str
@@ -266,9 +269,8 @@ class WoTBlitzReplayJSON(BaseModel):
 		allow_population_by_field_name = True
 
 
-
 	@root_validator(pre=False)
-	def store_id(cls, values):
+	def store_id(cls, values : dict[str, Any]) -> dict[str, Any]:
 		try:
 			debug('validating: WoTBlitzReplayJSON(pre=False)')
 			if 'id' not in values or values['id'] is None:
@@ -451,10 +453,10 @@ class WGtankStatAll(BaseModel):
 class WGtankStat(BaseModel):
 	id					: ObjectId | None = Field(None, alias='_id')
 	_region				: Region | None = Field(None, alias='r')
-	all					: WGtankStatAll = Field(..., alias='a')
+	all					: WGtankStatAll = Field(..., alias='s')
 	last_battle_time	: int			= Field(..., alias='lb')
-	account_id			: int			= Field(..., alias='ai')
-	tank_id				: int 			= Field(..., alias='ai')
+	account_id			: int			= Field(..., alias='a')
+	tank_id				: int 			= Field(..., alias='t')
 	mark_of_mastery		: int 			= Field(..., alias='m')
 	battle_life_time	: int 			= Field(..., alias='l')
 	max_xp				: int  | None
@@ -477,7 +479,7 @@ class WGtankStat(BaseModel):
 
 
 	@root_validator(pre=False)
-	def set_id(cls, values):
+	def set_id(cls, values : dict[str, Any]) -> dict[str, Any]:
 		try:
 			if values['id'] is None:
 				values['id'] = cls.mk_id(values['account_id'], values['last_battle_time'], values['tank_id'])				
