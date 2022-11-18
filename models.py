@@ -418,11 +418,13 @@ class WoTBlitzReplayJSON(BaseModel):
 
 
 class WGApiError(BaseModel):
-	code: 	str | None
+	code: 	int | None
 	message:str | None
 	field: 	str | None
 	value: 	str | None
 
+	def str(self) -> str:
+		return f'code: {self.code} {self.message}'
 
 class WGtankStatAll(BaseModel):
 	spotted			: int = Field(..., alias='sp')
@@ -502,6 +504,12 @@ class WGApiWoTBlitz(BaseModel):
 	status	: str	= Field(default="ok", alias='s')
 	meta	: dict[str, Any] 	| None	
 	error	: WGApiError 		| None
+
+	@validator('error')
+	def if_error(cls, v : WGApiError | None) -> WGApiError | None:
+		if v is not None:
+			error(v.str())
+		return v
 
 
 class WGApiWoTBlitzTankStats(WGApiWoTBlitz):	
