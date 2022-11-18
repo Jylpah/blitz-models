@@ -131,12 +131,12 @@ class WGApi():
 		assert self.session is not None, "session must be initialized"
 		try:
 			resp : WGApiWoTBlitzTankStats | None = await self.get_tank_stats_full(account_id=account_id, region=region, tank_ids=tank_ids, fields=fields)
-			if resp is None:
+			if resp is None or resp.data is None:
 				return None
 			else:
 				return list(resp.data.values())[0]
 		except Exception as err:
-			verbose(f'Failed to fetch tank stats for account_id: {account_id}: {str(err)}')	# or DEBUG? 
+			debug(f'Failed to fetch tank stats for account_id: {account_id}: {str(err)}')
 		return None	
 		
 
