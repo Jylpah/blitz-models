@@ -513,7 +513,7 @@ class WGApiWoTBlitz(BaseModel):
 
 
 class WGApiWoTBlitzTankStats(WGApiWoTBlitz):	
-	data	: dict[str, list[WGtankStat] | None ] = Field(default=..., alias='d')
+	data	: dict[str, list[WGtankStat] | None ] | None = Field(default=..., alias='d')
 
 	class Config:		
 		allow_mutation 			= True
