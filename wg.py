@@ -1,7 +1,8 @@
 import logging
 from typing import Dict, Tuple, cast
-
 from pydantic import BaseModel
+from alive_progress import alive_bar		# type: ignore
+
 from .models import Region, WGApiWoTBlitzTankStats, WGtankStat
 from pyutils.throttledclientsession import ThrottledClientSession
 from pyutils.utils import get_url_JSON_model, get_url
@@ -21,7 +22,7 @@ class WGApi():
 	URL_SERVER = {
 		'eu'    : 'https://api.wotblitz.eu/wotb/',
 		'ru'    : 'https://api.wotblitz.ru/wotb/',
-		'na'    : 'https://api.wotblitz.com/wotb/',
+		'com'    : 'https://api.wotblitz.com/wotb/',
 		'asia'  : 'https://api.wotblitz.asia/wotb/',
 		'china' : None
 		}
@@ -33,17 +34,30 @@ class WGApi():
 		assert WG_app_id is not None, "WG App ID must not be None"
 		assert rate_limit is not None, "rate_limit must not be None"
 
-		self.app_id : str = WG_app_id
-		
+		self.app_id 	: str = WG_app_id
+		self.session : Dict[str, ThrottledClientSession] | None = None
+
 		if self.app_id is not None:
 			headers = {'Accept-Encoding': 'gzip, deflate'} 	
-			self.session : Dict[str, ThrottledClientSession] | None = dict()
+			self.session  = dict()
 			for region in Region.API_regions():
 				self.session[region.value] = ThrottledClientSession(rate_limit=rate_limit, headers=headers)
 			debug('WG aiohttp session initiated')            
-		else:
-			self.session = None
+		else:			
 			debug('WG aiohttp session NOT initiated')
+
+
+	async def close(self) -> None:
+		if self.session is not None:
+			for server in self.session:
+				try:
+					debug(f'trying to close session to {server} server')
+					await self.session[server].close()
+					debug(f'session to {server} server closed')
+				except Exception as err:
+					error(f'{err}')
+		return None
+
 		
 
 	@classmethod
