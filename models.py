@@ -4,7 +4,7 @@ from typing import Any, Mapping, Optional, Tuple
 from bson.objectid import ObjectId
 from bson.int64 import Int64
 from isort import place_module
-from pydantic import BaseModel, Extra, root_validator, validator, Field, HttpUrl
+from pydantic import BaseModel, Extra, root_validator, validator, Field, HttpUrl, ValidationError
 from pydantic.utils import ValueItems
 import json
 from enum import Enum, IntEnum
@@ -20,6 +20,10 @@ message	= logger.warning
 verbose	= logger.info
 debug	= logger.debug
 
+
+TypeExcludeDict = Mapping[int | str, Any]
+
+
 class Region(str, Enum):
 	ru 		= 'ru'
 	eu 		= 'eu'
@@ -30,10 +34,36 @@ class Region(str, Enum):
 
 	@classmethod
 	def API_regions(cls) -> list['Region']:
-		return [Region.eu, Region.com, Region.asia]
+		return [Region.eu, Region.com, Region.asia, Region.ru]
 
+	
+	@classmethod
+	def from_id(cls, account_id : int) -> Optional['Region']:
+		try:
+			if account_id >= 31e8:
+				return Region.china
+			elif account_id >= 20e8:
+				return Region.asia
+			elif account_id >= 10e8:
+				return Region.com
+			elif account_id >= 5e8:
+				return Region.eu
+			else:			
+				return Region.ru
+		except Exception as err:
+			raise ValueError(f'accunt_id {account_id} is out of known id range: {str(err)}')
+		return None
 
-TypeExcludeDict = Mapping[int | str, Any]
+	
+	def matches(self, other_region : 'Region') -> bool:
+		assert type(other_region) is type(self), 'other_region is not Region'
+		if self == other_region:
+			return True
+		elif self == Region.API:
+			return other_region in Region.API_regions()
+		elif other_region == Region.API:
+			return self in Region.API_regions()
+		return False
 
 
 class EnumWinnerTeam(IntEnum):
@@ -48,7 +78,7 @@ class EnumBattleResult(IntEnum):
 	loss = 2
 	draw = 3
 
-	def __str__(self):
+	def __str__(self) -> str:
 		return f'{self.name}'.capitalize()
 
 
@@ -58,7 +88,7 @@ class EnumVehicleType(IntEnum):
 	heavy_tank 	= 2
 	tank_destroyer = 3
 
-	def __str__(self):
+	def __str__(self) -> str:
 		return f'{self.name}'.replace('_', ' ').capitalize()
 
 
@@ -118,9 +148,9 @@ class WoTBlitzReplayDetail(BaseModel):
 		allow_population_by_field_name = True
 
 
-class WoTBlitzReplaySummary(BaseModel):	
+class WoTBlitzReplaySummary(BaseModel):
 	_TimestampFormat : str = "%Y-%m-%d %H:%M:%S"
-	
+
 	winner_team 	: EnumWinnerTeam 	| None 	= Field(default=..., alias='wt')
 	battle_result 	: EnumBattleResult 	| None 	= Field(default=..., alias='br')
 	room_type		: int | None 	= Field(default=None, alias='rt')
@@ -137,10 +167,10 @@ class WoTBlitzReplaySummary(BaseModel):
 	credits_total	: int | None 	= Field(default=None, alias='ct')
 	credits_base	: int | None 	= Field(default=None, alias='cb')
 	exp_base		: int | None	= Field(default=None, alias='eb')
-	exp_total		: int | None	= Field(default=None, alias='et')	
+	exp_total		: int | None	= Field(default=None, alias='et')
 	battle_start_timestamp : int	= Field(default=..., alias='bts')
 	battle_start_time : str | None	= Field(default=None, repr=False)	# duplicate of 'bts'
-	battle_duration : float			= Field(default=..., alias='bd')	
+	battle_duration : float			= Field(default=..., alias='bd')
 	description		: str |None		= Field(default=None, alias='de')
 	arena_unique_id	: int			= Field(default=..., alias='aid')
 	allies 			: list[int]		= Field(default=..., alias='a')
@@ -155,38 +185,42 @@ class WoTBlitzReplaySummary(BaseModel):
 		validate_assignment = True
 		allow_population_by_field_name = True
 
+
 	@validator('vehicle_tier')
-	def check_tier(cls, v):
-		if v > 10 or v < 0:
-			raise ValueError('Tier has to be within [1, 10]')
-		else: 
-			return v
+	def check_tier(cls, v : int | None) -> int | None:
+		if v is not None:
+			if v > 10 or v < 0:
+				raise ValueError('Tier has to be within [1, 10]')
+		return v
+
 
 	@validator('protagonist_team')
-	def check_protagonist_team(cls, v):
+	def check_protagonist_team(cls, v : int) -> int:
 		if v == 1 or v == 2:
 			return v
 		else:
 			raise ValueError('protagonist_team has to be within 1 or 2')
 
+
 	@validator('battle_start_time')
-	def return_none(cls, v):
+	def return_none(cls, v : str) -> None:
 		return None
 
+
 	@root_validator(skip_on_failure=True)
-	def root(cls, values):
+	def root(cls, values : dict[str, Any]) ->  dict[str, Any]:
 		values['battle_start_time'] = datetime.fromtimestamp(values['battle_start_timestamp']).strftime(cls._TimestampFormat)
 		return values
 
 
-class WoTBlitzReplayData(BaseModel):	
-	view_url	: HttpUrl 		= Field(default=..., alias='v')
-	download_url: HttpUrl 		= Field(default=..., alias='d')
+class WoTBlitzReplayData(BaseModel):
+	view_url	: HttpUrl 		= Field(default=None, alias='v')
+	download_url: HttpUrl 		= Field(default=None, alias='d')
 	id 			: str | None	= Field(default=None)
-	summary		: WoTBlitzReplaySummary  = Field(default=..., alias='s') 
+	summary		: WoTBlitzReplaySummary  = Field(default=..., alias='s')
 
 	_ViewUrlBase : str = 'https://replays.wotinspector.com/en/view/'
-	_DLurlBase	: str = 'https://replays.wotinspector.com/en/download/'	
+	_DLurlBase	: str = 'https://replays.wotinspector.com/en/download/'
 	class Config:
 		arbitrary_types_allowed = True
 		allow_mutation 			= True
@@ -196,26 +230,35 @@ class WoTBlitzReplayData(BaseModel):
 
 
 	@root_validator
-	def store_id(cls, values):
+	def store_id(cls, values : dict[str, Any]) -> dict[str, Any]:
 		try:
-			if values['view_url'] is not None:
-				values['id'] = values['view_url'].split('/')[-1:][0]
+			debug('validating: WoTBlitzReplayData()')
+			id : str
+			if values['id'] is not None:
+				debug('data.id found')
+				id = values['id']
+			elif values['view_url'] is not None:
+				id = values['view_url'].split('/')[-1:][0]
 			elif values['download_url'] is not None:
-				values['id'] = values['download_url'].split('/')[-1:][0]
+				id = values['download_url'].split('/')[-1:][0]
 			else:
-				raise ValueError('Replay ID is missing')
-			values['view_url'] 		= f"{cls._ViewUrlBase}{values['id']}"
-			values['download_url'] 	= f"{cls._DLurlBase}{values['id']}"
+				debug('could not modify id')
+				return values  # could not modify 'id'
+				# raise ValueError('Replay ID is missing')
+			values['id']			= id
+			values['view_url'] 		= f"{cls._ViewUrlBase}{id}"
+			values['download_url'] 	= f"{cls._DLurlBase}{id}"
 			return values
 		except Exception as err:
 			raise ValueError(f'Error reading replay ID: {str(err)}')
-	
-	
+
+		
 class WoTBlitzReplayJSON(BaseModel):
-	id : str | None 		= Field(default=None, alias='_id')
-	status: str				= Field(default="ok", alias='s') 
-	data: WoTBlitzReplayData= Field(default=..., alias='d') 
-	error: dict				= Field(default={}, alias='e') 
+	id 		: str | None 		= Field(default=None, alias='_id')
+	status	: str				= Field(default="ok", alias='s')
+	data	: WoTBlitzReplayData= Field(default=..., alias='d')
+	error	: dict				= Field(default={}, alias='e')
+	_URL_REPLAY_JSON : str 		= 'https://api.wotinspector.com/replay/upload?details=full&key='
 
 
 	class Config:
@@ -225,13 +268,20 @@ class WoTBlitzReplayJSON(BaseModel):
 		validate_assignment 	= True
 		allow_population_by_field_name = True
 
+
 	@root_validator(pre=False)
-	def store_id(cls, values):
+	def store_id(cls, values : dict[str, Any]) -> dict[str, Any]:
 		try:
-			values['id'] = values['data'].id			
+			debug('validating: WoTBlitzReplayJSON(pre=False)')
+			if 'id' not in values or values['id'] is None:
+				values['id'] = values['data'].id
+				debug(f"adding ROOT.id")
+			elif 'id' in values and values['id'] is not None:
+				debug(f"adding data.id from ROOT.id")
+				values['data'].id = values['id']		
 			return values
 		except Exception as err:
-			raise ValueError(f'Could not read replay ID: {str(err)}')
+			raise ValueError(f'Could not store replay ID: {str(err)}')
 
 
 	@classmethod
@@ -239,13 +289,24 @@ class WoTBlitzReplayJSON(BaseModel):
 		"""Open replay JSON file and return WoTBlitzReplayJSON instance"""
 		try:
 			async with aiofiles.open(filename, 'r') as rf:
-				return cls.parse_raw(await rf.read())
-
+				return cls.from_str(await rf.read())
 		except Exception as err:
 			error(f'Error reading replay: {str(err)}')
 		return None
 
-	
+
+	@classmethod
+	def from_str(cls, content: str) -> Optional['WoTBlitzReplayJSON']:
+		"""Open replay JSON file and return WoTBlitzReplayJSON instance"""
+		try:
+			return cls.parse_raw(content)
+		except ValidationError as err:
+			error(f'Invalid replay format: {str(err)}')
+		except Exception as err:
+			error(f'Could not read replay: {str(err)}')
+		return None
+
+
 	async def save(self, filename: str) -> int:
 		"""Save replay JSON into a file"""
 		try:
@@ -257,19 +318,20 @@ class WoTBlitzReplayJSON(BaseModel):
 		return -1
 
 
-	def json_src(self) -> str:
-		exclude_src : TypeExcludeDict = { 'id': True, 'data': { 'id': True }} 
-		return self.json(exclude=exclude_src, exclude_unset=True, by_alias=False)
+	def json_src(self, **kwargs: Any) -> str:
+		exclude_src : TypeExcludeDict = { 'id': True, 'data': { 'id': True }}
+		return self.json(exclude=exclude_src, by_alias=False, **kwargs)
 
 
-	def json_db(self) -> str:
-		exclude_src : TypeExcludeDict = { 'data': { 
-											'view_url': True, 
-											'download_url': True, 
-											'summary': { 'battle_start_time' } 
+	def export_db(self, **kwargs: Any) -> dict:
+		exclude_src : TypeExcludeDict = { 'data': {
+											'id': True,
+											'view_url': True,
+											'download_url': True,
+											'summary': { 'battle_start_time' }
 											}
-										} 
-		return self.json(exclude=exclude_src, exclude_defaults=True, by_alias=True)
+										}
+		return self.dict(exclude=exclude_src, exclude_defaults=True, by_alias=True, **kwargs)
 
 
 	def get_id(self) -> str | None:
@@ -280,7 +342,11 @@ class WoTBlitzReplayJSON(BaseModel):
 				return self.data.id
 		except Exception as err:
 			error(f'Could not read replay id: {str(err)}')
-		return None	
+		return None
+
+
+	def get_url_json(self) -> str:
+		return f'{self._URL_REPLAY_JSON}{self.id}'
 
 
 	def get_enemies(self, player: int | None = None) -> list[int]:
@@ -299,36 +365,35 @@ class WoTBlitzReplayJSON(BaseModel):
 			return self.data.summary.enemies
 		else:
 			raise ValueError(f"player {player} not found in replay")
-			
-	
+
+
 	def get_players(self) -> list[int]:
 		return self.get_enemies() + self.get_allies()
 
-	
-	def get_platoons(self, player: int | None = None) -> Tuple[	defaultdict[int, list[int]], 
+
+	def get_platoons(self, player: int | None = None) -> Tuple[	defaultdict[int, list[int]],
 																defaultdict[int, list[int]]]:
 		allied_platoons : defaultdict[int, list[int]] = defaultdict(list)
 		enemy_platoons 	: defaultdict[int, list[int]] = defaultdict(list)
-		
+
 		allies 	= self.get_allies(player)
 
 		for d in self.data.summary.details:
 			if d.squad_index is not None and d.squad_index > 0:
 				account_id = d.dbid
-				if account_id in allies: 
+				if account_id in allies:
 					allied_platoons[d.squad_index].append(account_id)
 				else:
 					enemy_platoons[d.squad_index].append(account_id)
-		
+
 		return allied_platoons, enemy_platoons
 
 
-	
 	def get_battle_result(self, player : int | None = None) -> EnumBattleResult:
 		try:
 			if self.data.summary.battle_result == EnumBattleResult.incomplete:
 				return EnumBattleResult.incomplete
-			
+
 			elif player is not None and player in self.get_enemies():
 				if self.data.summary.battle_result == EnumBattleResult.win:
 					return EnumBattleResult.loss
@@ -336,7 +401,7 @@ class WoTBlitzReplayJSON(BaseModel):
 					return EnumBattleResult.draw
 				else:
 					return EnumBattleResult.win
-			
+
 			elif player is None or player in self.get_allies():
 				if self.data.summary.battle_result == EnumBattleResult.win:
 					return EnumBattleResult.win
@@ -352,3 +417,110 @@ class WoTBlitzReplayJSON(BaseModel):
 
 
 
+class WGApiError(BaseModel):
+	code: 	int | None
+	message:str | None
+	field: 	str | None
+	value: 	str | None
+
+	def str(self) -> str:
+		return f'code: {self.code} {self.message}'
+
+class WGtankStatAll(BaseModel):
+	spotted			: int = Field(..., alias='sp')
+	hits			: int = Field(..., alias='h')
+	frags			: int = Field(..., alias='k')
+	max_xp			: int | None
+	wins 			: int = Field(..., alias='w')
+	losses			: int = Field(..., alias='l')
+	capture_points 	: int = Field(..., alias='cp')
+	battles			: int = Field(..., alias='b')
+	damage_dealt	: int = Field(..., alias='dd')
+	damage_received	: int = Field(..., alias='dr')
+	max_frags		: int = Field(..., alias='mk')
+	shots			: int = Field(..., alias='sp')
+	frags8p			: int | None
+	xp				: int | None
+	win_and_survived: int = Field(..., alias='ws')
+	survived_battles: int = Field(..., alias='sb')
+	dropped_capture_points: int = Field(..., alias='dp')
+
+	class Config:		
+		allow_mutation 			= True
+		validate_assignment 	= True
+		allow_population_by_field_name = True
+
+
+
+class WGtankStat(BaseModel):
+	id					: ObjectId | None = Field(None, alias='_id')
+	_region				: Region | None = Field(None, alias='r')
+	all					: WGtankStatAll = Field(..., alias='s')
+	last_battle_time	: int			= Field(..., alias='lb')
+	account_id			: int			= Field(..., alias='a')
+	tank_id				: int 			= Field(..., alias='t')
+	mark_of_mastery		: int 			= Field(..., alias='m')
+	battle_life_time	: int 			= Field(..., alias='l')
+	max_xp				: int  | None
+	in_garage_updated	: int  | None
+	max_frags			: int  | None
+	frags				: int  | None
+	in_garage 			: bool | None
+
+	class Config:
+		arbitrary_types_allowed = True
+		json_encoders 			= { ObjectId: str }
+		allow_mutation 			= True
+		validate_assignment 	= True
+		allow_population_by_field_name = True
+
+
+	@classmethod
+	def mk_id(cls, account_id: int, last_battle_time: int, tank_id: int = 0) -> ObjectId:
+		return ObjectId(hex(account_id)[2:].zfill(10) + hex(tank_id)[2:].zfill(6) + hex(last_battle_time)[2:].zfill(8))
+
+
+	@root_validator(pre=False)
+	def set_id(cls, values : dict[str, Any]) -> dict[str, Any]:
+		try:
+			if values['id'] is None:
+				values['id'] = cls.mk_id(values['account_id'], values['last_battle_time'], values['tank_id'])				
+			if '_region' not in values or values['_region'] is None:
+				values['_region'] = Region.from_id(values['account_id'])
+			return values
+		except Exception as err:
+			raise ValueError(f'Could not store _id: {str(err)}')
+
+
+	def json_src(self) -> str:		
+		return self.json(exclude_unset=True, by_alias=False)
+
+
+	def export_db(self) -> dict:
+		return self.dict(exclude_defaults=True, by_alias=True)
+	
+
+class WGApiWoTBlitz(BaseModel):
+	status	: str	= Field(default="ok", alias='s')
+	meta	: dict[str, Any] 	| None	
+	error	: WGApiError 		| None
+
+	@validator('error')
+	def if_error(cls, v : WGApiError | None) -> WGApiError | None:
+		if v is not None:
+			error(v.str())
+		return v
+
+
+class WGApiWoTBlitzTankStats(WGApiWoTBlitz):	
+	data	: dict[str, list[WGtankStat] | None ] | None = Field(default=..., alias='d')
+
+	class Config:		
+		allow_mutation 			= True
+		validate_assignment 	= True
+		allow_population_by_field_name = True
+
+
+
+
+	
