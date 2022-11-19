@@ -1,5 +1,7 @@
 import logging
 from typing import Dict, Tuple, cast
+from collections import defaultdict
+
 from pydantic import BaseModel
 from alive_progress import alive_bar		# type: ignore
 
@@ -57,8 +59,29 @@ class WGApi():
 				except Exception as err:
 					error(f'{err}')
 		return None
+	
+	def print_server_stats(self) -> dict[str, str] | None:
+		"""Return dict of stats per server"""		
+		try:
+			if self.session is not None:
+				stats : dict[str, dict[str, float]] = dict()
+				totals : defaultdict[str, float] = defaultdict(float)
+				for region in self.session:
+					server_stats : dict[str, float] = self.session[region].get_stats()
+					for stat in server_stats:
+						totals[stat] += server_stats[stat]
+					stats[region] = server_stats
+				stats['Total'] = totals
 
-		
+				res : dict[str, str] = dict()
+				for region in self.session:
+					res[region] = self.session[region].get_stats_str()
+				res['Total'] = ThrottledClientSession.print_stats(stats['Total'])	
+				return dict(res)
+		except Exception as err:
+			error(f'{err}')
+		return None
+
 
 	@classmethod
 	def get_server_url(cls, region: Region) -> str | None:
