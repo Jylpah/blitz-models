@@ -1,17 +1,21 @@
 from datetime import datetime
 from time import time
 from typing import Any, Mapping, Optional, Tuple
-from bson.objectid import ObjectId
-from bson.int64 import Int64
-from isort import place_module
-from pydantic import BaseModel, Extra, root_validator, validator, Field, HttpUrl, ValidationError
-from pydantic.utils import ValueItems
-import json
-from enum import Enum, IntEnum
 from os.path import basename
+from enum import Enum, IntEnum
+from collections import defaultdict
+from csv import DictWriter, DictReader, Dialect, Sniffer, excel
 import logging
 import aiofiles
-from collections import defaultdict
+import json
+from bson.objectid import ObjectId
+from bson.int64 import Int64
+# from isort import place_module
+
+from pyutils.utils import CSVexportable, TXTexportable, JSONexportable
+
+from pydantic import BaseModel, Extra, root_validator, validator, Field, HttpUrl, ValidationError
+from pydantic.utils import ValueItems
 
 TYPE_CHECKING = True
 logger = logging.getLogger()
@@ -30,11 +34,11 @@ class Region(str, Enum):
 	com 	= 'com'
 	asia 	= 'asia'
 	china 	= 'china'
-	API		= 'API'
+#	API		= 'API'
 
 	@classmethod
-	def API_regions(cls) -> list['Region']:
-		return [Region.eu, Region.com, Region.asia, Region.ru]
+	def API_regions(cls) -> set['Region']:
+		return { Region.eu, Region.com, Region.asia, Region.ru }
 
 	
 	@classmethod
@@ -57,13 +61,107 @@ class Region(str, Enum):
 	
 	def matches(self, other_region : 'Region') -> bool:
 		assert type(other_region) is type(self), 'other_region is not Region'
-		if self == other_region:
-			return True
-		elif self == Region.API:
-			return other_region in Region.API_regions()
-		elif other_region == Region.API:
-			return self in Region.API_regions()
-		return False
+		return self == other_region
+
+
+class Account(BaseModel, CSVexportable,TXTexportable, JSONexportable):	
+	id					: int 		 = Field(default=..., alias='_id')
+	region 				: Region | None= Field(default=None, alias='r')
+	last_battle_time	: int | None = Field(default=None, alias='l')
+
+	
+	class Config:
+		allow_population_by_field_name = True
+		allow_mutation 			= True
+		validate_assignment 	= True
+
+	
+	@validator('id')
+	def check_id(cls, v):
+		assert v is not None, "id cannot be None"
+		assert type(v) is int or type(v) is Int64, "id has to be int"
+		if type(v) is Int64:
+			v = int(v)
+		if v < 0:
+			raise ValueError('account_id must be >= 0')
+		return v
+
+	
+	@validator('last_battle_time')
+	def check_epoch_ge_zero(cls, v):
+		if v is None:
+			return None
+		elif v >= 0:
+			return v
+		else:
+			raise ValueError('time field must be >= 0')
+
+	TypeAccountDict = dict[str, int|bool|Region|None]
+
+
+	@root_validator(skip_on_failure=True)
+	def set_region(cls, values: TypeAccountDict) -> TypeAccountDict:
+		i = values.get('id')
+		assert type(i) is int, f'_id has to be int, was: {i} : {type(i)}'
+		if values['region'] is None:
+			# set default regions, but do not change region if set
+			values['region'] = Region.from_id(i)			
+		return values
+
+
+	# TXTexportable()
+	def txt_row(self, format : str = 'id') -> str:
+		"""export data as single row of text	"""
+		if format == 'id':
+			return str(self.id)
+		else:
+			raise ValueError(f'Unsupported export format: {format}')
+
+
+	# JSONexportable()
+	@classmethod
+	def json_formats(cls) -> list[str]:
+		return ['src'] + super().json_formats()
+
+
+	def json_str(self, format: str = 'src') -> str:
+		# exclude_src : TypeExcludeDict = { } 
+		if format == 'src':
+			return self.json(exclude_unset=True, by_alias=False)
+		elif format == 'all':
+			return self.json(exclude_unset=False, by_alias=False)
+		else:
+			raise ValueError(f'Unsupported export format: {format}')
+
+
+	def json_obj(self, format: str = 'src') -> Any:
+		# exclude_src : TypeExcludeDict = { } 
+		if format == 'src':
+			return self.dict(exclude_unset=True, by_alias=False)
+		elif format == 'all':
+			return self.dict(exclude_unset=False, by_alias=False)
+		else:
+			raise ValueError(f'Unsupported export format: {format}')
+
+
+	# def dict_src(self) -> dict[str, int|bool|Region|None]:
+	# 	return self.dict(exclude_unset=False, by_alias=False)
+	
+
+	# CSVexportable()
+	def csv_headers(self) -> list[str]:
+		"""Provide CSV headers as list"""
+		return list(self.dict(exclude_unset=False, by_alias=False).keys())
+		
+		
+	def csv_row(self) -> dict[str, str | int | float | bool]:
+		"""Provide instance data as dict for csv.DictWriter"""
+		res : dict[str, str | int | float | bool] =  self.dict(exclude_unset=False, by_alias=False)
+		if self.region is not None:
+			res['region'] = self.region.value
+		else:
+			raise ValueError(f'Account {self.id} does not have region defined')
+		return res
 
 
 class EnumWinnerTeam(IntEnum):
@@ -451,6 +549,11 @@ class WGtankStatAll(BaseModel):
 		allow_population_by_field_name = True
 
 
+	@validator('frags8p', 'xp', 'max_xp')
+	def unset(cls, v: int | bool | None) -> None:
+		return None
+
+
 
 class WGtankStat(BaseModel):
 	id					: ObjectId | None = Field(None, alias='_id')
@@ -492,12 +595,17 @@ class WGtankStat(BaseModel):
 			raise ValueError(f'Could not store _id: {str(err)}')
 
 
+	@validator('max_frags', 'frags', 'max_xp', 'in_garage', 'in_garage_updated')
+	def unset(cls, v: int | bool | None) -> None:
+		return None
+
+
 	def json_src(self) -> str:		
 		return self.json(exclude_unset=True, by_alias=False)
 
 
 	def export_db(self) -> dict:
-		return self.dict(exclude_defaults=True, by_alias=True)
+		return self.dict(exclude_defaults=True, exclude_none=True, by_alias=True)
 	
 
 class WGApiWoTBlitz(BaseModel):
