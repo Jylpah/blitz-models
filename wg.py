@@ -93,23 +93,21 @@ class WGApi():
 		return None
 
 	
-	def tank_stats_get_url(self, account_id : int , region: Region | None = None, 
+	def tank_stats_get_url(self, account_id : int , region: Region, 
 							tank_ids: list[int] = [], fields: list[str] = []) -> Tuple[str, Region] | None:
 		assert type(account_id) is int, "account_id must be int"
-		assert type(tank_ids) is list, "tank_ids must be a list"
-		assert type(fields) is list, "fields must be a list"
+		assert type(tank_ids) is list,	"tank_ids must be a list"
+		assert type(fields) is list,	"fields must be a list"
+		assert type(region) is Region,	"region must be type of Region"
 		try:
 			URL_WG_TANK_STATS: str = 'tanks/stats/'
 
 			account_region : Region | None = Region.from_id(account_id)
+			
 			if account_region is None:
 				raise ValueError('Could not determine region for account_id')
-
-			if region is None:
-				region = account_region
-			else:
-				if not region.matches(account_region):
-					raise ValueError(f'account_id {account_id} does not match region {region.value}')
+			if account_region != region:
+				raise ValueError(f'account_id {account_id} does not match region {region.name}')
 						
 			server : str | None = self.get_server_url(account_region)
 			if server is None:
@@ -129,7 +127,7 @@ class WGApi():
 		return None
 
 	
-	async def get_tank_stats_full(self, account_id: int, region: Region | None = None,
+	async def get_tank_stats_full(self, account_id: int, region: Region,
 				tank_ids: list[int] = [], fields: list[str] = [] ) -> WGApiWoTBlitzTankStats | None:
 		assert self.session is not None, "session must be initialized"
 		try:
@@ -149,7 +147,7 @@ class WGApi():
 		return None	
 
 	
-	async def get_tank_stats(self, account_id: int, region: Region | None = None,
+	async def get_tank_stats(self, account_id: int, region: Region,
 			tank_ids: list[int] = [], fields: list[str] = [] ) -> list[WGtankStat] | None:
 		assert self.session is not None, "session must be initialized"
 		try:
