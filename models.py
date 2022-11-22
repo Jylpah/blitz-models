@@ -12,7 +12,7 @@ from bson.int64 import Int64
 from isort import place_module
 from pydantic import BaseModel, Extra, root_validator, validator, Field, HttpUrl, ValidationError
 from pydantic.utils import ValueItems
-from pyutils.utils import CSVExportable, TXTExportable, TXTImportable, JSONExportable, JSONImportable
+from pyutils.utils import CSVExportable, CSVImportable, TXTExportable, TXTImportable, JSONExportable, JSONImportable
 
 TYPE_CHECKING = True
 logger = logging.getLogger()
@@ -49,7 +49,7 @@ class Region(StrEnum):
 			else:			
 				return Region.ru
 		except Exception as err:
-			raise ValueError(f'accunt_id {account_id} is out of known id range: {str(err)}')
+			raise ValueError(f'accunt_id {account_id} is out of known id range: {err}')
 		return None
 
 	
@@ -60,7 +60,8 @@ class Region(StrEnum):
 TypeAccountDict = dict[str, int|bool|Region|None]
 
 
-class Account(JSONExportable, CSVExportable,TXTExportable, TXTImportable):	
+class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable, 
+				TXTExportable, TXTImportable):	
 
 	id					: int 		 	= Field(default=..., alias='_id')
 	region 				: Region | None	= Field(default=None, alias='r')
@@ -71,8 +72,8 @@ class Account(JSONExportable, CSVExportable,TXTExportable, TXTImportable):
 
 	class Config:
 		allow_population_by_field_name = True
-		allow_mutation 			= True
-		validate_assignment 	= True
+		allow_mutation 		= True
+		validate_assignment = True		
 
 	
 	@validator('id')
@@ -139,6 +140,18 @@ class Account(JSONExportable, CSVExportable,TXTExportable, TXTImportable):
 		else:
 			raise ValueError(f'Account {self.id} does not have region defined')
 		return res
+
+
+	@classmethod
+	def from_csv(cls, row: dict[str, Any]) -> 'Account':
+		"""Provide CSV row as a dict for csv.DictWriter"""		
+		for field in ['id', 'last_battle_time']:
+			if field in row:
+				if row[field] == '':
+					del row[field]
+				else:
+					row[field] = int(row[field])
+		return Account(**row)
 
 
 class EnumWinnerTeam(IntEnum):
@@ -326,7 +339,7 @@ class WoTBlitzReplayData(BaseModel):
 			values['download_url'] 	= f"{cls._DLurlBase}{id}"
 			return values
 		except Exception as err:
-			raise ValueError(f'Error reading replay ID: {str(err)}')
+			raise ValueError(f'Error reading replay ID: {err}')
 
 		
 class WoTBlitzReplayJSON(JSONExportable, JSONImportable):
@@ -365,7 +378,7 @@ class WoTBlitzReplayJSON(JSONExportable, JSONImportable):
 				values['data'].id = values['id']		
 			return values
 		except Exception as err:
-			raise ValueError(f'Could not store replay ID: {str(err)}')
+			raise ValueError(f'Could not store replay ID: {err}')
 
 
 	# @classmethod
@@ -375,7 +388,7 @@ class WoTBlitzReplayJSON(JSONExportable, JSONImportable):
 	# 		async with aiofiles.open(filename, 'r') as rf:
 	# 			return cls.from_str(await rf.read())
 	# 	except Exception as err:
-	# 		error(f'Error reading replay: {str(err)}')
+	# 		error(f'Error reading replay: {err}')
 	# 	return None
 
 
@@ -385,9 +398,9 @@ class WoTBlitzReplayJSON(JSONExportable, JSONImportable):
 	# 	try:
 	# 		return cls.parse_raw(content)
 	# 	except ValidationError as err:
-	# 		error(f'Invalid replay format: {str(err)}')
+	# 		error(f'Invalid replay format: {err}')
 	# 	except Exception as err:
-	# 		error(f'Could not read replay: {str(err)}')
+	# 		error(f'Could not read replay: {err}')
 	# 	return None
 
 
@@ -398,7 +411,7 @@ class WoTBlitzReplayJSON(JSONExportable, JSONImportable):
 			else:
 				return self.data.id
 		except Exception as err:
-			error(f'Could not read replay id: {str(err)}')
+			error(f'Could not read replay id: {err}')
 		return None
 
 
@@ -550,7 +563,7 @@ class WGtankStat(JSONExportable, JSONImportable):
 				values['_region'] = Region.from_id(values['account_id'])
 			return values
 		except Exception as err:
-			raise ValueError(f'Could not store _id: {str(err)}')
+			raise ValueError(f'Could not store _id: {err}')
 
 
 	@validator('max_frags', 'frags', 'max_xp', 'in_garage', 'in_garage_updated')
