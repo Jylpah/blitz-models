@@ -93,12 +93,12 @@ async def get_url_JSON(session: aiohttp.ClientSession, url: str,
 				await asyncio.sleep(SLEEP)    
 
 			except aiohttp.ClientError as err:
-				debug(f"Could not retrieve URL: {url} : {str(err)}")
+				debug(f"Could not retrieve URL: {url} : {err}")
 			except asyncio.CancelledError as err:
-				debug(f'Queue gets cancelled while still working: {str(err)}')
+				debug(f'Queue gets cancelled while still working: {err}')
 				break
 			except Exception as err:
-				debug(f'Unexpected Exception {str(err)}')
+				debug(f'Unexpected Exception {err}')
 		debug("Could not retrieve URL: " + url)
 		return None
 

@@ -123,7 +123,7 @@ class WGApi():
 
 			return f'{server}{URL_WG_TANK_STATS}?application_id={self.app_id}&account_id={account_id}{tank_id_str}{field_str}', account_region
 		except Exception as err:
-			debug(f'Failed to form url for account_id: {account_id}: {str(err)}')
+			debug(f'Failed to form url for account_id: {account_id}: {err}')
 		return None
 
 	
@@ -143,7 +143,7 @@ class WGApi():
 			else:
 				return cast(WGApiWoTBlitzTankStats, resp)
 		except Exception as err:
-			error(f'Failed to fetch tank stats for account_id: {account_id}: {str(err)}')
+			error(f'Failed to fetch tank stats for account_id: {account_id}: {err}')
 		return None	
 
 	
@@ -157,7 +157,7 @@ class WGApi():
 			else:
 				return list(resp.data.values())[0]
 		except Exception as err:
-			debug(f'Failed to fetch tank stats for account_id: {account_id}: {str(err)}')
+			debug(f'Failed to fetch tank stats for account_id: {account_id}: {err}')
 		return None	
 		
 
