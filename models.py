@@ -1,20 +1,18 @@
 from datetime import datetime
 from time import time
-from typing import Any, Mapping, Optional, Tuple
+from typing import Any, Mapping, Optional, Tuple, ClassVar, TypeVar
 from os.path import basename
-from enum import Enum, IntEnum
+from enum import Enum, IntEnum, StrEnum
 from collections import defaultdict
 import logging
 import aiofiles
 import json
 from bson.objectid import ObjectId
 from bson.int64 import Int64
-# from isort import place_module
-
-from pyutils.utils import CSVexportable, TXTexportable, JSONexportable
-
+from isort import place_module
 from pydantic import BaseModel, Extra, root_validator, validator, Field, HttpUrl, ValidationError
 from pydantic.utils import ValueItems
+from pyutils.utils import CSVExportable, TXTExportable, TXTImportable, JSONExportable, JSONImportable
 
 TYPE_CHECKING = True
 logger = logging.getLogger()
@@ -24,10 +22,7 @@ verbose	= logger.info
 debug	= logger.debug
 
 
-TypeExcludeDict = Mapping[int | str, Any]
-
-
-class Region(str, Enum):
+class Region(StrEnum):
 	ru 		= 'ru'
 	eu 		= 'eu'
 	com 	= 'com'
@@ -62,13 +57,18 @@ class Region(str, Enum):
 		assert type(other_region) is type(self), 'other_region is not Region'
 		return self == other_region
 
+TypeAccountDict = dict[str, int|bool|Region|None]
 
-class Account(BaseModel, CSVexportable,TXTexportable, JSONexportable):	
-	id					: int 		 = Field(default=..., alias='_id')
-	region 				: Region | None= Field(default=None, alias='r')
-	last_battle_time	: int | None = Field(default=None, alias='l')
 
-	
+class Account(JSONExportable, CSVExportable,TXTExportable, TXTImportable):	
+
+	id					: int 		 	= Field(default=..., alias='_id')
+	region 				: Region | None	= Field(default=None, alias='r')
+	last_battle_time	: int 	 | None	= Field(default=None, alias='l')
+
+	_exclude_export_DB_fields  = None
+	_exclude_export_src_fields = None
+
 	class Config:
 		allow_population_by_field_name = True
 		allow_mutation 			= True
@@ -95,8 +95,6 @@ class Account(BaseModel, CSVexportable,TXTexportable, JSONexportable):
 		else:
 			raise ValueError('time field must be >= 0')
 
-	TypeAccountDict = dict[str, int|bool|Region|None]
-
 
 	@root_validator(skip_on_failure=True)
 	def set_region(cls, values: TypeAccountDict) -> TypeAccountDict:
@@ -108,7 +106,7 @@ class Account(BaseModel, CSVexportable,TXTexportable, JSONexportable):
 		return values
 
 
-	# TXTexportable()
+	# TXTExportable()
 	def txt_row(self, format : str = 'id') -> str:
 		"""export data as single row of text	"""
 		if format == 'id':
@@ -117,37 +115,17 @@ class Account(BaseModel, CSVexportable,TXTexportable, JSONexportable):
 			raise ValueError(f'Unsupported export format: {format}')
 
 
-	# JSONexportable()
+	# TXTImportable()
 	@classmethod
-	def json_formats(cls) -> list[str]:
-		return ['src'] + super().json_formats()
+	def from_txt(cls, text : str) -> 'Account':
+		"""export data as single row of text	"""
+		try:
+			return Account(id=int(text))
+		except Exception as err:
+			raise ValueError(f'Could not create Account() from input: {err}')
 
 
-	def json_str(self, format: str = 'src') -> str:
-		# exclude_src : TypeExcludeDict = { } 
-		if format == 'src':
-			return self.json(exclude_unset=True, by_alias=False)
-		elif format == 'all':
-			return self.json(exclude_unset=False, by_alias=False)
-		else:
-			raise ValueError(f'Unsupported export format: {format}')
-
-
-	def json_obj(self, format: str = 'src') -> Any:
-		# exclude_src : TypeExcludeDict = { } 
-		if format == 'src':
-			return self.dict(exclude_unset=True, by_alias=False)
-		elif format == 'all':
-			return self.dict(exclude_unset=False, by_alias=False)
-		else:
-			raise ValueError(f'Unsupported export format: {format}')
-
-
-	# def dict_src(self) -> dict[str, int|bool|Region|None]:
-	# 	return self.dict(exclude_unset=False, by_alias=False)
-	
-
-	# CSVexportable()
+	# CSVExportable()
 	def csv_headers(self) -> list[str]:
 		"""Provide CSV headers as list"""
 		return list(self.dict(exclude_unset=False, by_alias=False).keys())
@@ -318,6 +296,7 @@ class WoTBlitzReplayData(BaseModel):
 
 	_ViewUrlBase : str = 'https://replays.wotinspector.com/en/view/'
 	_DLurlBase	: str = 'https://replays.wotinspector.com/en/download/'
+
 	class Config:
 		arbitrary_types_allowed = True
 		allow_mutation 			= True
@@ -350,13 +329,21 @@ class WoTBlitzReplayData(BaseModel):
 			raise ValueError(f'Error reading replay ID: {str(err)}')
 
 		
-class WoTBlitzReplayJSON(BaseModel):
+class WoTBlitzReplayJSON(JSONExportable, JSONImportable):
 	id 		: str | None 		= Field(default=None, alias='_id')
 	status	: str				= Field(default="ok", alias='s')
 	data	: WoTBlitzReplayData= Field(default=..., alias='d')
 	error	: dict				= Field(default={}, alias='e')
 	_URL_REPLAY_JSON : str 		= 'https://api.wotinspector.com/replay/upload?details=full&key='
 
+	_exclude_export_src_fields 	= { 'id': True, 'data': { 'id': True }}
+	_exclude_export_DB_fields	= { 'data': {
+											'id': True,
+											'view_url': True,
+											'download_url': True,
+											'summary': { 'battle_start_time' }
+											}
+									}
 
 	class Config:
 		arbitrary_types_allowed = True
@@ -381,54 +368,27 @@ class WoTBlitzReplayJSON(BaseModel):
 			raise ValueError(f'Could not store replay ID: {str(err)}')
 
 
-	@classmethod
-	async def open(cls, filename: str) -> Optional['WoTBlitzReplayJSON']:
-		"""Open replay JSON file and return WoTBlitzReplayJSON instance"""
-		try:
-			async with aiofiles.open(filename, 'r') as rf:
-				return cls.from_str(await rf.read())
-		except Exception as err:
-			error(f'Error reading replay: {str(err)}')
-		return None
+	# @classmethod
+	# async def open(cls, filename: str) -> Optional['WoTBlitzReplayJSON']:
+	# 	"""Open replay JSON file and return WoTBlitzReplayJSON instance"""
+	# 	try:
+	# 		async with aiofiles.open(filename, 'r') as rf:
+	# 			return cls.from_str(await rf.read())
+	# 	except Exception as err:
+	# 		error(f'Error reading replay: {str(err)}')
+	# 	return None
 
 
-	@classmethod
-	def from_str(cls, content: str) -> Optional['WoTBlitzReplayJSON']:
-		"""Open replay JSON file and return WoTBlitzReplayJSON instance"""
-		try:
-			return cls.parse_raw(content)
-		except ValidationError as err:
-			error(f'Invalid replay format: {str(err)}')
-		except Exception as err:
-			error(f'Could not read replay: {str(err)}')
-		return None
-
-
-	async def save(self, filename: str) -> int:
-		"""Save replay JSON into a file"""
-		try:
-			async with aiofiles.open(filename, 'w') as rf:
-				return await rf.write(self.json_src())
-
-		except Exception as err:
-			error(f'Error writing replay {filename}: {str(err)}')
-		return -1
-
-
-	def json_src(self, **kwargs: Any) -> str:
-		exclude_src : TypeExcludeDict = { 'id': True, 'data': { 'id': True }}
-		return self.json(exclude=exclude_src, by_alias=False, **kwargs)
-
-
-	def export_db(self, **kwargs: Any) -> dict:
-		exclude_src : TypeExcludeDict = { 'data': {
-											'id': True,
-											'view_url': True,
-											'download_url': True,
-											'summary': { 'battle_start_time' }
-											}
-										}
-		return self.dict(exclude=exclude_src, exclude_defaults=True, by_alias=True, **kwargs)
+	# @classmethod
+	# def from_str(cls, content: str) -> Optional['WoTBlitzReplayJSON']:
+	# 	"""Open replay JSON file and return WoTBlitzReplayJSON instance"""
+	# 	try:
+	# 		return cls.parse_raw(content)
+	# 	except ValidationError as err:
+	# 		error(f'Invalid replay format: {str(err)}')
+	# 	except Exception as err:
+	# 		error(f'Could not read replay: {str(err)}')
+	# 	return None
 
 
 	def get_id(self) -> str | None:
@@ -513,7 +473,6 @@ class WoTBlitzReplayJSON(BaseModel):
 			raise Exception('Error reading replay')
 
 
-
 class WGApiError(BaseModel):
 	code: 	int | None
 	message:str | None
@@ -554,7 +513,7 @@ class WGtankStatAll(BaseModel):
 
 
 
-class WGtankStat(BaseModel):
+class WGtankStat(JSONExportable, JSONImportable):
 	id					: ObjectId | None = Field(None, alias='_id')
 	_region				: Region | None = Field(None, alias='r')
 	all					: WGtankStatAll = Field(..., alias='s')
@@ -598,14 +557,6 @@ class WGtankStat(BaseModel):
 	def unset(cls, v: int | bool | None) -> None:
 		return None
 
-
-	def json_src(self) -> str:		
-		return self.json(exclude_unset=True, by_alias=False)
-
-
-	def export_db(self) -> dict:
-		return self.dict(exclude_defaults=True, exclude_none=True, by_alias=True)
-	
 
 class WGApiWoTBlitz(BaseModel):
 	status	: str	= Field(default="ok", alias='s')
