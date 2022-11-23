@@ -123,7 +123,7 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 		try:
 			return Account(id=int(text))
 		except Exception as err:
-			raise ValueError(f'Could not create Account() from input: {err}')
+			raise ValueError(f'Could not create Account() with id={text}: {err}')
 
 
 	# CSVExportable()
@@ -142,16 +142,16 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 		return res
 
 
-	@classmethod
-	def from_csv(cls, row: dict[str, Any]) -> 'Account':
-		"""Provide CSV row as a dict for csv.DictWriter"""		
-		for field in ['id', 'last_battle_time']:
-			if field in row:
-				if row[field] == '':
-					del row[field]
-				else:
-					row[field] = int(row[field])
-		return Account(**row)
+	# @classmethod
+	# def from_csv(cls, row: dict[str, Any]) -> 'Account':
+	# 	"""Provide CSV row as a dict for csv.DictWriter"""		
+	# 	for field in ['id', 'last_battle_time']:
+	# 		if field in row:
+	# 			if row[field] == '':
+	# 				del row[field]
+	# 			else:
+	# 				row[field] = int(row[field])
+	# 	return Account(**row)
 
 
 class EnumWinnerTeam(IntEnum):
