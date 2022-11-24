@@ -140,24 +140,18 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 		else:
 			raise ValueError(f'Account {self.id} does not have region defined')
 		return res
+	
 
-
-	# @classmethod
-	# def from_csv(cls, row: dict[str, Any]) -> 'Account':
-	# 	"""Provide CSV row as a dict for csv.DictWriter"""		
-	# 	for field in ['id', 'last_battle_time']:
-	# 		if field in row:
-	# 			if row[field] == '':
-	# 				del row[field]
-	# 			else:
-	# 				row[field] = int(row[field])
-	# 	return Account(**row)
+	def __str__(self) -> str:
+		fields : list[str] = [ f for f in self.__fields__.keys() if f != 'id' ]
+		return f'{type(self).__name__} id={self.id} { ", ".join( [ f + "=" + str(getattr(self,f)) for f in fields ]  ) }'
 
 
 class EnumWinnerTeam(IntEnum):
 	draw = 0
 	one = 1
 	two = 2
+
 
 class EnumBattleResult(IntEnum):
 	incomplete = -1
