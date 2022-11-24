@@ -101,9 +101,9 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 	def set_region(cls, values: TypeAccountDict) -> TypeAccountDict:
 		i = values.get('id')
 		assert type(i) is int, f'_id has to be int, was: {i} : {type(i)}'
-		if values['region'] is None:
+		if values.get('region') is None:
 			# set default regions, but do not change region if set
-			values['region'] = Region.from_id(i)			
+			values['region'] = Region.from_id(i)
 		return values
 
 
@@ -144,7 +144,7 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 
 	def __str__(self) -> str:
 		fields : list[str] = [ f for f in self.__fields__.keys() if f != 'id' ]
-		return f'{type(self).__name__} id={self.id} { ", ".join( [ f + "=" + str(getattr(self,f)) for f in fields ]  ) }'
+		return f'{type(self).__name__} id={self.id}: { ", ".join( [ f + "=" + str(getattr(self,f)) for f in fields ]  ) }'
 
 
 class EnumWinnerTeam(IntEnum):
