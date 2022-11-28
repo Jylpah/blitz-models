@@ -34,7 +34,12 @@ class Region(StrEnum):
 	def API_regions(cls) -> set['Region']:
 		return { Region.eu, Region.com, Region.asia, Region.ru }
 
-	
+
+	@classmethod
+	def has_stats(cls) -> set['Region']:
+		return { Region.eu, Region.com, Region.asia, Region.ru }
+
+
 	@classmethod
 	def from_id(cls, account_id : int) -> Optional['Region']:
 		try:
