@@ -169,7 +169,7 @@ class EnumBattleResult(IntEnum):
 		return f'{self.name}'.capitalize()
 
 
-class EnumVehicleType(IntEnum):
+class EnumVehicleTypeInt(IntEnum):
 	light_tank 	= 0
 	medium_tank = 1
 	heavy_tank 	= 2
@@ -177,6 +177,70 @@ class EnumVehicleType(IntEnum):
 
 	def __str__(self) -> str:
 		return f'{self.name}'.replace('_', ' ').capitalize()
+
+	
+	def as_str(self) -> 'EnumVehicleTypeStr':
+		return EnumVehicleTypeStr[self.name]
+
+
+	@classmethod
+	def from_str(cls, t: str) -> 'EnumVehicleTypeInt':
+		return EnumVehicleTypeStr(t).as_int()
+
+
+
+class EnumVehicleTypeStr(StrEnum):
+	light_tank 		= 'lightTank'
+	medium_tank 	= 'mediumTank'
+	heavy_tank 		= 'heavyTank'
+	tank_destroyer	= 'AT-SPG'
+
+	def __str__(self) -> str:
+		return f'{self.name}'.replace('_', ' ').capitalize()
+
+
+	def as_int(self) -> EnumVehicleTypeInt:
+		return EnumVehicleTypeInt[self.name]
+
+
+	@classmethod
+	def from_int(cls, t: int) -> 'EnumVehicleTypeStr':
+		return EnumVehicleTypeInt(t).as_str()
+
+
+
+class EnumVehicleTier(IntEnum):
+	I 		= 1
+	II 		= 2
+	III 	= 3
+	IV 		= 4
+	V 		= 5
+	VI 		= 6
+	VII 	= 7
+	VIII 	= 8
+	IX 		= 9
+	X		= 10
+
+	def __str__(self) -> str:
+		return str(self.name)
+
+
+class EnumNation(IntEnum):
+	ussr		= 0
+	germany		= 1
+	usa 		= 2
+	china 		= 3
+	france		= 4
+	uk			= 5
+	japan		= 6
+	other		= 7
+	european	= 8
+
+	def __str__(self) -> str:
+		if self.value in [ 0 , 2, 5]:
+			return f'{self.name}'.upper()
+		else:
+			return f'{self.name}'.capitalize()
 
 
 class WoTBlitzReplayAchievement(BaseModel):
@@ -250,7 +314,7 @@ class WoTBlitzReplaySummary(BaseModel):
 	map_name		: str			= Field(default=..., alias='mn')
 	vehicle			: str			= Field(default=..., alias='v')
 	vehicle_tier	: int | None	= Field(default=..., alias='vx')
-	vehicle_type 	: EnumVehicleType | None = Field(default=..., alias='vt')
+	vehicle_type 	: EnumVehicleTypeInt | None = Field(default=..., alias='vt')
 	credits_total	: int | None 	= Field(default=None, alias='ct')
 	credits_base	: int | None 	= Field(default=None, alias='cb')
 	exp_base		: int | None	= Field(default=None, alias='eb')
@@ -591,6 +655,92 @@ class WGApiWoTBlitzTankStats(WGApiWoTBlitz):
 		allow_population_by_field_name = True
 
 
+class Tank(JSONExportable, JSONImportable):
+	tank_id 	: int				= Field(default=..., alias='_id')
+	name 		: str | None		= Field(default=None, alias='n')
+	nation	: EnumNation | None 	= Field(default=None, alias='c')
+	type: EnumVehicleTypeStr|None	= Field(default=None, alias='v')
+	tier: EnumVehicleTier|None 		= Field(default=None, alias='t')
+	is_premium 	: bool 				= Field(default=False, alias='p')
+	next_tanks	: list[int] | None	= Field(default=None, alias='s')
+
+	@validator('next_tanks', pre=True)
+	def next_tanks2list(cls, v):
+		try:
+			if v is not None:
+				return [ int(k) for k in v.keys() ]
+		except Exception as err:
+			error(f"Error validating 'next_tanks': {err}")
+		return None
 
 
+	@validator('type', pre=True)
+	def prevalidate_type(cls, v):
+		if v is None:
+			return None
+		elif type(v) is int:
+			print('prevalidate: int')
+			return EnumVehicleTypeStr.from_int(v)
+		else:
+			return v
+
+
+	@validator('type')
+	def validate_type(cls, v):
+		if v is None:
+			return None
+		elif type(v) is str:
+			return EnumVehicleTypeStr(v)
+		elif type(v) is EnumVehicleTypeStr:
+			return v
+		else:
+			raise ValueError(f"invalid 'type': {v}")
+
+
+	@validator('tier', pre=True)
+	def prevalidate_tier(cls, v):
+		if v is None:
+			return None
+		elif type(v) is str:
+			return EnumVehicleTier[v.upper()].value
+		else:
+			return v
+		
+
+	@validator('tier')
+	def validate_tier(cls, v):
+		if v is None:
+			return None
+		elif type(v) is int:
+			return EnumVehicleTier(v)
+		elif type(v) is EnumVehicleTier:
+			return v
+		else:
+			raise ValueError(f"invalid 'tier': {v}")
+		
+
+	@classmethod
+	def from_id(cls, id : int) -> 'Tank':
+		return Tank(tank_id=id)
+
+
+	# def get_tank_id(nation: str, tank_id : int) -> int:
+	# 	return (tank_id << 8) + (wg.NATION_ID[nation] << 4) + 1 
+
+
+	class Config:		
+		allow_mutation 			= True
+		validate_assignment 	= True
+		allow_population_by_field_name = True
+		use_enum_values			= True
+
+
+class WGApiTankopedia(WGApiWoTBlitz):
+	data : dict[str, Tank] | None = Field(default=..., alias='d')
 	
+	class Config:		
+		allow_mutation 			= True
+		validate_assignment 	= True
+		allow_population_by_field_name = True
+
+
