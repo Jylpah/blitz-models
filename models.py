@@ -679,8 +679,7 @@ class Tank(JSONExportable, JSONImportable):
 		if v is None:
 			return None
 		elif type(v) is int:
-			print('prevalidate: int')
-			return EnumVehicleTypeStr.from_int(v)
+			return EnumVehicleTypeStr.from_int(v).value
 		else:
 			return v
 
