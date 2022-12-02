@@ -676,9 +676,7 @@ class Tank(JSONExportable, JSONImportable):
 
 	@validator('type', pre=True)
 	def prevalidate_type(cls, v):
-		if v is None:
-			return None
-		elif type(v) is int:
+		if type(v) is int:
 			return EnumVehicleTypeStr.from_int(v).value
 		else:
 			return v
@@ -686,21 +684,15 @@ class Tank(JSONExportable, JSONImportable):
 
 	@validator('type')
 	def validate_type(cls, v):
-		if v is None:
-			return None
-		elif type(v) is str:
+		if type(v) is str:
 			return EnumVehicleTypeStr(v)
-		elif type(v) is EnumVehicleTypeStr:
-			return v
 		else:
-			raise ValueError(f"invalid 'type': {v}")
+			return v
 
 
 	@validator('tier', pre=True)
-	def prevalidate_tier(cls, v):
-		if v is None:
-			return None
-		elif type(v) is str:
+	def prevalidate_tier(cls, v: Any):
+		if type(v) is str:
 			return EnumVehicleTier[v.upper()].value
 		else:
 			return v
@@ -708,15 +700,11 @@ class Tank(JSONExportable, JSONImportable):
 
 	@validator('tier')
 	def validate_tier(cls, v):
-		if v is None:
-			return None
-		elif type(v) is int:
+		if type(v) is int:
 			return EnumVehicleTier(v)
-		elif type(v) is EnumVehicleTier:
-			return v
 		else:
-			raise ValueError(f"invalid 'tier': {v}")
-		
+			return v
+
 
 	@classmethod
 	def from_id(cls, id : int) -> 'Tank':
