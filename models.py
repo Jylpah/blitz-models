@@ -84,8 +84,8 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 	@validator('id')
 	def check_id(cls, v):
 		assert v is not None, "id cannot be None"
-		assert type(v) is int or type(v) is Int64, "id has to be int"
-		if type(v) is Int64:
+		assert isinstance(v, int), "id has to be int"
+		if isinstance(v, Int64):
 			v = int(v)
 		if v < 0:
 			raise ValueError('account_id must be >= 0')
@@ -105,7 +105,7 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 	@root_validator(skip_on_failure=True)
 	def set_region(cls, values: TypeAccountDict) -> TypeAccountDict:
 		i = values.get('id')
-		assert type(i) is int, f'_id has to be int, was: {i} : {type(i)}'
+		assert isinstance(i, int), f'_id has to be int, was: {i} : {type(i)}'
 		if values.get('region') is None:
 			# set default regions, but do not change region if set
 			values['region'] = Region.from_id(i)
@@ -676,7 +676,7 @@ class Tank(JSONExportable, JSONImportable):
 
 	@validator('type', pre=True)
 	def prevalidate_type(cls, v):
-		if type(v) is int:
+		if isinstance(v, int):
 			return EnumVehicleTypeStr.from_int(v).value
 		else:
 			return v
@@ -684,7 +684,7 @@ class Tank(JSONExportable, JSONImportable):
 
 	@validator('type')
 	def validate_type(cls, v):
-		if type(v) is str:
+		if isinstance(v, str):
 			return EnumVehicleTypeStr(v)
 		else:
 			return v
@@ -692,7 +692,7 @@ class Tank(JSONExportable, JSONImportable):
 
 	@validator('tier', pre=True)
 	def prevalidate_tier(cls, v: Any):
-		if type(v) is str:
+		if isinstance(v, str):
 			return EnumVehicleTier[v.upper()].value
 		else:
 			return v
@@ -700,7 +700,7 @@ class Tank(JSONExportable, JSONImportable):
 
 	@validator('tier')
 	def validate_tier(cls, v):
-		if type(v) is int:
+		if isinstance(v, int):
 			return EnumVehicleTier(v)
 		else:
 			return v
