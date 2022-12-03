@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 from time import time
 from typing import Any, Mapping, Optional, Tuple, ClassVar, TypeVar
 from os.path import basename
@@ -444,29 +444,6 @@ class WoTBlitzReplayJSON(JSONExportable, JSONImportable):
 			raise ValueError(f'Could not store replay ID: {err}')
 
 
-	# @classmethod
-	# async def open(cls, filename: str) -> Optional['WoTBlitzReplayJSON']:
-	# 	"""Open replay JSON file and return WoTBlitzReplayJSON instance"""
-	# 	try:
-	# 		async with aiofiles.open(filename, 'r') as rf:
-	# 			return cls.from_str(await rf.read())
-	# 	except Exception as err:
-	# 		error(f'Error reading replay: {err}')
-	# 	return None
-
-
-	# @classmethod
-	# def from_str(cls, content: str) -> Optional['WoTBlitzReplayJSON']:
-	# 	"""Open replay JSON file and return WoTBlitzReplayJSON instance"""
-	# 	try:
-	# 		return cls.parse_raw(content)
-	# 	except ValidationError as err:
-	# 		error(f'Invalid replay format: {err}')
-	# 	except Exception as err:
-	# 		error(f'Could not read replay: {err}')
-	# 	return None
-
-
 	def get_id(self) -> str | None:
 		try:
 			if self.id is not None:
@@ -731,3 +708,46 @@ class WGApiTankopedia(WGApiWoTBlitz):
 		allow_population_by_field_name = True
 
 
+class WGBlitzRelease(JSONExportable, JSONImportable):
+	release : str
+	launch_date: date | None	= Field(default=None)
+
+	class Config:		
+		allow_mutation 			= True
+		validate_assignment 	= True
+
+	@validator('release')
+	def validate_release(cls, v: str):
+		"""Blitz release is format X.Y[.Z]"""
+		rel: list[int] = cls._release_number(v)
+		return cls._release_str(rel)
+
+
+	@classmethod
+	def _release_number(cls, rel: str) -> list[int]:
+		"""Return release in type list[int]"""
+		return [ int(r) for r in rel.split('.')]
+
+
+	@classmethod
+	def _release_str(cls, rel: list[int]) -> str:
+		"""Create a release string from list[int]"""
+		return '.'.join([ str(r) for r in rel ])
+
+
+	def next(self, launch_date : date|None = None) -> 'WGBlitzRelease':
+		rel : list[int] = self._release_number(self.release)
+		major : int = rel[0]
+		minor : int = rel[1]
+		if minor < 10:
+			minor += 1
+		else:
+			minor = 0
+			major += 1
+		return WGBlitzRelease(release=self._release_str([major, minor]), launch_date=launch_date)
+
+
+	def __eq__(self, __o: object) -> bool:
+		return __o is not None and isinstance(__o, WGBlitzRelease) and \
+					self.release == __o.release
+	
