@@ -161,8 +161,8 @@ class WGApi():
 		return None	
 		
 
-class Tankopedia():
-	_tanks : Dict[int, Dict[str, int | str | bool]] | None = None
+# class Tankopedia():
+# 	_tanks : Dict[int, Dict[str, int | str | bool]] | None = None
 
 
 class Maps():
