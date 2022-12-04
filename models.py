@@ -707,7 +707,7 @@ class WGApiTankopedia(WGApiWoTBlitz):
 		validate_assignment 	= True
 		allow_population_by_field_name = True
 
-
+WGBlitzReleaseSelf = TypeVar('WGBlitzReleaseSelf', bound='WGBlitzRelease')
 class WGBlitzRelease(JSONExportable, JSONImportable):
 	release : str
 	launch_date: date | None	= Field(default=None)
@@ -735,7 +735,7 @@ class WGBlitzRelease(JSONExportable, JSONImportable):
 		return '.'.join([ str(r) for r in rel ])
 
 
-	def next(self, launch_date : date|None = None) -> 'WGBlitzRelease':
+	def next(self: WGBlitzReleaseSelf, **kwargs) -> WGBlitzReleaseSelf:
 		rel : list[int] = self._release_number(self.release)
 		major : int = rel[0]
 		minor : int = rel[1]
@@ -744,10 +744,13 @@ class WGBlitzRelease(JSONExportable, JSONImportable):
 		else:
 			minor = 0
 			major += 1
-		return WGBlitzRelease(release=self._release_str([major, minor]), launch_date=launch_date)
-
+		return type(self)(release=self._release_str([major, minor]), **kwargs)
+		
 
 	def __eq__(self, __o: object) -> bool:
 		return __o is not None and isinstance(__o, WGBlitzRelease) and \
 					self.release == __o.release
+
+	def __str__(self) -> str:
+		return self.release
 	
