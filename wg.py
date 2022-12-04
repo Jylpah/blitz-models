@@ -165,7 +165,7 @@ class WGApi():
 # 	_tanks : Dict[int, Dict[str, int | str | bool]] | None = None
 
 
-class Maps():
+class WoTBlitzMaps():
 	_maps : Dict[str, str] = {
 		"Random": "Random map",
 		"amigosville": "Falls Creek",
