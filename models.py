@@ -12,6 +12,7 @@ from bson.int64 import Int64
 from isort import place_module
 from pydantic import BaseModel, Extra, root_validator, validator, Field, HttpUrl, ValidationError
 from pydantic.utils import ValueItems
+
 from pyutils.utils import CSVExportable, CSVImportable, TXTExportable, TXTImportable, JSONExportable, JSONImportable
 
 TYPE_CHECKING = True
@@ -750,6 +751,7 @@ class WGBlitzRelease(JSONExportable, JSONImportable):
 	def __eq__(self, __o: object) -> bool:
 		return __o is not None and isinstance(__o, WGBlitzRelease) and \
 					self.release == __o.release
+
 
 	def __str__(self) -> str:
 		return self.release
