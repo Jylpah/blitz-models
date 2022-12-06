@@ -13,7 +13,8 @@ from isort import place_module
 from pydantic import BaseModel, Extra, root_validator, validator, Field, HttpUrl, ValidationError
 from pydantic.utils import ValueItems
 
-from pyutils.utils import CSVExportable, CSVImportable, TXTExportable, TXTImportable, JSONExportable, JSONImportable
+from pyutils.utils import CSVExportable, CSVImportable, CSVImportableSelf, \
+							TXTExportable, TXTImportable, JSONExportable, JSONImportable
 
 TYPE_CHECKING = True
 logger = logging.getLogger()
@@ -709,7 +710,7 @@ class WGApiTankopedia(WGApiWoTBlitz):
 		allow_population_by_field_name = True
 
 WGBlitzReleaseSelf = TypeVar('WGBlitzReleaseSelf', bound='WGBlitzRelease')
-class WGBlitzRelease(JSONExportable, JSONImportable):
+class WGBlitzRelease(JSONExportable, JSONImportable, CSVExportable, CSVImportable, TXTExportable):
 	release : str					= Field(default=...)
 	launch_date: datetime | None	= Field(default=None)
 	_export_DB_by_alias			: bool = False
@@ -751,6 +752,37 @@ class WGBlitzRelease(JSONExportable, JSONImportable):
 	def _release_str(cls, rel: list[int]) -> str:
 		"""Create a release string from list[int]"""
 		return '.'.join([ str(r) for r in rel ])
+
+
+	# TXTExportable()
+	def txt_row(self, format : str = '') -> str:
+		"""export data as single row of text"""
+		return self.release
+
+
+	# CSVExportable()
+	def csv_headers(self) -> list[str]:
+		return list(self.dict(exclude_unset=False, by_alias=False).keys())
+
+
+	def csv_row(self) -> dict[str, str | int | float | bool]:
+		res : dict[str, Any] =  self.dict(exclude_unset=False, by_alias=False)
+		if 'launch_date' in res and res['launch_date'] is not None:
+			res['launch_date'] = res['launch_date'].date()
+		return self.clear_none(res)
+
+
+	# # CSVImportable()
+	# @classmethod
+	# def from_csv(cls: type[CSVImportableSelf], row: dict[str, Any]) -> CSVImportableSelf | None:
+	# 	"""Provide CSV row as a dict for csv.DictWriter"""
+	# 	try:
+	# 		row = cls._set_field_types(row)
+	# 		debug(str(row))
+	# 		return cls.parse_obj(row)
+	# 	except Exception as err:
+	# 		error(f'Could not parse row ({row}): {err}')
+	# 	return None
 
 
 	def next(self: WGBlitzReleaseSelf, **kwargs) -> WGBlitzReleaseSelf:
