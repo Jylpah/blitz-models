@@ -710,12 +710,15 @@ class WGApiTankopedia(WGApiWoTBlitz):
 
 WGBlitzReleaseSelf = TypeVar('WGBlitzReleaseSelf', bound='WGBlitzRelease')
 class WGBlitzRelease(JSONExportable, JSONImportable):
-	release : str
-	launch_date: date | None	= Field(default=None)
+	release : str					= Field(default=...)
+	launch_date: datetime | None	= Field(default=None)
+	_export_DB_by_alias			: bool = False
 
 	class Config:		
 		allow_mutation 			= True
 		validate_assignment 	= True
+		allow_population_by_field_name = True
+		json_encoders 			= { datetime: lambda v: v.date().isoformat() }
 
 	@validator('release')
 	def validate_release(cls, v: str):
@@ -723,6 +726,20 @@ class WGBlitzRelease(JSONExportable, JSONImportable):
 		rel: list[int] = cls._release_number(v)
 		return cls._release_str(rel)
 
+
+	@validator('launch_date', pre=True)
+	def validate_date(cls, d):
+		if d is None:
+			return None
+		elif isinstance(d, str):
+			return datetime.combine(date.fromisoformat(d), datetime.min.time())
+		elif isinstance(d,float):
+			return int(d)
+		elif isinstance(d, datetime):
+			return datetime.combine(d.date(), datetime.min.time())
+		elif isinstance(d, date):
+			return datetime.combine(d, datetime.min.time())
+		
 
 	@classmethod
 	def _release_number(cls, rel: str) -> list[int]:
