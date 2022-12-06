@@ -769,7 +769,7 @@ class WGBlitzRelease(JSONExportable, JSONImportable, CSVExportable, CSVImportabl
 		res : dict[str, Any] =  self.dict(exclude_unset=False, by_alias=False)
 		if 'launch_date' in res and res['launch_date'] is not None:
 			res['launch_date'] = res['launch_date'].date()
-		return self.clear_none(res)
+		return self.clear_None(res)
 
 
 	# # CSVImportable()
