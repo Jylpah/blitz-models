@@ -14,7 +14,10 @@ from pydantic import BaseModel, Extra, root_validator, validator, Field, HttpUrl
 from pydantic.utils import ValueItems
 
 from pyutils.utils import CSVExportable, CSVImportable, CSVImportableSelf, \
-							TXTExportable, TXTImportable, JSONExportable, JSONImportable
+							TXTExportable, TXTImportable, JSONExportable, \
+							JSONImportable, TypeExcludeDict, epoch_now
+
+
 
 TYPE_CHECKING = True
 logger = logging.getLogger()
@@ -245,6 +248,102 @@ class EnumNation(IntEnum):
 			return f'{self.name}'.capitalize()
 
 
+WGBlitzReleaseSelf = TypeVar('WGBlitzReleaseSelf', bound='WGBlitzRelease')
+class WGBlitzRelease(JSONExportable, JSONImportable, CSVExportable, CSVImportable, TXTExportable):
+	release : str					= Field(default=...)
+	launch_date: datetime | None	= Field(default=None)
+	_export_DB_by_alias			: bool = False
+
+	class Config:		
+		allow_mutation 			= True
+		validate_assignment 	= True
+		allow_population_by_field_name = True
+		json_encoders 			= { datetime: lambda v: v.date().isoformat() }
+
+	@validator('release')
+	def validate_release(cls, v: str):
+		"""Blitz release is format X.Y[.Z]"""
+		rel: list[int] = cls._release_number(v)
+		return cls._release_str(rel)
+
+
+	@validator('launch_date', pre=True)
+	def validate_date(cls, d):
+		if d is None:
+			return None
+		elif isinstance(d, str):
+			return datetime.combine(date.fromisoformat(d), datetime.min.time())
+		elif isinstance(d,float):
+			return int(d)
+		elif isinstance(d, datetime):
+			return datetime.combine(d.date(), datetime.min.time())
+		elif isinstance(d, date):
+			return datetime.combine(d, datetime.min.time())
+		
+
+	@classmethod
+	def _release_number(cls, rel: str) -> list[int]:
+		"""Return release in type list[int]"""
+		return [ int(r) for r in rel.split('.')]
+
+
+	@classmethod
+	def _release_str(cls, rel: list[int]) -> str:
+		"""Create a release string from list[int]"""
+		return '.'.join([ str(r) for r in rel ])
+
+
+	# TXTExportable()
+	def txt_row(self, format : str = '') -> str:
+		"""export data as single row of text"""
+		return self.release
+
+
+	# CSVExportable()
+	def csv_headers(self) -> list[str]:
+		return list(self.dict(exclude_unset=False, by_alias=False).keys())
+
+
+	def csv_row(self) -> dict[str, str | int | float | bool]:
+		res : dict[str, Any] =  self.dict(exclude_unset=False, by_alias=False)
+		if 'launch_date' in res and res['launch_date'] is not None:
+			res['launch_date'] = res['launch_date'].date()
+		return self.clear_None(res)
+
+
+	# # CSVImportable()
+	# @classmethod
+	# def from_csv(cls: type[CSVImportableSelf], row: dict[str, Any]) -> CSVImportableSelf | None:
+	# 	"""Provide CSV row as a dict for csv.DictWriter"""
+	# 	try:
+	# 		row = cls._set_field_types(row)
+	# 		debug(str(row))
+	# 		return cls.parse_obj(row)
+	# 	except Exception as err:
+	# 		error(f'Could not parse row ({row}): {err}')
+	# 	return None
+
+
+	def next(self: WGBlitzReleaseSelf, **kwargs) -> WGBlitzReleaseSelf:
+		rel : list[int] = self._release_number(self.release)
+		major : int = rel[0]
+		minor : int = rel[1]
+		if minor < 10:
+			minor += 1
+		else:
+			minor = 0
+			major += 1
+		return type(self)(release=self._release_str([major, minor]), **kwargs)
+		
+
+	def __eq__(self, __o: object) -> bool:
+		return __o is not None and isinstance(__o, WGBlitzRelease) and \
+					self.release == __o.release
+
+
+	def __str__(self) -> str:
+		return self.release
+	
 class WoTBlitzReplayAchievement(BaseModel):
 	t: int
 	v: int
@@ -569,19 +668,28 @@ class WGtankStatAll(BaseModel):
 
 
 class WGtankStat(JSONExportable, JSONImportable):
-	id					: ObjectId | None = Field(None, alias='_id')
-	_region				: Region | None = Field(None, alias='r')
+	id					: ObjectId | None = Field(default=None, alias='_id')
+	region				: Region | None = Field(default=None, alias='r')
 	all					: WGtankStatAll = Field(..., alias='s')
 	last_battle_time	: int			= Field(..., alias='lb')
 	account_id			: int			= Field(..., alias='a')
 	tank_id				: int 			= Field(..., alias='t')
 	mark_of_mastery		: int 			= Field(..., alias='m')
 	battle_life_time	: int 			= Field(..., alias='l')
+	release 			: str  | None 	= Field(default=None, alias='u')
 	max_xp				: int  | None
 	in_garage_updated	: int  | None
 	max_frags			: int  | None
 	frags				: int  | None
 	in_garage 			: bool | None
+
+	_exclude_export_DB_fields	: ClassVar[Optional[TypeExcludeDict]] = {'max_frags': True, 'frags' : True, 
+																		'max_xp': True, 'in_garage': True, 
+																		'in_garage_updated': True 
+																		}
+	_exclude_export_src_fields	: ClassVar[Optional[TypeExcludeDict]] = {'region': True } 
+	# _include_export_DB_fields	: ClassVar[Optional[TypeExcludeDict]] = None
+	# _include_export_src_fields	: ClassVar[Optional[TypeExcludeDict]] = None
 
 	class Config:
 		arbitrary_types_allowed = True
@@ -596,13 +704,22 @@ class WGtankStat(JSONExportable, JSONImportable):
 		return ObjectId(hex(account_id)[2:].zfill(10) + hex(tank_id)[2:].zfill(6) + hex(last_battle_time)[2:].zfill(8))
 
 
+	@validator('last_battle_time', pre=True)
+	def validate_lbt(cls, v: int) -> int:
+		now : int = epoch_now()
+		if v > now + 36000:
+			return now
+		else:
+			return v
+
+
 	@root_validator(pre=False)
 	def set_id(cls, values : dict[str, Any]) -> dict[str, Any]:
 		try:
 			if values['id'] is None:
 				values['id'] = cls.mk_id(values['account_id'], values['last_battle_time'], values['tank_id'])				
-			if '_region' not in values or values['_region'] is None:
-				values['_region'] = Region.from_id(values['account_id'])
+			if 'region' not in values or values['region'] is None:
+				values['region'] = Region.from_id(values['account_id'])
 			return values
 		except Exception as err:
 			raise ValueError(f'Could not store _id: {err}')
@@ -708,100 +825,3 @@ class WGApiTankopedia(WGApiWoTBlitz):
 		allow_mutation 			= True
 		validate_assignment 	= True
 		allow_population_by_field_name = True
-
-WGBlitzReleaseSelf = TypeVar('WGBlitzReleaseSelf', bound='WGBlitzRelease')
-class WGBlitzRelease(JSONExportable, JSONImportable, CSVExportable, CSVImportable, TXTExportable):
-	release : str					= Field(default=...)
-	launch_date: datetime | None	= Field(default=None)
-	_export_DB_by_alias			: bool = False
-
-	class Config:		
-		allow_mutation 			= True
-		validate_assignment 	= True
-		allow_population_by_field_name = True
-		json_encoders 			= { datetime: lambda v: v.date().isoformat() }
-
-	@validator('release')
-	def validate_release(cls, v: str):
-		"""Blitz release is format X.Y[.Z]"""
-		rel: list[int] = cls._release_number(v)
-		return cls._release_str(rel)
-
-
-	@validator('launch_date', pre=True)
-	def validate_date(cls, d):
-		if d is None:
-			return None
-		elif isinstance(d, str):
-			return datetime.combine(date.fromisoformat(d), datetime.min.time())
-		elif isinstance(d,float):
-			return int(d)
-		elif isinstance(d, datetime):
-			return datetime.combine(d.date(), datetime.min.time())
-		elif isinstance(d, date):
-			return datetime.combine(d, datetime.min.time())
-		
-
-	@classmethod
-	def _release_number(cls, rel: str) -> list[int]:
-		"""Return release in type list[int]"""
-		return [ int(r) for r in rel.split('.')]
-
-
-	@classmethod
-	def _release_str(cls, rel: list[int]) -> str:
-		"""Create a release string from list[int]"""
-		return '.'.join([ str(r) for r in rel ])
-
-
-	# TXTExportable()
-	def txt_row(self, format : str = '') -> str:
-		"""export data as single row of text"""
-		return self.release
-
-
-	# CSVExportable()
-	def csv_headers(self) -> list[str]:
-		return list(self.dict(exclude_unset=False, by_alias=False).keys())
-
-
-	def csv_row(self) -> dict[str, str | int | float | bool]:
-		res : dict[str, Any] =  self.dict(exclude_unset=False, by_alias=False)
-		if 'launch_date' in res and res['launch_date'] is not None:
-			res['launch_date'] = res['launch_date'].date()
-		return self.clear_None(res)
-
-
-	# # CSVImportable()
-	# @classmethod
-	# def from_csv(cls: type[CSVImportableSelf], row: dict[str, Any]) -> CSVImportableSelf | None:
-	# 	"""Provide CSV row as a dict for csv.DictWriter"""
-	# 	try:
-	# 		row = cls._set_field_types(row)
-	# 		debug(str(row))
-	# 		return cls.parse_obj(row)
-	# 	except Exception as err:
-	# 		error(f'Could not parse row ({row}): {err}')
-	# 	return None
-
-
-	def next(self: WGBlitzReleaseSelf, **kwargs) -> WGBlitzReleaseSelf:
-		rel : list[int] = self._release_number(self.release)
-		major : int = rel[0]
-		minor : int = rel[1]
-		if minor < 10:
-			minor += 1
-		else:
-			minor = 0
-			major += 1
-		return type(self)(release=self._release_str([major, minor]), **kwargs)
-		
-
-	def __eq__(self, __o: object) -> bool:
-		return __o is not None and isinstance(__o, WGBlitzRelease) and \
-					self.release == __o.release
-
-
-	def __str__(self) -> str:
-		return self.release
-	
