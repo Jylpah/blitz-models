@@ -814,7 +814,7 @@ class Tank(JSONExportable, JSONImportable):
 		use_enum_values			= True
 
 
-class PlayerAchievements(JSONExportable):
+class WGplayerAchievements(JSONExportable):
 	
 
 	class Config:		
@@ -823,7 +823,7 @@ class PlayerAchievements(JSONExportable):
 		allow_population_by_field_name = True
 		extra 					= Extra.allow
 
-class PlayerAchievementsMaxSeries(JSONExportable):
+class WGplayerAchievementsMaxSeries(JSONExportable):
 	jointVictory 	: int = Field(default=0, alias='jv')
 	account_id		: int | None = Field(default=None, alias='a')	
 	region			: Region | None = Field(default=None, alias='r')
@@ -837,9 +837,9 @@ class PlayerAchievementsMaxSeries(JSONExportable):
 		extra 				= Extra.allow
 		
 
-class PlayerAchievementsMain(JSONExportable):
-	achievements 	: PlayerAchievements | None = Field(default=None, alias='a')
-	max_series		: PlayerAchievementsMaxSeries | None = Field(default=None, alias='m')
+class WGplayerAchievementsMain(JSONExportable):
+	achievements 	: WGplayerAchievements | None = Field(default=None, alias='a')
+	max_series		: WGplayerAchievementsMaxSeries | None = Field(default=None, alias='m')
 
 	class Config:		
 		allow_mutation 			= True
@@ -848,7 +848,7 @@ class PlayerAchievementsMain(JSONExportable):
 
 
 class WGApiWoTBlitzPlayerAchievements(WGApiWoTBlitz):	
-	data	: dict[str, PlayerAchievementsMain] | None = Field(default=None, alias='d')
+	data	: dict[str, WGplayerAchievementsMain] | None = Field(default=None, alias='d')
 
 	class Config:		
 		allow_mutation 			= True
@@ -856,8 +856,8 @@ class WGApiWoTBlitzPlayerAchievements(WGApiWoTBlitz):
 		allow_population_by_field_name = True
 
 
-	def get_max_series(self) -> list[PlayerAchievementsMaxSeries]:
-		res : list[PlayerAchievementsMaxSeries] = list()
+	def get_max_series(self) -> list[WGplayerAchievementsMaxSeries]:
+		res : list[WGplayerAchievementsMaxSeries] = list()
 		try:			
 			if self.data is None:
 				return res
@@ -865,7 +865,7 @@ class WGApiWoTBlitzPlayerAchievements(WGApiWoTBlitz):
 				try:
 					if pam.max_series is None:
 						continue
-					ms : PlayerAchievementsMaxSeries = pam.max_series
+					ms : WGplayerAchievementsMaxSeries = pam.max_series
 					account_id = int(key)
 					ms.account_id = account_id
 					if (region := Region.from_id(account_id)) is not None:
