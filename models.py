@@ -250,9 +250,9 @@ class EnumNation(IntEnum):
 
 WGBlitzReleaseSelf = TypeVar('WGBlitzReleaseSelf', bound='WGBlitzRelease')
 class WGBlitzRelease(JSONExportable, JSONImportable, CSVExportable, CSVImportable, TXTExportable):
-	release : str					= Field(default=...)
+	release : str					= Field(default=..., alias='_id')
 	launch_date: datetime | None	= Field(default=None)
-	_export_DB_by_alias			: bool = False
+	#_export_DB_by_alias			: bool = False
 
 	class Config:		
 		allow_mutation 			= True
@@ -524,7 +524,7 @@ class WoTBlitzReplayJSON(JSONExportable, JSONImportable):
 
 	class Config:
 		arbitrary_types_allowed = True
-		json_encoders = { ObjectId: str }
+		json_encoders 			= { ObjectId: str }
 		allow_mutation 			= True
 		validate_assignment 	= True
 		allow_population_by_field_name = True
@@ -807,15 +807,94 @@ class Tank(JSONExportable, JSONImportable):
 		return Tank(tank_id=id)
 
 
-	# def get_tank_id(nation: str, tank_id : int) -> int:
-	# 	return (tank_id << 8) + (wg.NATION_ID[nation] << 4) + 1 
-
-
 	class Config:		
 		allow_mutation 			= True
 		validate_assignment 	= True
 		allow_population_by_field_name = True
 		use_enum_values			= True
+
+
+class PlayerAchievements(JSONExportable):
+	
+
+	class Config:		
+		allow_mutation 			= True
+		validate_assignment 	= True
+		allow_population_by_field_name = True
+		extra 					= Extra.allow
+
+class PlayerAchievementsMaxSeries(JSONExportable):
+	jointVictory 	: int = Field(default=0, alias='jv')
+	account_id		: int | None = Field(default=None, alias='a')	
+	region			: Region | None = Field(default=None, alias='r')
+
+	_include_export_DB_fields	: ClassVar[Optional[TypeExcludeDict]] = { 'jointVictory': True, 'account_id': True, 'region': True }
+
+	class Config:		
+		allow_mutation 			= True
+		validate_assignment 	= True
+		allow_population_by_field_name = True
+		extra 				= Extra.allow
+		
+
+class PlayerAchievementsMain(JSONExportable):
+	achievements 	: PlayerAchievements | None = Field(default=None, alias='a')
+	max_series		: PlayerAchievementsMaxSeries | None = Field(default=None, alias='m')
+
+	class Config:		
+		allow_mutation 			= True
+		validate_assignment 	= True
+		allow_population_by_field_name = True
+
+
+class WGApiWoTBlitzPlayerAchievements(WGApiWoTBlitz):	
+	data	: dict[str, PlayerAchievementsMain] | None = Field(default=None, alias='d')
+
+	class Config:		
+		allow_mutation 			= True
+		validate_assignment 	= True
+		allow_population_by_field_name = True
+
+
+	def get_max_series(self) -> list[PlayerAchievementsMaxSeries]:
+		res : list[PlayerAchievementsMaxSeries] = list()
+		try:			
+			if self.data is None:
+				return res
+			for key, pam in self.data.items():
+				try:
+					if pam.max_series is None:
+						continue
+					ms : PlayerAchievementsMaxSeries = pam.max_series
+					account_id = int(key)
+					ms.account_id = account_id
+					if (region := Region.from_id(account_id)) is not None:
+						ms.region = region
+					res.append(ms)
+				except Exception as err:
+					error(f"Unknown error parsing 'max_series': {err}")
+		except Exception as err:
+			error(f"Error getting 'max_series': {err}")
+		return res
+
+
+	def set_regions(self, region: Region) -> None:
+		try:			
+			if self.data is None:
+				return None
+			for key, pam in self.data.items():
+				try:
+					if pam.max_series is None:
+						continue
+					else:
+						pam.max_series.region = region
+						self.data[key].max_series = pam.max_series
+				except Exception as err:
+					error(f"Unknown error: {err}")
+		except Exception as err:
+			error(f"Error getting 'max_series': {err}")
+		return None
+
 
 
 class WGApiTankopedia(WGApiWoTBlitz):
