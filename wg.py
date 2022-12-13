@@ -5,7 +5,7 @@ from collections import defaultdict
 from pydantic import BaseModel
 from alive_progress import alive_bar		# type: ignore
 
-from .models import Region, WGApiWoTBlitzTankStats, WGtankStat
+from .models import Region, WGApiWoTBlitzTankStats, WGtankStat, WGApiWoTBlitzPlayerAchievements, WGplayerAchievementsMaxSeries
 from pyutils.throttledclientsession import ThrottledClientSession
 from pyutils.utils import get_url_JSON_model, get_url
 
@@ -137,11 +137,8 @@ class WGApi():
 			url : str = server_url[0]
 			region = server_url[1]
 
-			resp : BaseModel | None = await get_url_JSON_model(self.session[region.value], url, resp_model=WGApiWoTBlitzTankStats)
-			if resp is None:
-				return None
-			else:
-				return cast(WGApiWoTBlitzTankStats, resp)
+			return await get_url_JSON_model(self.session[region.value], url, resp_model=WGApiWoTBlitzTankStats)
+			
 		except Exception as err:
 			error(f'Failed to fetch tank stats for account_id: {account_id}: {err}')
 		return None	
@@ -160,6 +157,71 @@ class WGApi():
 			debug(f'Failed to fetch tank stats for account_id: {account_id}: {err}')
 		return None	
 		
+
+	def get_player_achievements_url(self, account_ids : list[int], 
+									region: Region, 
+									fields: list[str] = list()) -> Tuple[str, Region] | None:
+		assert type(account_ids) is list, "account_ids must be list"
+		assert type(fields) is list,	"fields must be a list"
+		assert type(region) is Region,	"region must be type of Region"
+		try:
+			URL_WG_PLAYER_ACHIEVEMENTS: str = 'account/achievements/'
+
+			account_region : Region | None = Region.from_id(account_ids[0])
+			
+			if account_region is None:
+				raise ValueError('Could not determine region for account_id')
+			if account_region != region:
+				raise ValueError(f'account_id {account_ids[0]} does not match region {region.name}')
+						
+			server : str | None = self.get_server_url(account_region)
+			if server is None:
+				raise ValueError(f'No API server for region {account_region.value}')
+			
+			account_str: str = '%2C'.join([ str(a) for a in account_ids] )
+			
+			field_str : str = ''
+			if len(fields) > 0:
+				field_str = '&fields=' + '%2C'.join(fields)
+
+			return f'{server}{URL_WG_PLAYER_ACHIEVEMENTS}?application_id={self.app_id}&account_id={account_str}{field_str}', account_region
+		except Exception as err:
+			debug(f'Failed to form url: {err}')
+		return None
+
+	
+	async def get_player_achievements_full(self, account_ids : list[int], region: Region,
+											fields: list[str] = list() ) -> WGApiWoTBlitzPlayerAchievements | None:
+		assert self.session is not None, "session must be initialized"
+		try:
+			server_url : Tuple[str, Region] | None = self.get_player_achievements_url(account_ids=account_ids, region=region, fields=fields)
+			if server_url is None:
+				raise ValueError(f'No player achievements available')
+			url : str = server_url[0]
+			region = server_url[1]
+
+			return await get_url_JSON_model(self.session[region.value], url, resp_model=WGApiWoTBlitzPlayerAchievements)
+			
+		except Exception as err:
+			error(f'Failed to fetch player achievements: {err}')
+		return None	
+
+	
+	async def get_player_achievements(self, account_ids : list[int], 
+										region: Region,
+										fields: list[str] = list() ) -> list[WGplayerAchievementsMaxSeries] | None:
+		assert self.session is not None, "session must be initialized"
+		try:
+			resp : WGApiWoTBlitzPlayerAchievements | None 
+			resp = await self.get_player_achievements_full(account_ids=account_ids, region=region, fields=fields)
+			if resp is None or resp.data is None:
+				return None
+			else:
+				resp.set_regions(region)
+				return resp.get_max_series()
+		except Exception as err:
+			debug(f'Failed to fetch player achievements: {err}')
+		return None	
 
 # class Tankopedia():
 # 	_tanks : Dict[int, Dict[str, int | str | bool]] | None = None
