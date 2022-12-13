@@ -35,7 +35,7 @@ class WGApi():
 				rate_limit: float = 10):
 		assert WG_app_id is not None, "WG App ID must not be None"
 		assert rate_limit is not None, "rate_limit must not be None"
-
+		debug(f'rate_limit: {rate_limit}')
 		self.app_id 	: str = WG_app_id
 		self.session : Dict[str, ThrottledClientSession] | None = None
 
