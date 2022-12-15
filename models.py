@@ -824,11 +824,17 @@ class WGplayerAchievements(JSONExportable):
 		extra 					= Extra.allow
 
 class WGplayerAchievementsMaxSeries(JSONExportable):
-	jointVictory 	: int = Field(default=0, alias='jv')
-	account_id		: int | None = Field(default=None, alias='a')	
+	jointVictory 	: int 			= Field(default=0, alias='jv')
+	account_id		: int | None 	= Field(default=None, alias='a')	
 	region			: Region | None = Field(default=None, alias='r')
+	release 		: str  | None 	= Field(default=None, alias='u')
+	added			: int 			= Field(default=epoch_now(), alias='t')
 
-	_include_export_DB_fields	: ClassVar[Optional[TypeExcludeDict]] = { 'jointVictory': True, 'account_id': True, 'region': True }
+	_include_export_DB_fields	: ClassVar[Optional[TypeExcludeDict]] = { 'jointVictory': True, 
+																		'account_id': True, 
+																		'region': True, 
+																		'release': True 
+																		}
 
 	class Config:		
 		allow_mutation 			= True
@@ -836,6 +842,16 @@ class WGplayerAchievementsMaxSeries(JSONExportable):
 		allow_population_by_field_name = True
 		extra 				= Extra.allow
 		
+
+	@root_validator
+	def set_region(cls, values: dict) -> dict:
+		try:
+			if values['region'] is None and values['account'] is not None:
+				values['region'] = Region.from_id(values['account'])
+		except:
+			pass
+		return values
+
 
 class WGplayerAchievementsMain(JSONExportable):
 	achievements 	: WGplayerAchievements | None = Field(default=None, alias='a')
@@ -868,8 +884,9 @@ class WGApiWoTBlitzPlayerAchievements(WGApiWoTBlitz):
 					ms : WGplayerAchievementsMaxSeries = pam.max_series
 					account_id = int(key)
 					ms.account_id = account_id
-					if (region := Region.from_id(account_id)) is not None:
-						ms.region = region
+					if ms.region is None:
+						if (region := Region.from_id(account_id)) is not None:
+							ms.region = region
 					res.append(ms)
 				except Exception as err:
 					error(f"Unknown error parsing 'max_series': {err}")
@@ -894,7 +911,6 @@ class WGApiWoTBlitzPlayerAchievements(WGApiWoTBlitz):
 		except Exception as err:
 			error(f"Error getting 'max_series': {err}")
 		return None
-
 
 
 class WGApiTankopedia(WGApiWoTBlitz):
