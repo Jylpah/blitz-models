@@ -68,7 +68,7 @@ class Region(StrEnum):
 		return self == other_region
 
 TypeAccountDict = dict[str, int|bool|Region|None]
-
+AccountSelf = TypeVar('AccountSelf', bound='Account')
 
 class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable, 
 				TXTExportable, TXTImportable):	
@@ -105,6 +105,16 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 			return v
 		else:
 			raise ValueError('time field must be >= 0')
+
+
+	@root_validator(pre=True)
+	def read_account_id(cls, values: dict[str, Any]) -> dict[str, Any]:
+		id = values.get('id')
+		if isinstance(id, str):
+			i, r = id.split(':')
+			values['id'] = int(i)
+			values['region'] = Region(r)
+		return values			
 
 
 	@root_validator(skip_on_failure=True)
@@ -151,6 +161,15 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 			raise ValueError(f'Account {self.id} does not have region defined')
 		return res
 	
+	@classmethod
+	def from_str(cls : type[AccountSelf], account: str) -> AccountSelf:
+		obj : dict[str, Any] = dict()
+		a = account.split(':')
+		obj['id'] = int(a[0])
+		if len(a) > 1:
+			obj['region'] = a[1]
+		return cls.parse_obj(obj)
+
 
 	def __str__(self) -> str:
 		fields : list[str] = [ f for f in self.__fields__.keys() if f != 'id' ]
@@ -261,7 +280,7 @@ class WGBlitzRelease(JSONExportable, JSONImportable, CSVExportable, CSVImportabl
 		json_encoders 			= { datetime: lambda v: v.date().isoformat() }
 
 	@validator('release')
-	def validate_release(cls, v: str):
+	def validate_release(cls, v: str) -> str:
 		"""Blitz release is format X.Y[.Z]"""
 		rel: list[int] = cls._release_number(v)
 		return cls._release_str(rel)
@@ -342,6 +361,10 @@ class WGBlitzRelease(JSONExportable, JSONImportable, CSVExportable, CSVImportabl
 	def __eq__(self, __o: object) -> bool:
 		return __o is not None and isinstance(__o, WGBlitzRelease) and \
 					self.release == __o.release
+	
+
+	def __hash__(self) -> int:
+		return hash((self.release, self.launch_date))
 
 
 	def __str__(self) -> str:
