@@ -253,7 +253,7 @@ class EnumNation(IntEnum):
 WGBlitzReleaseSelf = TypeVar('WGBlitzReleaseSelf', bound='WGBlitzRelease')
 class WGBlitzRelease(JSONExportable, JSONImportable, CSVExportable, CSVImportable, TXTExportable):
 	release : str					= Field(default=..., alias='_id')
-	launch_date: datetime | None	= Field(default=None)
+	launch_date: datetime 			= Field(default=datetime.combine(date.today(), datetime.min.time()))
 	#_export_DB_by_alias			: bool = False
 
 	class Config:		
@@ -271,9 +271,7 @@ class WGBlitzRelease(JSONExportable, JSONImportable, CSVExportable, CSVImportabl
 
 	@validator('launch_date', pre=True)
 	def validate_date(cls, d):
-		if d is None:
-			return None
-		elif isinstance(d, str):
+		if isinstance(d, str):
 			return datetime.combine(date.fromisoformat(d), datetime.min.time())
 		elif isinstance(d,float):
 			return int(d)
@@ -298,6 +296,8 @@ class WGBlitzRelease(JSONExportable, JSONImportable, CSVExportable, CSVImportabl
 	# TXTExportable()
 	def txt_row(self, format : str = '') -> str:
 		"""export data as single row of text"""
+		if format == 'rich':
+			return f"{self.release}\t{self.launch_date.date()}"
 		return self.release
 
 
@@ -308,8 +308,8 @@ class WGBlitzRelease(JSONExportable, JSONImportable, CSVExportable, CSVImportabl
 
 	def csv_row(self) -> dict[str, str | int | float | bool]:
 		res : dict[str, Any] =  self.dict(exclude_unset=False, by_alias=False)
-		if 'launch_date' in res and res['launch_date'] is not None:
-			res['launch_date'] = res['launch_date'].date()
+		# if 'launch_date' in res and res['launch_date'] is not None:
+		# 	res['launch_date'] = res['launch_date'].date()
 		return self.clear_None(res)
 
 
