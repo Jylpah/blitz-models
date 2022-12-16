@@ -33,9 +33,7 @@ class Region(StrEnum):
 	com 	= 'com'
 	asia 	= 'asia'
 	china 	= 'china'
-# #	API		= 'API'
-
-	
+# #	API		= 'API'	
 
 	@classmethod
 	def API_regions(cls) -> set['Region']:
@@ -253,7 +251,7 @@ class EnumNation(IntEnum):
 WGBlitzReleaseSelf = TypeVar('WGBlitzReleaseSelf', bound='WGBlitzRelease')
 class WGBlitzRelease(JSONExportable, JSONImportable, CSVExportable, CSVImportable, TXTExportable):
 	release : str					= Field(default=..., alias='_id')
-	launch_date: datetime 			= Field(default=datetime.combine(date.today(), datetime.min.time()))
+	launch_date: datetime | None	= Field(default=None)
 	#_export_DB_by_alias			: bool = False
 
 	class Config:		
@@ -271,6 +269,8 @@ class WGBlitzRelease(JSONExportable, JSONImportable, CSVExportable, CSVImportabl
 
 	@validator('launch_date', pre=True)
 	def validate_date(cls, d):
+		if d is None:
+			return None
 		if isinstance(d, str):
 			return datetime.combine(date.fromisoformat(d), datetime.min.time())
 		elif isinstance(d,float):
@@ -279,6 +279,7 @@ class WGBlitzRelease(JSONExportable, JSONImportable, CSVExportable, CSVImportabl
 			return datetime.combine(d.date(), datetime.min.time())
 		elif isinstance(d, date):
 			return datetime.combine(d, datetime.min.time())
+		return d
 		
 
 	@classmethod
@@ -296,7 +297,7 @@ class WGBlitzRelease(JSONExportable, JSONImportable, CSVExportable, CSVImportabl
 	# TXTExportable()
 	def txt_row(self, format : str = '') -> str:
 		"""export data as single row of text"""
-		if format == 'rich':
+		if format == 'rich' and self.launch_date is not None:
 			return f"{self.release}\t{self.launch_date.date()}"
 		return self.release
 
