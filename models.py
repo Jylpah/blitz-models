@@ -33,7 +33,9 @@ class Region(StrEnum):
 	com 	= 'com'
 	asia 	= 'asia'
 	china 	= 'china'
-#	API		= 'API'
+# #	API		= 'API'
+
+	
 
 	@classmethod
 	def API_regions(cls) -> set['Region']:
@@ -823,12 +825,14 @@ class WGplayerAchievements(JSONExportable):
 		allow_population_by_field_name = True
 		extra 					= Extra.allow
 
+
 class WGplayerAchievementsMaxSeries(JSONExportable):
-	jointVictory 	: int 			= Field(default=0, alias='jv')
-	account_id		: int | None 	= Field(default=None, alias='a')	
-	region			: Region | None = Field(default=None, alias='r')
-	release 		: str  | None 	= Field(default=None, alias='u')
-	added			: int 			= Field(default=epoch_now(), alias='t')
+	id 			: ObjectId | None	= Field(default=None, alias='_id')
+	jointVictory: int 				= Field(default=0, alias='jv')
+	account_id	: int		 		= Field(default=0, alias='a')	
+	region		: Region | None 	= Field(default=None, alias='r')
+	release 	: str  | None 		= Field(default=None, alias='u')
+	added		: int 				= Field(default=epoch_now(), alias='t')
 
 	_include_export_DB_fields	: ClassVar[Optional[TypeExcludeDict]] = { 'jointVictory': True, 
 																		'account_id': True, 
@@ -840,13 +844,48 @@ class WGplayerAchievementsMaxSeries(JSONExportable):
 		allow_mutation 			= True
 		validate_assignment 	= True
 		allow_population_by_field_name = True
+		arbitrary_types_allowed = True
+		json_encoders 			= { ObjectId: str }
 		extra 				= Extra.allow
-		
+	
+
+	@classmethod
+	def mk_id(cls, account_id : int, region: Region | None, added: int) -> ObjectId:
+		r: int = 0
+		if region is not None:
+			r = list(Region).index(region)
+		return ObjectId(hex(account_id)[2:].zfill(10) + hex(r)[2:].zfill(6) + hex(added)[2:].zfill(8))
+	
+
+	@root_validator
+	def set_region_id(cls, values: dict[str, Any]) -> dict[str, Any]:
+		r: int = 0
+		region : Region | None 	= values['region']
+		account_id : int 		= values['account_id']
+
+		if region is None and account_id > 0:
+			region = Region.from_id(account_id)
+		values['region'] = region
+		values['id'] = cls.mk_id(account_id, region, values['added'])
+		return values
+
+	# @root_validator(pre=False)
+	# def set_id(cls, values : dict[str, Any]) -> dict[str, Any]:
+	# 	try:
+	# 		if values['id'] is None:
+	# 			values['id'] = cls.mk_id(values['account_id'], values['last_battle_time'], values['tank_id'])				
+	# 		if 'region' not in values or values['region'] is None:
+	# 			values['region'] = Region.from_id(values['account_id'])
+	# 		return values
+	# 	except Exception as err:
+	# 		raise ValueError(f'Could not store _id: {err}')
+
+
 
 	@root_validator
 	def set_region(cls, values: dict) -> dict:
 		try:
-			if values['region'] is None and values['account'] is not None:
+			if values['region'] is None and values['account'] > 0:
 				values['region'] = Region.from_id(values['account'])
 		except:
 			pass
