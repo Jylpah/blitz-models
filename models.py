@@ -212,7 +212,6 @@ class EnumVehicleTypeInt(IntEnum):
 		return EnumVehicleTypeStr(t).as_int()
 
 
-
 class EnumVehicleTypeStr(StrEnum):
 	light_tank 		= 'lightTank'
 	medium_tank 	= 'mediumTank'
@@ -700,8 +699,8 @@ class WGtankStat(JSONExportable, JSONImportable):
 	last_battle_time	: int			= Field(..., alias='lb')
 	account_id			: int			= Field(..., alias='a')
 	tank_id				: int 			= Field(..., alias='t')
-	mark_of_mastery		: int 			= Field(..., alias='m')
-	battle_life_time	: int 			= Field(..., alias='l')
+	mark_of_mastery		: int 			= Field(default=0, alias='m')
+	battle_life_time	: int 			= Field(default=0, alias='l')
 	release 			: str  | None 	= Field(default=None, alias='u')
 	max_xp				: int  | None
 	in_garage_updated	: int  | None
