@@ -713,7 +713,7 @@ class WGtankStat(JSONExportable, JSONImportable):
 																		'max_xp': True, 'in_garage': True, 
 																		'in_garage_updated': True 
 																		}
-	_exclude_export_src_fields	: ClassVar[Optional[TypeExcludeDict]] = {'region': True } 
+	_exclude_export_src_fields	: ClassVar[Optional[TypeExcludeDict]] = {'_id': True, 'region': True } 
 	# _include_export_DB_fields	: ClassVar[Optional[TypeExcludeDict]] = None
 	# _include_export_src_fields	: ClassVar[Optional[TypeExcludeDict]] = None
 
@@ -742,8 +742,13 @@ class WGtankStat(JSONExportable, JSONImportable):
 	@root_validator(pre=True)
 	def set_id(cls, values : dict[str, Any]) -> dict[str, Any]:
 		try:
-			if 'id' not in values:
-				values['id'] = cls.mk_id(int(values['account_id']), int(values['last_battle_time']), int(values['tank_id']))
+			debug('starting')
+			debug(f'{values}')
+			if 'id' not in values and '_id' not in values:
+				if 'a' in values:
+					values['_id'] = cls.mk_id(values['a'], values['lb'], values['t'])
+				else:
+					values['id'] = cls.mk_id(values['account_id'], values['last_battle_time'], values['tank_id'])
 			return values
 		except Exception as err:
 			raise ValueError(f'Could not store _id: {err}')
@@ -767,6 +772,7 @@ class WGtankStat(JSONExportable, JSONImportable):
 
 	def __str__(self) -> str:
 		return f'id: {self.id} account_id={self.account_id}:{self.region} tank_id={self.tank_id} last_battle_time={self.last_battle_time}'
+
 
 class WGApiWoTBlitz(BaseModel):
 	status	: str	= Field(default="ok", alias='s')
