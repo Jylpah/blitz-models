@@ -694,7 +694,7 @@ class WGtankStatAll(BaseModel):
 
 
 class WGtankStat(JSONExportable, JSONImportable):
-	id					: ObjectId | None = Field(default=None, alias='_id')
+	id					: ObjectId  	= Field(alias='_id')
 	region				: Region | None = Field(default=None, alias='r')
 	all					: WGtankStatAll = Field(..., alias='s')
 	last_battle_time	: int			= Field(..., alias='lb')
@@ -739,16 +739,25 @@ class WGtankStat(JSONExportable, JSONImportable):
 			return v
 
 
-	@root_validator(pre=False)
+	@root_validator(pre=True)
 	def set_id(cls, values : dict[str, Any]) -> dict[str, Any]:
 		try:
-			if values['id'] is None:
-				values['id'] = cls.mk_id(values['account_id'], values['last_battle_time'], values['tank_id'])				
+			if 'id' not in values:
+				values['id'] = cls.mk_id(int(values['account_id']), int(values['last_battle_time']), int(values['tank_id']))
+			return values
+		except Exception as err:
+			raise ValueError(f'Could not store _id: {err}')
+
+	
+	@root_validator(pre=False)
+	def set_region(cls, values : dict[str, Any]) -> dict[str, Any]:
+		try:
 			if 'region' not in values or values['region'] is None:
 				values['region'] = Region.from_id(values['account_id'])
 			return values
 		except Exception as err:
-			raise ValueError(f'Could not store _id: {err}')
+			raise ValueError(f'Could not set region: {err}')
+
 
 
 	@validator('max_frags', 'frags', 'max_xp', 'in_garage', 'in_garage_updated')
