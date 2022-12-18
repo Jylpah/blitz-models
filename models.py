@@ -1,6 +1,6 @@
 from datetime import datetime, date
 from time import time
-from typing import Any, Mapping, Optional, Tuple, ClassVar, TypeVar
+from typing import Any, Mapping, Optional, Tuple, ClassVar, TypeVar, cast
 from os.path import basename
 from enum import Enum, IntEnum, StrEnum
 from collections import defaultdict
@@ -120,7 +120,7 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 	@root_validator(skip_on_failure=True)
 	def set_region(cls, values: TypeAccountDict) -> TypeAccountDict:
 		i = values.get('id')
-		assert isinstance(i, int), f'_id has to be int, was: {i} : {type(i)}'
+		assert isinstance(i, int), f'_id has to be int'
 		if values.get('region') is None:
 			# set default regions, but do not change region if set
 			values['region'] = Region.from_id(i)
@@ -742,7 +742,7 @@ class WGtankStat(JSONExportable, JSONImportable):
 	def set_id(cls, values : dict[str, Any]) -> dict[str, Any]:
 		try:
 			debug('starting')
-			debug(f'{values}')
+			# debug(f'{values}')
 			if 'id' not in values and '_id' not in values:
 				if 'a' in values:
 					values['_id'] = cls.mk_id(values['a'], values['lb'], values['t'])

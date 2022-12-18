@@ -2,12 +2,8 @@ import logging
 from typing import Dict, Tuple, cast
 from collections import defaultdict
 
-from pydantic import BaseModel
-from alive_progress import alive_bar		# type: ignore
-
 from .models import Region, WGApiWoTBlitzTankStats, WGtankStat, WGApiWoTBlitzPlayerAchievements, WGplayerAchievementsMaxSeries
-from pyutils.throttledclientsession import ThrottledClientSession
-from pyutils.utils import get_url_JSON_model, get_url
+from pyutils import ThrottledClientSession, get_url_JSON_model
 
 TYPE_CHECKING = True
 logger = logging.getLogger()
