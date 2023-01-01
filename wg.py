@@ -156,23 +156,18 @@ class WGApi():
 
 	def get_player_achievements_url(self, account_ids : list[int], 
 									region: Region, 
-									fields: list[str] = list()) -> Tuple[str, Region] | None:
-		assert type(account_ids) is list, "account_ids must be list"
-		assert type(fields) is list,	"fields must be a list"
-		assert type(region) is Region,	"region must be type of Region"
-		try:
-			URL_WG_PLAYER_ACHIEVEMENTS: str = 'account/achievements/'
+									fields: list[str] = list()) -> str | None:
+		# assert type(account_ids) is list, "account_ids must be list"
+		# assert type(fields) is list,	"fields must be a list"
+		# assert type(region) is Region,	"region must be type of Region"
 
-			account_region : Region | None = Region.from_id(account_ids[0])
-			
-			if account_region is None:
-				raise ValueError('Could not determine region for account_id')
-			if account_region != region:
-				raise ValueError(f'account_id {account_ids[0]} does not match region {region.name}')
-						
-			server : str | None = self.get_server_url(account_region)
+		URL_WG_PLAYER_ACHIEVEMENTS: str = 'account/achievements/'
+
+		try:
+			debug(f'starting, account_ids={account_ids}, region={region}')
+			server : str | None = self.get_server_url(region)
 			if server is None:
-				raise ValueError(f'No API server for region {account_region.value}')
+				raise ValueError(f'No API server for region {region}')
 			
 			account_str: str = '%2C'.join([ str(a) for a in account_ids] )
 			
@@ -180,7 +175,7 @@ class WGApi():
 			if len(fields) > 0:
 				field_str = '&fields=' + '%2C'.join(fields)
 
-			return f'{server}{URL_WG_PLAYER_ACHIEVEMENTS}?application_id={self.app_id}&account_id={account_str}{field_str}', account_region
+			return f'{server}{URL_WG_PLAYER_ACHIEVEMENTS}?application_id={self.app_id}&account_id={account_str}{field_str}'
 		except Exception as err:
 			debug(f'Failed to form url: {err}')
 		return None
@@ -190,12 +185,10 @@ class WGApi():
 											fields: list[str] = list() ) -> WGApiWoTBlitzPlayerAchievements | None:
 		assert self.session is not None, "session must be initialized"
 		try:
-			server_url : Tuple[str, Region] | None = self.get_player_achievements_url(account_ids=account_ids, region=region, fields=fields)
-			if server_url is None:
+			url : str | None
+			if (url := self.get_player_achievements_url(account_ids=account_ids, region=region, fields=fields)) is None:
 				raise ValueError(f'No player achievements available')
-			url : str = server_url[0]
-			region = server_url[1]
-
+			
 			return await get_url_JSON_model(self.session[region.value], url, resp_model=WGApiWoTBlitzPlayerAchievements)
 			
 		except Exception as err:
