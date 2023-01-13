@@ -1,6 +1,7 @@
 import logging
 from typing import Dict, Tuple, cast
 from collections import defaultdict
+from aiohttp import ClientTimeout
 
 from .models import Region, WGApiWoTBlitzTankStats, WGtankStat, WGApiWoTBlitzPlayerAchievements, WGplayerAchievementsMaxSeries
 from pyutils import ThrottledClientSession, get_url_JSON_model
@@ -39,7 +40,10 @@ class WGApi():
 			headers = {'Accept-Encoding': 'gzip, deflate'} 	
 			self.session  = dict()
 			for region in Region.API_regions():
-				self.session[region.value] = ThrottledClientSession(rate_limit=rate_limit, headers=headers)
+				timeout = ClientTimeout(total=5)
+				self.session[region.value] = ThrottledClientSession(rate_limit=rate_limit, 
+																	headers=headers, 
+																	timeout=timeout)
 			debug('WG aiohttp session initiated')            
 		else:			
 			debug('WG aiohttp session NOT initiated')
@@ -60,20 +64,20 @@ class WGApi():
 		"""Return dict of stats per server"""		
 		try:
 			if self.session is not None:
-				stats : dict[str, dict[str, float]] = dict()
+				# stats : dict[str, dict[str, float]] = dict()
 				totals : defaultdict[str, float] = defaultdict(float)
-				for region in self.session:
+				for region in self.session.keys():
 					server_stats : dict[str, float] = self.session[region].stats_dict
 					for stat in server_stats:
 						totals[stat] += server_stats[stat]
-					stats[region] = server_stats
-				stats['Total'] = totals
+					# stats[region] = server_stats
+				# stats['Total'] = totals
 
 				res : dict[str, str] = dict()
-				for region in self.session:
+				for region in self.session.keys():
 					res[region] = self.session[region].stats
-				res['Total'] = ThrottledClientSession.print_stats(stats['Total'])	
-				return dict(res)
+				res['Total'] = ThrottledClientSession.print_stats(totals)	
+				return res
 		except Exception as err:
 			error(f'{err}')
 		return None
