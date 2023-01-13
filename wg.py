@@ -63,7 +63,7 @@ class WGApi():
 				stats : dict[str, dict[str, float]] = dict()
 				totals : defaultdict[str, float] = defaultdict(float)
 				for region in self.session:
-					server_stats : dict[str, float] = self.session[region].get_stats()
+					server_stats : dict[str, float] = self.session[region].stats_dict
 					for stat in server_stats:
 						totals[stat] += server_stats[stat]
 					stats[region] = server_stats
@@ -71,7 +71,7 @@ class WGApi():
 
 				res : dict[str, str] = dict()
 				for region in self.session:
-					res[region] = self.session[region].get_stats_str()
+					res[region] = self.session[region].stats
 				res['Total'] = ThrottledClientSession.print_stats(stats['Total'])	
 				return dict(res)
 		except Exception as err:
