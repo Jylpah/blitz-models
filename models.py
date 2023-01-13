@@ -741,7 +741,7 @@ class WGtankStat(JSONExportable, JSONImportable):
 	@root_validator(pre=True)
 	def set_id(cls, values : dict[str, Any]) -> dict[str, Any]:
 		try:
-			debug('starting')
+			# debug('starting')
 			# debug(f'{values}')
 			if 'id' not in values and '_id' not in values:
 				if 'a' in values:
