@@ -2,6 +2,7 @@ import logging
 from typing import Dict, Tuple, cast
 from collections import defaultdict
 from aiohttp import ClientTimeout
+from urllib.parse import quote
 
 from .models import Region, WGApiWoTBlitzTankStats, WGtankStat, WGApiWoTBlitzPlayerAchievements, WGplayerAchievementsMaxSeries
 from pyutils import ThrottledClientSession, get_url_JSON_model
@@ -93,7 +94,7 @@ class WGApi():
 		return None
 
 	
-	def tank_stats_get_url(self, account_id : int , region: Region, 
+	def get_tank_stats_url(self, account_id : int , region: Region, 
 							tank_ids: list[int] = [], fields: list[str] = []) -> Tuple[str, Region] | None:
 		assert type(account_id) is int, "account_id must be int"
 		assert type(tank_ids) is list,	"tank_ids must be a list"
@@ -115,11 +116,11 @@ class WGApi():
 			
 			tank_id_str : str = ''
 			if len(tank_ids) > 0:
-				tank_id_str = '&tank_id=' + '%2C'.join([ str(x) for x in tank_ids])
+				tank_id_str = '&tank_id=' + quote(','.join([ str(x) for x in tank_ids]))
 			
 			field_str : str = ''
 			if len(fields) > 0:
-				field_str = '&fields=' + '%2C'.join(fields)
+				field_str = '&fields=' + quote(','.join(fields))
 
 			return f'{server}{URL_WG_TANK_STATS}?application_id={self.app_id}&account_id={account_id}{tank_id_str}{field_str}', account_region
 		except Exception as err:
@@ -131,7 +132,7 @@ class WGApi():
 				tank_ids: list[int] = [], fields: list[str] = [] ) -> WGApiWoTBlitzTankStats | None:
 		assert self.session is not None, "session must be initialized"
 		try:
-			server_url : Tuple[str, Region] | None = self.tank_stats_get_url(account_id=account_id, region=region, tank_ids=tank_ids, fields=fields)
+			server_url : Tuple[str, Region] | None = self.get_tank_stats_url(account_id=account_id, region=region, tank_ids=tank_ids, fields=fields)
 			if server_url is None:
 				raise ValueError(f'No tank stats available')
 			url : str = server_url[0]
@@ -193,7 +194,7 @@ class WGApi():
 			url : str | None
 			if (url := self.get_player_achievements_url(account_ids=account_ids, region=region, fields=fields)) is None:
 				raise ValueError(f'No player achievements available')
-			
+			debug(f'URL: {url}')
 			return await get_url_JSON_model(self.session[region.value], url, resp_model=WGApiWoTBlitzPlayerAchievements)
 			
 		except Exception as err:
