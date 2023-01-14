@@ -40,7 +40,7 @@ class WGApi():
 			headers = {'Accept-Encoding': 'gzip, deflate'} 	
 			self.session  = dict()
 			for region in Region.API_regions():
-				timeout = ClientTimeout(total=5)
+				timeout = ClientTimeout(total=10)
 				self.session[region.value] = ThrottledClientSession(rate_limit=rate_limit, 
 																	headers=headers, 
 																	timeout=timeout)
