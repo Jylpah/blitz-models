@@ -172,13 +172,14 @@ class WGApi():
 			server : str | None = self.get_server_url(region)
 			if server is None:
 				raise ValueError(f'No API server for region {region}')
+			if len(account_ids) == 0:
+				raise ValueError('Empty account_id list given')
 			
-			account_str: str = '%2C'.join([ str(a) for a in account_ids] )
-			
+			account_str: str = quote(','.join([ str(a) for a in account_ids] ))			
 			field_str : str = ''
 			if len(fields) > 0:
-				field_str = '&fields=' + '%2C'.join(fields)
-
+				field_str = '&fields=' + quote(','.join(fields))
+			
 			return f'{server}{URL_WG_PLAYER_ACHIEVEMENTS}?application_id={self.app_id}&account_id={account_str}{field_str}'
 		except Exception as err:
 			debug(f'Failed to form url: {err}')
