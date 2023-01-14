@@ -210,12 +210,13 @@ class WGApi():
 			resp : WGApiWoTBlitzPlayerAchievements | None 
 			resp = await self.get_player_achievements_full(account_ids=account_ids, region=region, fields=fields)
 			if resp is None or resp.data is None:
+				error('No stats found')
 				return None
 			else:
 				resp.set_regions(region)
 				return resp.get_max_series()
 		except Exception as err:
-			debug(f'Failed to fetch player achievements: {err}')
+			error(f'Failed to fetch player achievements: {err}')
 		return None	
 
 # class Tankopedia():
