@@ -952,6 +952,17 @@ class WGApiWoTBlitzPlayerAchievements(WGApiWoTBlitz):
 		allow_population_by_field_name = True
 
 
+	@validator('data', pre=True)
+	def validate_data(cls, v : dict[str, WGplayerAchievementsMain | None] | None) -> dict[str, WGplayerAchievementsMain] | None:
+		if not isinstance(v, dict):
+			return None
+		else:
+			res : dict[str, WGplayerAchievementsMain]
+			res = { key:value for key, value in v.items() if value is not None }
+			return res
+
+
+
 	def get_max_series(self) -> list[WGplayerAchievementsMaxSeries]:
 		res : list[WGplayerAchievementsMaxSeries] = list()
 		try:			
@@ -959,7 +970,7 @@ class WGApiWoTBlitzPlayerAchievements(WGApiWoTBlitz):
 				return res
 			for key, pam in self.data.items():
 				try:
-					if pam.max_series is None:
+					if pam is None or pam.max_series is None:
 						continue
 					ms : WGplayerAchievementsMaxSeries = pam.max_series
 					account_id = int(key)
@@ -981,7 +992,7 @@ class WGApiWoTBlitzPlayerAchievements(WGApiWoTBlitz):
 				return None
 			for key, pam in self.data.items():
 				try:
-					if pam.max_series is None:
+					if pam is None or pam.max_series is None:
 						continue
 					else:
 						pam.max_series.region = region
