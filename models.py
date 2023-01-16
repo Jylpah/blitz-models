@@ -18,7 +18,6 @@ from pyutils.utils import CSVExportable, CSVImportable, CSVImportableSelf, \
 							JSONImportable, TypeExcludeDict, epoch_now
 
 
-
 TYPE_CHECKING = True
 logger = logging.getLogger()
 error 	= logger.error
@@ -26,6 +25,8 @@ message	= logger.warning
 verbose	= logger.info
 debug	= logger.debug
 
+
+B	= TypeVar('B', bound='BaseModel')
 
 class Region(StrEnum):
 	ru 		= 'ru'
@@ -871,14 +872,15 @@ class WGplayerAchievementsMaxSeries(JSONExportable):
 	id 			: ObjectId | None	= Field(default=None, alias='_id')
 	jointVictory: int 				= Field(default=0, alias='jv')
 	account_id	: int		 		= Field(default=0, alias='a')	
-	region		: Region | None 	= Field(default=None, alias='r')
-	release 	: str  | None 		= Field(default=None, alias='u')
+	region		: Region 	| None 	= Field(default=None, alias='r')
+	release 	: str 		| None	= Field(default=None, alias='u')
 	added		: int 				= Field(default=epoch_now(), alias='t')
 
 	_include_export_DB_fields	: ClassVar[Optional[TypeExcludeDict]] = { 'jointVictory': True, 
-																		'account_id': True, 
-																		'region': True, 
-																		'release': True 
+																			'account_id': True, 
+																			'region'	: True, 
+																			'release'	: True,
+																			'added'		: True
 																		}
 
 	class Config:		
@@ -887,7 +889,7 @@ class WGplayerAchievementsMaxSeries(JSONExportable):
 		allow_population_by_field_name = True
 		arbitrary_types_allowed = True
 		json_encoders 			= { ObjectId: str }
-		extra 				= Extra.allow
+		extra 					= Extra.allow
 	
 
 	@classmethod
@@ -910,18 +912,6 @@ class WGplayerAchievementsMaxSeries(JSONExportable):
 		values['id'] = cls.mk_id(account_id, region, values['added'])
 		return values
 
-	# @root_validator(pre=False)
-	# def set_id(cls, values : dict[str, Any]) -> dict[str, Any]:
-	# 	try:
-	# 		if values['id'] is None:
-	# 			values['id'] = cls.mk_id(values['account_id'], values['last_battle_time'], values['tank_id'])				
-	# 		if 'region' not in values or values['region'] is None:
-	# 			values['region'] = Region.from_id(values['account_id'])
-	# 		return values
-	# 	except Exception as err:
-	# 		raise ValueError(f'Could not store _id: {err}')
-
-
 
 	@root_validator
 	def set_region(cls, values: dict) -> dict:
@@ -933,9 +923,46 @@ class WGplayerAchievementsMaxSeries(JSONExportable):
 		return values
 
 
+	@classmethod
+	def transform(cls, in_obj: Any) -> Optional['WGplayerAchievementsMaxSeries']:
+		"""Transform object to out_type if supported"""
+		ms : WGplayerAchievementsMaxSeries
+		try:
+			if isinstance(in_obj, WGplayerAchievementsMain):
+				return cls._transform_WGplayerAchievementsMain(in_obj)
+
+		except Exception as err:
+			error(f'{err}')
+		return None
+
+	
+	@classmethod
+	def _transform_WGplayerAchievementsMain(cls, in_obj: 'WGplayerAchievementsMain') -> Optional['WGplayerAchievementsMaxSeries']:
+		"""Transform WGplayerAchievementsMain object to WGplayerAchievementsMaxSeries"""
+		try:
+			if in_obj.max_series is None:
+				raise ValueError(f"in_obj doesn't have 'max_series' set: {in_obj}")
+			ms = in_obj.max_series
+			if in_obj.account_id is None:
+				raise ValueError(f"in_obj doesn't have 'account_id' set: {in_obj}")
+			if in_obj.updated is None:
+				ms.added = epoch_now()
+			else:
+				ms.added = in_obj.updated
+			ms.account_id = in_obj.account_id
+			return ms
+
+		except Exception as err:
+			error(f'{err}')
+		return None
+
+
+
 class WGplayerAchievementsMain(JSONExportable):
 	achievements 	: WGplayerAchievements | None = Field(default=None, alias='a')
 	max_series		: WGplayerAchievementsMaxSeries | None = Field(default=None, alias='m')
+	account_id 		: int | None 				= Field(default=None)
+	updated			: int | None 				= Field(default=None)
 
 	class Config:		
 		allow_mutation 			= True
