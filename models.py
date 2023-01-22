@@ -662,6 +662,7 @@ class WGApiError(BaseModel):
 	def str(self) -> str:
 		return f'code: {self.code} {self.message}'
 
+
 class WGtankStatAll(BaseModel):
 	spotted			: int = Field(..., alias='sp')
 	hits			: int = Field(..., alias='h')
