@@ -15,7 +15,7 @@ from pydantic.utils import ValueItems
 
 from pyutils.utils import CSVExportable, CSVImportable, CSVImportableSelf, \
 							TXTExportable, TXTImportable, JSONExportable, \
-							JSONImportable, TypeExcludeDict, epoch_now
+							JSONImportable, TypeExcludeDict, epoch_now, I, D, Idx
 
 
 TYPE_CHECKING = True
@@ -86,7 +86,19 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 		allow_mutation 		= True
 		validate_assignment = True		
 
-	
+	@property
+	def index(self) -> Idx:
+		return self.id
+
+	@property
+	def indexes(self) -> dict[str, Idx]:
+		"""return backend indexes"""
+		if self.region is None:
+			return { 'region': '_none_', 'account_id': self.id }
+		else:
+			return { 'region': self.region.name, 'account_id': self.id }
+
+
 	@validator('id')
 	def check_id(cls, v):
 		assert v is not None, "id cannot be None"
@@ -162,6 +174,7 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 			raise ValueError(f'Account {self.id} does not have region defined')
 		return res
 	
+
 	@classmethod
 	def from_str(cls : type[AccountSelf], account: str) -> AccountSelf:
 		obj : dict[str, Any] = dict()
@@ -248,6 +261,16 @@ class EnumVehicleTier(IntEnum):
 	def __str__(self) -> str:
 		return str(self.name)
 
+	@classmethod
+	def read_tier(cls, tier: str) -> 'EnumVehicleTier':
+		try:
+			if tier.isdigit():
+				return EnumVehicleTier(int(tier))
+			else:
+				return EnumVehicleTier[tier]
+		except Exception as err:
+			raise ValueError(f"incorrect tier: '{tier}': {err}")
+
 
 class EnumNation(IntEnum):
 	ussr		= 0
@@ -278,6 +301,18 @@ class WGBlitzRelease(JSONExportable, JSONImportable, CSVExportable, CSVImportabl
 		validate_assignment 	= True
 		allow_population_by_field_name = True
 		json_encoders 			= { datetime: lambda v: v.date().isoformat() }
+
+
+	@property
+	def index(self) -> Idx:
+		return self.release
+
+
+	@property
+	def indexes(self) -> dict[str, Idx]:
+		"""return backend indexes"""
+		return { 'release': self.release }
+		
 
 	@validator('release')
 	def validate_release(cls, v: str) -> str:
@@ -491,7 +526,7 @@ class WoTBlitzReplaySummary(BaseModel):
 		return values
 
 
-class WoTBlitzReplayData(BaseModel):
+class WoTBlitzReplayData(JSONExportable, JSONImportable):
 	view_url	: HttpUrl 		= Field(default=None, alias='v')
 	download_url: HttpUrl 		= Field(default=None, alias='d')
 	id 			: str | None	= Field(default=None)
@@ -508,6 +543,39 @@ class WoTBlitzReplayData(BaseModel):
 		json_encoders = { ObjectId: str }
 
 
+	@property
+	def index(self) -> Idx:
+		"""return backend index"""
+		if self.id is not None:
+			return self.id
+		raise ValueError('id is missing')
+
+
+	@property
+	def indexes(self) -> dict[str, Idx]:
+		"""return backend indexes"""
+		return { 'id': self.index }
+
+
+	@classmethod
+	def transform(cls, in_obj: 'JSONExportable') -> Optional['WoTBlitzReplayData']:
+		try:
+			if isinstance(in_obj, WoTBlitzReplayJSON):
+				return cls._transform_WoTBlitzReplayJSON(in_obj)
+		except Exception as err:
+			error(f'{err}')
+		return None
+
+
+	@classmethod
+	def _transform_WoTBlitzReplayJSON(cls, in_obj: 'WoTBlitzReplayJSON') -> Optional['WoTBlitzReplayData']:
+		try:
+			return in_obj.data
+		except Exception as err:
+			error(f'{err}')
+		return None
+
+	
 	@root_validator
 	def store_id(cls, values : dict[str, Any]) -> dict[str, Any]:
 		try:
@@ -554,6 +622,20 @@ class WoTBlitzReplayJSON(JSONExportable, JSONImportable):
 		allow_mutation 			= True
 		validate_assignment 	= True
 		allow_population_by_field_name = True
+
+
+	@property
+	def index(self) -> Idx:
+		"""return backend index"""
+		if self.id is not None:
+			return self.id
+		raise ValueError('id is missing') 
+
+
+	@property
+	def indexes(self) -> dict[str, Idx]:
+		"""return backend indexes"""
+		return { 'id': self.index }
 
 
 	@root_validator(pre=False)
@@ -725,6 +807,21 @@ class WGtankStat(JSONExportable, JSONImportable):
 		allow_population_by_field_name = True
 
 
+	@property
+	def index(self) -> Idx:
+		"""return backend index"""
+		return self.id
+
+
+	@property
+	def indexes(self) -> dict[str, Idx]:
+		"""return backend indexes"""
+		return { 	'account_id': self.account_id, 
+					'last_battle_time': self.last_battle_time, 
+					'tank_id': self.tank_id,
+				 }
+
+
 	@classmethod
 	def mk_id(cls, account_id: int, last_battle_time: int, tank_id: int = 0) -> ObjectId:
 		return ObjectId(hex(account_id)[2:].zfill(10) + hex(tank_id)[2:].zfill(6) + hex(last_battle_time)[2:].zfill(8))
@@ -796,13 +893,13 @@ class WGApiWoTBlitzTankStats(WGApiWoTBlitz):
 
 
 class WGTank(JSONExportable, JSONImportable):
-	id 			: int 		= Field(default=..., alias = '_id')
-	tank_id 	: int 		= Field(default=...)
-	name   		: str 		= Field(default=...)
-	nation   	: EnumNation		= Field(default=...)
-	type 	  	: EnumVehicleTypeStr= Field(default=...)
-	tier 		: EnumVehicleTier 	= Field(default=...)
-	is_premium 	: bool 		= Field(default=False)
+	id 			: int 						= Field(default=..., alias = '_id')
+	tank_id 	: int 						= Field(default=None)
+	name   		: str | None				= Field(default=None)
+	nation   	: EnumNation | None	 		= Field(default=None)
+	type 	  	: EnumVehicleTypeStr| None	= Field(default=None)
+	tier 		: EnumVehicleTier| None 	= Field(default=None)
+	is_premium 	: bool 						= Field(default=False)
 
 	class Config:		
 		allow_mutation 			= True
@@ -810,11 +907,32 @@ class WGTank(JSONExportable, JSONImportable):
 		allow_population_by_field_name = True
 
 
+	@property
+	def index(self) -> Idx:
+		"""return backend index"""
+		return self.id
+
+
+	@property
+	def indexes(self) -> dict[str, Idx]:
+		"""return backend indexes"""
+		return { 'tank_id': self.index }
+
+
 	@validator('id', 'tank_id')
 	def validate_id(cls, v: int) -> int:
 		if v > 0:
 			return v
 		raise ValueError('id must be > 0')
+
+
+	@root_validator(pre=True)
+	def set_tank_id(cls, values: dict[str, Any])  -> dict[str, Any]:
+		if '_id' in values:
+			values['tank_id'] = values['_id']
+		else:
+			values['tank_id'] = values['id']
+		return values
 
 
 	# @validator('tier')
@@ -839,8 +957,8 @@ class Tank(JSONExportable, JSONImportable):
 	tank_id 	: int						= Field(default=..., alias='_id')
 	name 		: str | None				= Field(default=None, alias='n')
 	nation		: EnumNation | None 		= Field(default=None, alias='c')
-	type		: EnumVehicleTypeInt|None	= Field(default=None, alias='v')
-	tier		: EnumVehicleTier|None 		= Field(default=None, alias='t')
+	type		: EnumVehicleTypeInt | None	= Field(default=None, alias='v')
+	tier		: EnumVehicleTier | None 	= Field(default=None, alias='t')
 	is_premium 	: bool 						= Field(default=False, alias='p')
 	next_tanks	: list[int] | None			= Field(default=None, alias='s')
 
@@ -849,7 +967,19 @@ class Tank(JSONExportable, JSONImportable):
 		allow_mutation 			= True
 		validate_assignment 	= True
 		allow_population_by_field_name = True
-		use_enum_values			= True
+		# use_enum_values			= True
+
+
+	@property
+	def index(self) -> Idx:
+		"""return backend index"""
+		return self.tank_id
+
+
+	@property
+	def indexes(self) -> dict[str, Idx]:
+		"""return backend indexes"""
+		return { 'tank_id': self.index }
 
 	
 	@validator('next_tanks', pre=True)
@@ -903,7 +1033,7 @@ class Tank(JSONExportable, JSONImportable):
 
 
 	@classmethod
-	def transform(cls, in_obj: Any) -> Optional['Tank']:
+	def transform(cls, in_obj: JSONExportable) -> Optional['Tank']:
 		"""Transform object to out_type if supported"""		
 		try:
 			if isinstance(in_obj, WGTank):
@@ -935,8 +1065,7 @@ class Tank(JSONExportable, JSONImportable):
 
 
 class WGplayerAchievements(JSONExportable):
-	
-
+	"""Placeholder class for data.achievements that are not collected"""
 	class Config:		
 		allow_mutation 			= True
 		validate_assignment 	= True
@@ -967,6 +1096,21 @@ class WGplayerAchievementsMaxSeries(JSONExportable):
 		json_encoders 			= { ObjectId: str }
 		extra 					= Extra.allow
 	
+
+	@property
+	def index(self) -> Idx:
+		"""return backend index"""
+		if self.id is None:
+			return self.mk_id(self.account_id, self.region, self.added)
+		else:
+			return self.id
+
+
+	@property
+	def indexes(self) -> dict[str, Idx]:
+		"""return backend indexes"""
+		return { 'account_id': self.account_id, 'region': str(self.region), 'added': self.added }
+
 
 	@classmethod
 	def mk_id(cls, account_id : int, region: Region | None, added: int) -> ObjectId:
@@ -1000,7 +1144,7 @@ class WGplayerAchievementsMaxSeries(JSONExportable):
 
 
 	@classmethod
-	def transform(cls, in_obj: Any) -> Optional['WGplayerAchievementsMaxSeries']:
+	def transform(cls, in_obj: JSONExportable) -> Optional['WGplayerAchievementsMaxSeries']:
 		"""Transform object to out_type if supported"""
 		ms : WGplayerAchievementsMaxSeries
 		try:
