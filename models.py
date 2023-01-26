@@ -291,7 +291,8 @@ class EnumNation(IntEnum):
 
 
 WGBlitzReleaseSelf = TypeVar('WGBlitzReleaseSelf', bound='WGBlitzRelease')
-class WGBlitzRelease(JSONExportable, JSONImportable, CSVExportable, CSVImportable, TXTExportable):
+class WGBlitzRelease(JSONExportable, JSONImportable, CSVExportable, \
+					CSVImportable, TXTExportable):
 	release : str					= Field(default=..., alias='_id')
 	launch_date: datetime | None	= Field(default=None)
 	#_export_DB_by_alias			: bool = False
@@ -953,7 +954,8 @@ class WGTank(JSONExportable, JSONImportable):
 		return EnumNation[v]
 
 	
-class Tank(JSONExportable, JSONImportable):
+class Tank(JSONExportable, JSONImportable, \
+			CSVExportable, CSVImportable, TXTExportable):
 	tank_id 	: int						= Field(default=..., alias='_id')
 	name 		: str | None				= Field(default=None, alias='n')
 	nation		: EnumNation | None 		= Field(default=None, alias='c')
@@ -1027,6 +1029,7 @@ class Tank(JSONExportable, JSONImportable):
 	def __str__(self) -> str:
 		return f'{self.name}'
 
+
 	@classmethod
 	def from_id(cls, id : int) -> 'Tank':
 		return Tank(tank_id=id)
@@ -1063,6 +1066,23 @@ class Tank(JSONExportable, JSONImportable):
 			error(f'{err}')
 		return None
 
+
+	def csv_headers(self) -> list[str]:
+		"""Provide CSV headers as list"""
+		return list(Tank.__fields__.keys())
+
+
+	def csv_row(self) -> dict[str, str | int | float | bool]:
+		"""Provide CSV row as a dict for csv.DictWriter"""
+		if (res:= json.loads(self.json_src())) is not None:
+			return self.clear_None(res)
+		raise ValueError(f'Could not create CSV row for {self}')
+
+
+	def txt_row(self, format : str = '') -> str:
+		"""export data as single row of text"""
+		return f'tank_id={self.tank_id}: {self.name} tier {self.tier} {self.type} {self.nation}'
+		
 
 class WGplayerAchievements(JSONExportable):
 	"""Placeholder class for data.achievements that are not collected"""
