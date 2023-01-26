@@ -693,7 +693,6 @@ class WGtankStatAll(BaseModel):
 		return None
 
 
-
 class WGtankStat(JSONExportable, JSONImportable):
 	id					: ObjectId  	= Field(alias='_id')
 	region				: Region | None = Field(default=None, alias='r')
@@ -796,15 +795,63 @@ class WGApiWoTBlitzTankStats(WGApiWoTBlitz):
 		allow_population_by_field_name = True
 
 
-class Tank(JSONExportable, JSONImportable):
-	tank_id 	: int				= Field(default=..., alias='_id')
-	name 		: str | None		= Field(default=None, alias='n')
-	nation	: EnumNation | None 	= Field(default=None, alias='c')
-	type: EnumVehicleTypeStr|None	= Field(default=None, alias='v')
-	tier: EnumVehicleTier|None 		= Field(default=None, alias='t')
-	is_premium 	: bool 				= Field(default=False, alias='p')
-	next_tanks	: list[int] | None	= Field(default=None, alias='s')
+class WGTank(JSONExportable, JSONImportable):
+	id 			: int 		= Field(default=..., alias = '_id')
+	tank_id 	: int 		= Field(default=...)
+	name   		: str 		= Field(default=...)
+	nation   	: EnumNation		= Field(default=...)
+	type 	  	: EnumVehicleTypeStr= Field(default=...)
+	tier 		: EnumVehicleTier 	= Field(default=...)
+	is_premium 	: bool 		= Field(default=False)
 
+	class Config:		
+		allow_mutation 			= True
+		validate_assignment 	= True
+		allow_population_by_field_name = True
+
+
+	@validator('id', 'tank_id')
+	def validate_id(cls, v: int) -> int:
+		if v > 0:
+			return v
+		raise ValueError('id must be > 0')
+
+
+	# @validator('tier')
+	# def validate_tier(cls, v: int) -> int:
+	# 	if v > 0 and v <= 10:
+	# 		return v
+	# 	raise ValueError('tier must be [0 ... 10]')
+
+	# @validator('type')
+	# def validate_type(cls, v: str) -> str:
+	# 	if v in [ t.value for t in EnumVehicleTypeStr]:
+	# 		return v
+	# 	raise ValueError(f'Unknown tank type: {v}')
+
+
+	@validator('nation', pre=True)
+	def validate_nation(cls, v: str) -> EnumNation:
+		return EnumNation[v]
+
+	
+class Tank(JSONExportable, JSONImportable):
+	tank_id 	: int						= Field(default=..., alias='_id')
+	name 		: str | None				= Field(default=None, alias='n')
+	nation		: EnumNation | None 		= Field(default=None, alias='c')
+	type		: EnumVehicleTypeInt|None	= Field(default=None, alias='v')
+	tier		: EnumVehicleTier|None 		= Field(default=None, alias='t')
+	is_premium 	: bool 						= Field(default=False, alias='p')
+	next_tanks	: list[int] | None			= Field(default=None, alias='s')
+
+	
+	class Config:		
+		allow_mutation 			= True
+		validate_assignment 	= True
+		allow_population_by_field_name = True
+		use_enum_values			= True
+
+	
 	@validator('next_tanks', pre=True)
 	def next_tanks2list(cls, v):
 		try:
@@ -815,20 +862,20 @@ class Tank(JSONExportable, JSONImportable):
 		return None
 
 
-	@validator('type', pre=True)
-	def prevalidate_type(cls, v):
-		if isinstance(v, int):
-			return EnumVehicleTypeStr.from_int(v).value
-		else:
-			return v
+	# @validator('type', pre=True)
+	# def prevalidate_type(cls, v):
+	# 	if isinstance(v, int):
+	# 		return EnumVehicleTypeStr.from_int(v).value
+	# 	else:
+	# 		return v
 
 
-	@validator('type')
-	def validate_type(cls, v):
-		if isinstance(v, str):
-			return EnumVehicleTypeStr(v)
-		else:
-			return v
+	# @validator('type')
+	# def validate_type(cls, v):
+	# 	if isinstance(v, str):
+	# 		return EnumVehicleTypeInt(v)
+	# 	else:
+	# 		return v
 
 
 	@validator('tier', pre=True)
@@ -847,16 +894,39 @@ class Tank(JSONExportable, JSONImportable):
 			return v
 
 
+	def __str__(self) -> str:
+		return f'{self.name}'
+
 	@classmethod
 	def from_id(cls, id : int) -> 'Tank':
 		return Tank(tank_id=id)
 
 
-	class Config:		
-		allow_mutation 			= True
-		validate_assignment 	= True
-		allow_population_by_field_name = True
-		use_enum_values			= True
+	@classmethod
+	def transform(cls, in_obj: Any) -> Optional['Tank']:
+		"""Transform object to out_type if supported"""		
+		try:
+			if isinstance(in_obj, WGTank):
+				return cls._transform_WGTank(in_obj)
+		except Exception as err:
+			error(f'{err}')
+		return None
+
+	
+	@classmethod
+	def _transform_WGTank(cls, in_obj: WGTank) -> Optional['Tank']:
+		"""Transform WGTank object to Tank"""
+		try:
+			return Tank(tank_id=in_obj.id, 
+						name=in_obj.name, 
+						tier=in_obj.tier, 
+						type=EnumVehicleTypeInt[in_obj.type.name], 
+						is_premium=in_obj.is_premium, 
+						nation=in_obj.nation,
+						)			
+		except Exception as err:
+			error(f'{err}')
+		return None
 
 
 class WGplayerAchievements(JSONExportable):
