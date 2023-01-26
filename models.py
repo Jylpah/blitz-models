@@ -917,10 +917,15 @@ class Tank(JSONExportable, JSONImportable):
 	def _transform_WGTank(cls, in_obj: WGTank) -> Optional['Tank']:
 		"""Transform WGTank object to Tank"""
 		try:
+			# debug(f'type={type(in_obj)}')
+			# debug(f'in_obj={in_obj}')
+			tank_type : EnumVehicleTypeInt | None = None
+			if in_obj.type is not None:
+				tank_type = EnumVehicleTypeInt[in_obj.type.name]
 			return Tank(tank_id=in_obj.id, 
 						name=in_obj.name, 
 						tier=in_obj.tier, 
-						type=EnumVehicleTypeInt[in_obj.type.name], 
+						type=tank_type, 
 						is_premium=in_obj.is_premium, 
 						nation=in_obj.nation,
 						)			
