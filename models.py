@@ -528,9 +528,9 @@ class WoTBlitzReplaySummary(BaseModel):
 
 
 class WoTBlitzReplayData(JSONExportable, JSONImportable):
+	id 			: str | None	= Field(default=None, alias='_id')
 	view_url	: HttpUrl 		= Field(default=None, alias='v')
 	download_url: HttpUrl 		= Field(default=None, alias='d')
-	id 			: str | None	= Field(default=None)
 	summary		: WoTBlitzReplaySummary  = Field(default=..., alias='s')
 
 	_ViewUrlBase : str = 'https://replays.wotinspector.com/en/view/'
@@ -542,6 +542,12 @@ class WoTBlitzReplayData(JSONExportable, JSONImportable):
 		validate_assignment 	= True
 		allow_population_by_field_name = True
 		json_encoders = { ObjectId: str }
+
+	_exclude_export_DB_fields	= { 'view_url': True,
+									'download_url': True,
+									'summary': { 'battle_start_time' }
+									}
+
 
 
 	@property
@@ -556,6 +562,22 @@ class WoTBlitzReplayData(JSONExportable, JSONImportable):
 	def indexes(self) -> dict[str, Idx]:
 		"""return backend indexes"""
 		return { 'id': self.index }
+
+
+	@classmethod
+	def backend_indexes(cls) -> list[list[tuple[str, BackendIndexType]]]:
+		"""return backend search indexes"""
+		indexes : list[list[tuple[str, BackendIndexType]]] = list()
+		indexes.append([('summary.protagonist', ASCENDING), 
+						('summary.room_type', ASCENDING), 
+						('summary.vehicle_tier', ASCENDING), 
+						('summary.battle_start_timestamp', DESCENDING)
+					])
+		indexes.append([('summary.room_type', ASCENDING), 
+						('summary.vehicle_tier', ASCENDING),
+						('summary.battle_start_timestamp', DESCENDING)
+					])
+		return indexes
 
 
 	@classmethod
