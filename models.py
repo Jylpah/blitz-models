@@ -780,7 +780,7 @@ class WGApiError(BaseModel):
 		return f'code: {self.code} {self.message}'
 
 
-class WGtankStatAll(BaseModel):
+class WGTankStatAll(BaseModel):
 	spotted			: int = Field(..., alias='sp')
 	hits			: int = Field(..., alias='h')
 	frags			: int = Field(..., alias='k')
@@ -810,10 +810,10 @@ class WGtankStatAll(BaseModel):
 		return None
 
 
-class WGtankStat(JSONExportable, JSONImportable):
+class WGTankStat(JSONExportable, JSONImportable):
 	id					: ObjectId  	= Field(alias='_id')
 	region				: Region | None = Field(default=None, alias='r')
-	all					: WGtankStatAll = Field(..., alias='s')
+	all					: WGTankStatAll = Field(..., alias='s')
 	last_battle_time	: int			= Field(..., alias='lb')
 	account_id			: int			= Field(..., alias='a')
 	tank_id				: int 			= Field(..., alias='t')
@@ -937,7 +937,7 @@ class WGApiWoTBlitz(BaseModel):
 
 
 class WGApiWoTBlitzTankStats(WGApiWoTBlitz):	
-	data	: dict[str, list[WGtankStat] | None ] | None = Field(default=..., alias='d')
+	data	: dict[str, list[WGTankStat] | None ] | None = Field(default=..., alias='d')
 
 	class Config:		
 		allow_mutation 			= True
@@ -1163,7 +1163,7 @@ class Tank(JSONExportable, JSONImportable, \
 		return f'tank_id={self.tank_id}: {self.name} tier {self.tier} {self.type} {self.nation}'
 		
 
-class WGplayerAchievements(JSONExportable):
+class WGPlayerAchievements(JSONExportable):
 	"""Placeholder class for data.achievements that are not collected"""
 	class Config:		
 		allow_mutation 			= True
@@ -1172,7 +1172,7 @@ class WGplayerAchievements(JSONExportable):
 		extra 					= Extra.allow
 
 
-class WGplayerAchievementsMaxSeries(JSONExportable):
+class WGPlayerAchievementsMaxSeries(JSONExportable):
 	id 			: ObjectId | None	= Field(default=None, alias='_id')
 	jointVictory: int 				= Field(default=0, alias='jv')
 	account_id	: int		 		= Field(default=0, alias='a')	
@@ -1258,12 +1258,12 @@ class WGplayerAchievementsMaxSeries(JSONExportable):
 
 
 	@classmethod
-	def transform(cls, in_obj: JSONExportable) -> Optional['WGplayerAchievementsMaxSeries']:
+	def transform(cls, in_obj: JSONExportable) -> Optional['WGPlayerAchievementsMaxSeries']:
 		"""Transform object to out_type if supported"""
-		ms : WGplayerAchievementsMaxSeries
+		ms : WGPlayerAchievementsMaxSeries
 		try:
-			if isinstance(in_obj, WGplayerAchievementsMain):
-				return cls._transform_WGplayerAchievementsMain(in_obj)
+			if isinstance(in_obj, WGPlayerAchievementsMain):
+				return cls._transform_WGPlayerAchievementsMain(in_obj)
 
 		except Exception as err:
 			error(f'{err}')
@@ -1271,8 +1271,8 @@ class WGplayerAchievementsMaxSeries(JSONExportable):
 
 	
 	@classmethod
-	def _transform_WGplayerAchievementsMain(cls, in_obj: 'WGplayerAchievementsMain') -> Optional['WGplayerAchievementsMaxSeries']:
-		"""Transform WGplayerAchievementsMain object to WGplayerAchievementsMaxSeries"""
+	def _transform_WGPlayerAchievementsMain(cls, in_obj: 'WGPlayerAchievementsMain') -> Optional['WGPlayerAchievementsMaxSeries']:
+		"""Transform WGPlayerAchievementsMain object to WGPlayerAchievementsMaxSeries"""
 		try:
 			if in_obj.max_series is None:
 				raise ValueError(f"in_obj doesn't have 'max_series' set: {in_obj}")
@@ -1292,9 +1292,9 @@ class WGplayerAchievementsMaxSeries(JSONExportable):
 
 
 
-class WGplayerAchievementsMain(JSONExportable):
-	achievements 	: WGplayerAchievements | None = Field(default=None, alias='a')
-	max_series		: WGplayerAchievementsMaxSeries | None = Field(default=None, alias='m')
+class WGPlayerAchievementsMain(JSONExportable):
+	achievements 	: WGPlayerAchievements | None = Field(default=None, alias='a')
+	max_series		: WGPlayerAchievementsMaxSeries | None = Field(default=None, alias='m')
 	account_id 		: int | None 				= Field(default=None)
 	updated			: int | None 				= Field(default=None)
 
@@ -1305,7 +1305,7 @@ class WGplayerAchievementsMain(JSONExportable):
 
 
 class WGApiWoTBlitzPlayerAchievements(WGApiWoTBlitz):	
-	data	: dict[str, WGplayerAchievementsMain] | None = Field(default=None, alias='d')
+	data	: dict[str, WGPlayerAchievementsMain] | None = Field(default=None, alias='d')
 
 	class Config:		
 		allow_mutation 			= True
@@ -1314,18 +1314,18 @@ class WGApiWoTBlitzPlayerAchievements(WGApiWoTBlitz):
 
 
 	@validator('data', pre=True)
-	def validate_data(cls, v : dict[str, WGplayerAchievementsMain | None] | None) -> dict[str, WGplayerAchievementsMain] | None:
+	def validate_data(cls, v : dict[str, WGPlayerAchievementsMain | None] | None) -> dict[str, WGPlayerAchievementsMain] | None:
 		if not isinstance(v, dict):
 			return None
 		else:
-			res : dict[str, WGplayerAchievementsMain]
+			res : dict[str, WGPlayerAchievementsMain]
 			res = { key:value for key, value in v.items() if value is not None }
 			return res
 
 
 
-	def get_max_series(self) -> list[WGplayerAchievementsMaxSeries]:
-		res : list[WGplayerAchievementsMaxSeries] = list()
+	def get_max_series(self) -> list[WGPlayerAchievementsMaxSeries]:
+		res : list[WGPlayerAchievementsMaxSeries] = list()
 		try:			
 			if self.data is None:
 				return res
@@ -1333,7 +1333,7 @@ class WGApiWoTBlitzPlayerAchievements(WGApiWoTBlitz):
 				try:
 					if pam is None or pam.max_series is None:
 						continue
-					ms : WGplayerAchievementsMaxSeries = pam.max_series
+					ms : WGPlayerAchievementsMaxSeries = pam.max_series
 					account_id = int(key)
 					ms.account_id = account_id
 					if ms.region is None:

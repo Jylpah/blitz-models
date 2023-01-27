@@ -4,7 +4,7 @@ from collections import defaultdict
 from aiohttp import ClientTimeout
 from urllib.parse import quote
 
-from .models import Region, WGApiWoTBlitzTankStats, WGtankStat, WGApiWoTBlitzPlayerAchievements, WGplayerAchievementsMaxSeries
+from .models import Region, WGApiWoTBlitzTankStats, WGTankStat, WGApiWoTBlitzPlayerAchievements, WGPlayerAchievementsMaxSeries
 from pyutils import ThrottledClientSession, get_url_JSON_model
 
 TYPE_CHECKING = True
@@ -146,7 +146,7 @@ class WGApi():
 
 	
 	async def get_tank_stats(self, account_id: int, region: Region,
-			tank_ids: list[int] = [], fields: list[str] = [] ) -> list[WGtankStat] | None:
+			tank_ids: list[int] = [], fields: list[str] = [] ) -> list[WGTankStat] | None:
 		assert self.session is not None, "session must be initialized"
 		try:
 			resp : WGApiWoTBlitzTankStats | None = await self.get_tank_stats_full(account_id=account_id, region=region, tank_ids=tank_ids, fields=fields)
@@ -204,7 +204,7 @@ class WGApi():
 	
 	async def get_player_achievements(self, account_ids : list[int], 
 										region: Region,
-										fields: list[str] = list() ) -> list[WGplayerAchievementsMaxSeries] | None:
+										fields: list[str] = list() ) -> list[WGPlayerAchievementsMaxSeries] | None:
 		assert self.session is not None, "session must be initialized"
 		try:
 			resp : WGApiWoTBlitzPlayerAchievements | None 
