@@ -1212,6 +1212,21 @@ class WGplayerAchievementsMaxSeries(JSONExportable):
 
 
 	@classmethod
+	def backend_indexes(cls) -> list[list[tuple[str, BackendIndexType]]]:
+		indexes : list[list[BackendIndex]] = list()
+		indexes.append([
+					 	('account_id', ASCENDING), 
+						('added', DESCENDING)
+						])
+		indexes.append([
+					 	('release', DESCENDING),	
+						('account_id', ASCENDING), 
+						('added', DESCENDING)
+						])
+		return indexes
+
+
+	@classmethod
 	def mk_id(cls, account_id : int, region: Region | None, added: int) -> ObjectId:
 		r: int = 0
 		if region is not None:
