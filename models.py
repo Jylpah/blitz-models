@@ -319,7 +319,6 @@ class WGBlitzRelease(JSONExportable, JSONImportable, CSVExportable, \
 	@classmethod
 	def backend_indexes(cls) -> list[list[tuple[str, BackendIndexType]]]:
 		indexes : list[list[BackendIndex]] = list()
-
 		indexes.append([('name', ASCENDING), 
 						('launch_date', DESCENDING)
 						])
@@ -859,6 +858,24 @@ class WGtankStat(JSONExportable, JSONImportable):
 
 
 	@classmethod
+	def backend_indexes(cls) -> list[list[tuple[str, BackendIndexType]]]:
+		indexes : list[list[BackendIndex]] = list()		
+		indexes.append([ 	
+						('region', ASCENDING),
+						('account_id', ASCENDING),
+						('tank_id', ASCENDING),
+						('last_battle_time', DESCENDING)
+						])					
+		indexes.append([
+					 	('region', ASCENDING),
+						('release', DESCENDING),										
+						('tank_id', ASCENDING),
+						('account_id', ASCENDING),										
+						])
+		return indexes
+
+
+	@classmethod
 	def mk_id(cls, account_id: int, last_battle_time: int, tank_id: int = 0) -> ObjectId:
 		return ObjectId(hex(account_id)[2:].zfill(10) + hex(tank_id)[2:].zfill(6) + hex(last_battle_time)[2:].zfill(8))
 
@@ -955,6 +972,19 @@ class WGTank(JSONExportable, JSONImportable):
 		return { 'tank_id': self.index }
 
 
+	@classmethod
+	def backend_indexes(cls) -> list[list[tuple[str, BackendIndexType]]]:
+		indexes : list[list[BackendIndex]] = list()
+		indexes.append([ ('tier', ASCENDING), 
+						 ('type', ASCENDING)
+						])
+		indexes.append([ ('tier', ASCENDING), 
+						 ('nation', ASCENDING)
+						])
+		indexes.append([ ('name', TEXT) 							
+						])		
+		return indexes
+
 	@validator('id', 'tank_id')
 	def validate_id(cls, v: int) -> int:
 		if v > 0:
@@ -1017,6 +1047,20 @@ class Tank(JSONExportable, JSONImportable, \
 	def indexes(self) -> dict[str, Idx]:
 		"""return backend indexes"""
 		return { 'tank_id': self.index }
+
+
+	@classmethod
+	def backend_indexes(cls) -> list[list[tuple[str, BackendIndexType]]]:
+		indexes : list[list[BackendIndex]] = list()
+		indexes.append([ ('tier', ASCENDING), 
+						 ('type', ASCENDING)
+						])
+		indexes.append([ ('tier', ASCENDING), 
+						 ('nation', ASCENDING)
+						])
+		indexes.append([ ('name', TEXT) 							
+						])		
+		return indexes
 
 	
 	@validator('next_tanks', pre=True)
