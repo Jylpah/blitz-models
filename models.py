@@ -15,7 +15,8 @@ from pydantic.utils import ValueItems
 
 from pyutils.utils import CSVExportable, CSVImportable, CSVImportableSelf, \
 							TXTExportable, TXTImportable, JSONExportable, \
-							JSONImportable, TypeExcludeDict, epoch_now, I, D, Idx
+							JSONImportable, TypeExcludeDict, epoch_now, I, D, Idx, \
+							BackendIndexType, BackendIndex, DESCENDING, ASCENDING, TEXT
 
 
 TYPE_CHECKING = True
