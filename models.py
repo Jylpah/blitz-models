@@ -70,7 +70,7 @@ class Region(StrEnum):
 		return self == other_region
 
 TypeAccountDict = dict[str, int|bool|Region|None]
-AccountSelf = TypeVar('AccountSelf', bound='Account')
+AccountSelf 	= TypeVar('AccountSelf', bound='Account')
 
 class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable, 
 				TXTExportable, TXTImportable):	
@@ -510,11 +510,13 @@ class WoTBlitzReplaySummary(BaseModel):
 
 
 	@validator('protagonist_team')
-	def check_protagonist_team(cls, v : int) -> int:
-		if v == 1 or v == 2:
+	def check_protagonist_team(cls, v : int) -> int | None:
+		if v is None: 
+			return None
+		elif v == 0 or v == 1 or v == 2:
 			return v
 		else:
-			raise ValueError('protagonist_team has to be within 1 or 2')
+			raise ValueError('protagonist_team has to be 0, 1, 2 or None')
 
 
 	@validator('battle_start_time')
