@@ -314,6 +314,16 @@ class WGBlitzRelease(JSONExportable, JSONImportable, CSVExportable, \
 	def indexes(self) -> dict[str, Idx]:
 		"""return backend indexes"""
 		return { 'release': self.release }
+
+
+	@classmethod
+	def backend_indexes(cls) -> list[list[tuple[str, BackendIndexType]]]:
+		indexes : list[list[BackendIndex]] = list()
+
+		indexes.append([('name', ASCENDING), 
+						('launch_date', DESCENDING)
+						])
+		return indexes
 		
 
 	@validator('release')
