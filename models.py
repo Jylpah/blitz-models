@@ -1200,7 +1200,7 @@ class WGPlayerAchievementsMaxSeries(JSONExportable):
 	def index(self) -> Idx:
 		"""return backend index"""
 		if self.id is None:
-			return self.mk_id(self.account_id, self.region, self.added)
+			return self.mk_index(self.account_id, self.region, self.added)
 		else:
 			return self.id
 
@@ -1227,7 +1227,7 @@ class WGPlayerAchievementsMaxSeries(JSONExportable):
 
 
 	@classmethod
-	def mk_id(cls, account_id : int, region: Region | None, added: int) -> ObjectId:
+	def mk_index(cls, account_id : int, region: Region | None, added: int) -> ObjectId:
 		r: int = 0
 		if region is not None:
 			r = list(Region).index(region)
@@ -1243,7 +1243,7 @@ class WGPlayerAchievementsMaxSeries(JSONExportable):
 		if region is None and account_id > 0:
 			region = Region.from_id(account_id)
 		values['region'] = region
-		values['id'] = cls.mk_id(account_id, region, values['added'])
+		values['id'] = cls.mk_index(account_id, region, values['added'])
 		return values
 
 
