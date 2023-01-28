@@ -1160,7 +1160,7 @@ class Tank(JSONExportable, JSONImportable, \
 
 	def txt_row(self, format : str = '') -> str:
 		"""export data as single row of text"""
-		return f'tank_id={self.tank_id}: {self.name} tier {self.tier} {self.type} {self.nation}'
+		return f'({self.tank_id}) {self.name} tier {self.tier} {self.type} {self.nation}'
 		
 
 class WGPlayerAchievements(JSONExportable):
