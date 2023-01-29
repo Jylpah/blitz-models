@@ -921,7 +921,7 @@ class WGTankStat(JSONExportable, JSONImportable):
 
 
 	def __str__(self) -> str:
-		return f'id: {self.id} account_id={self.account_id}:{self.region} tank_id={self.tank_id} last_battle_time={self.last_battle_time}'
+		return f'account_id={self.account_id}:{self.region} tank_id={self.tank_id} last_battle_time={self.last_battle_time}'
 
 
 class WGApiWoTBlitz(BaseModel):
