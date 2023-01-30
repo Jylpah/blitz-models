@@ -826,11 +826,13 @@ class WGTankStat(JSONExportable, JSONImportable):
 	frags				: int  | None
 	in_garage 			: bool | None
 
-	_exclude_export_DB_fields	: ClassVar[Optional[TypeExcludeDict]] = {'max_frags': True, 'frags' : True, 
-																		'max_xp': True, 'in_garage': True, 
-																		'in_garage_updated': True 
+	_exclude_export_DB_fields	: ClassVar[Optional[TypeExcludeDict]] = { 	'max_frags': True, 
+																			'frags' : True, 
+																			'max_xp': True, 
+																			'in_garage': True, 
+																			'in_garage_updated': True 
 																		}
-	_exclude_export_src_fields	: ClassVar[Optional[TypeExcludeDict]] = {'_id': True, 'region': True } 
+	_exclude_export_src_fields	: ClassVar[Optional[TypeExcludeDict]] = { '_id': True, 'region': True } 
 	# _include_export_DB_fields	: ClassVar[Optional[TypeExcludeDict]] = None
 	# _include_export_src_fields	: ClassVar[Optional[TypeExcludeDict]] = None
 
@@ -1029,7 +1031,8 @@ class Tank(JSONExportable, JSONImportable, \
 	is_premium 	: bool 						= Field(default=False, alias='p')
 	next_tanks	: list[int] | None			= Field(default=None, alias='s')
 
-	
+	_exclude_defaults = False
+
 	class Config:		
 		allow_mutation 			= True
 		validate_assignment 	= True
@@ -1180,13 +1183,15 @@ class WGPlayerAchievementsMaxSeries(JSONExportable):
 	release 	: str 		| None	= Field(default=None, alias='u')
 	added		: int 				= Field(default=epoch_now(), alias='t')
 
-	_include_export_DB_fields	: ClassVar[Optional[TypeExcludeDict]] = { 'jointVictory': True, 
+	_include_export_DB_fields	: ClassVar[Optional[TypeExcludeDict]] = { 	'id' 		: True, 
+																			'jointVictory': True, 
 																			'account_id': True, 
 																			'region'	: True, 
 																			'release'	: True,
 																			'added'		: True
 																		}
 
+	_exclude_defaults = False
 	class Config:		
 		allow_mutation 			= True
 		validate_assignment 	= True
@@ -1215,11 +1220,13 @@ class WGPlayerAchievementsMaxSeries(JSONExportable):
 	def backend_indexes(cls) -> list[list[tuple[str, BackendIndexType]]]:
 		indexes : list[list[BackendIndex]] = list()
 		indexes.append([
-					 	('account_id', ASCENDING), 
+					 	('region', ASCENDING), 
+						('account_id', ASCENDING), 
 						('added', DESCENDING)
 						])
 		indexes.append([
 					 	('release', DESCENDING),	
+						('region', ASCENDING),
 						('account_id', ASCENDING), 
 						('added', DESCENDING)
 						])
@@ -1244,17 +1251,22 @@ class WGPlayerAchievementsMaxSeries(JSONExportable):
 			region = Region.from_id(account_id)
 		values['region'] = region
 		values['id'] = cls.mk_index(account_id, region, values['added'])
+		# debug(f"account_id={account_id}, region={region}, added={values['added']}, _id = {values['id']}")
 		return values
 
 
-	@root_validator
-	def set_region(cls, values: dict) -> dict:
-		try:
-			if values['region'] is None and values['account'] > 0:
-				values['region'] = Region.from_id(values['account'])
-		except:
-			pass
-		return values
+	# @root_validator
+	# def set_region(cls, values: dict) -> dict:
+	# 	try:
+	# 		if values['region'] is None and values['account'] > 0:
+	# 			values['region'] = Region.from_id(values['account'])
+	# 	except:
+	# 		pass
+	# 	return values
+
+
+	def __str__(self) -> str:
+		return f'account_id={self.account_id}:{self.region} added={self.added}'
 
 
 	@classmethod
