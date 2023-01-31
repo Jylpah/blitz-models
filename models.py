@@ -1380,9 +1380,54 @@ class WGApiWoTBlitzPlayerAchievements(WGApiWoTBlitz):
 
 
 class WGApiTankopedia(WGApiWoTBlitz):
-	data : dict[str, Tank] | None = Field(default=..., alias='d')
-	
+	data 	: dict[str, WGTank] | None = Field(default=..., alias='d')
+	userStr	: dict[str, str] | None  = Field(default=None, alias='d')
+
+	_exclude_export_DB_fields : ClassVar[Optional[TypeExcludeDict]] = {	'userStr': True }
+
+	class Config:		
+		allow_mutation 					= True
+		validate_assignment 			= True
+		allow_population_by_field_name 	= True
+
+
+class WoTBlitzTankString(JSONExportable):
+	code: str = Field(default=..., alias='_id')
+	name: str = Field(default=..., alias='n')
+
 	class Config:		
 		allow_mutation 			= True
 		validate_assignment 	= True
 		allow_population_by_field_name = True
+
+
+	@property
+	def index(self) -> Idx:
+		return self.code
+
+
+	@property
+	def indexes(self) -> dict[str, Idx]:
+		"""return backend indexes"""
+		return { 'code': self.index }
+
+
+	@classmethod
+	def backend_indexes(cls) -> list[list[tuple[str, BackendIndexType]]]:
+		indexes : list[list[tuple[str, BackendIndexType]]] = list()
+		indexes.append([ ('code', TEXT) ])
+		return indexes
+
+
+	@classmethod
+	def from_tankopedia(cls, tankopedia: WGApiTankopedia) -> list['WoTBlitzTankString'] | None:
+		res : list[WoTBlitzTankString] = list()
+		try:
+			if tankopedia.userStr is not None:
+				for k, v in tankopedia.userStr.items():
+					res.append(WoTBlitzTankString(code=k, name=v))
+				return res
+		except Exception as err:
+			error(f"Could not read tank strings from Tankopedia: {err}")
+
+		return None
