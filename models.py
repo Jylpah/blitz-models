@@ -313,7 +313,7 @@ class WGBlitzRelease(JSONExportable, JSONImportable, CSVExportable, \
 	@property
 	def indexes(self) -> dict[str, Idx]:
 		"""return backend indexes"""
-		return { 'release': self.release }
+		return { 'release': self.index  }
 
 
 	@classmethod
@@ -926,7 +926,7 @@ class WGTankStat(JSONExportable, JSONImportable):
 		return f'account_id={self.account_id}:{self.region} tank_id={self.tank_id} last_battle_time={self.last_battle_time}'
 
 
-class WGApiWoTBlitz(BaseModel):
+class WGApiWoTBlitz(JSONExportable):
 	status	: str	= Field(default="ok", alias='s')
 	meta	: dict[str, Any] 	| None	
 	error	: WGApiError 		| None
@@ -1303,7 +1303,6 @@ class WGPlayerAchievementsMaxSeries(JSONExportable):
 		except Exception as err:
 			error(f'{err}')
 		return None
-
 
 
 class WGPlayerAchievementsMain(JSONExportable):
