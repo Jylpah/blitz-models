@@ -948,8 +948,8 @@ class WGApiWoTBlitzTankStats(WGApiWoTBlitz):
 
 
 class WGTank(JSONExportable, JSONImportable):
-	id 			: int 						= Field(default=..., alias = '_id')
-	tank_id 	: int 						= Field(default=None)
+	id 			: int 						= Field(default=None, alias = '_id')
+	tank_id 	: int 						= Field(default=...)
 	name   		: str | None				= Field(default=None)
 	nation   	: EnumNation | None	 		= Field(default=None)
 	type 	  	: EnumVehicleTypeStr| None	= Field(default=None)
@@ -965,7 +965,7 @@ class WGTank(JSONExportable, JSONImportable):
 	@property
 	def index(self) -> Idx:
 		"""return backend index"""
-		return self.id
+		return self.tank_id
 
 
 	@property
@@ -996,10 +996,12 @@ class WGTank(JSONExportable, JSONImportable):
 
 	@root_validator(pre=True)
 	def set_tank_id(cls, values: dict[str, Any])  -> dict[str, Any]:
-		if '_id' in values:
+		if 'tank_id' in values:
+			values['id'] = values['tank_id']
+		elif '_id' in values:
 			values['tank_id'] = values['_id']
-		else:
-			values['tank_id'] = values['id']
+		elif 'id' in values:
+			values['tank_id'] = values['id']		
 		return values
 
 
