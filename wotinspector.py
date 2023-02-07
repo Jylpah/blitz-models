@@ -4,15 +4,15 @@
 # replays.wotinspector.com
 ## -----------------------------------------------------------
 
-from typing import Optional, Union, cast
+from typing import Optional, Union, cast, Any
 import logging, json, re, sys, urllib
 from aiohttp import ClientResponse
 from asyncio import sleep
 from bs4 import BeautifulSoup                                           # type: ignore
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, Extra
 from pyutils.throttledclientsession import ThrottledClientSession     # type: ignore
-from pyutils.utils import get_url, get_url_JSON, get_url_JSON_model   # type: ignore  
-from .models import WoTBlitzReplayJSON
+from pyutils.utils import get_url, get_url_JSON, get_url_JSON_model, JSONExportable   
+from .models import WoTBlitzReplayJSON, Region
 from hashlib import md5
 from urllib.parse import urlencode, quote
 from base64 import b64encode
@@ -26,11 +26,47 @@ verbose	= logger.info
 debug	= logger.debug
 
 SLEEP : float = 1
+
+class WoTInspectorReplaySummary(JSONExportable):
+	id			: str 	= Field(default=..., alias= '_id')
+	player_name	: str 
+	vehicle_descr: int 
+	region		: str
+
+	class Config:	
+		allow_population_by_field_name = True
+		allow_mutation 			= True
+		validate_assignment 	= True
+		extra 					= Extra.allow
+	
+
+class WoTInspectorAPIdata(JSONExportable):
+	replays: list[WoTInspectorReplaySummary]
+
+	class Config:	
+		allow_population_by_field_name = True
+		allow_mutation 			= True
+		validate_assignment 	= True
+		extra 					= Extra.allow
+
+
+class WoTInspectorAPI(JSONExportable):
+	status	: str	= Field(default="ok")
+	data 	: WoTInspectorAPIdata
+	error 	: dict[str, Any]
+
+	class Config:	
+		allow_population_by_field_name = True
+		allow_mutation 			= True
+		validate_assignment 	= True
+		extra 					= Extra.allow
+
 class WoTinspector:
 	URL_WI          : str = 'https://replays.wotinspector.com'
 	URL_REPLAY_LIST : str = URL_WI + '/en/sort/ut/page/'
 	URL_REPLAY_DL   : str = URL_WI + '/en/download/'  
 	URL_REPLAY_VIEW : str = URL_WI +'/en/view/'
+	API_REPLAY_LIST : str = 'https://api.wotinspector.com/replay/list'
 	URL_REPLAY_UL   : str = 'https://api.wotinspector.com/replay/upload?'
 	URL_REPLAY_INFO : str = 'https://api.wotinspector.com/replay/upload?details=full&key='
 	URL_TANK_DB     : str = "https://wotinspector.com/static/armorinspector/tank_db_blitz.js"
@@ -46,8 +82,15 @@ class WoTinspector:
 			headers = dict()
 			headers['Authorization'] = f'Token {auth_token}'
 
-		self.session = ThrottledClientSession(rate_limit=rate_limit, filters=[self.URL_REPLAY_INFO, self.URL_REPLAY_DL, self.URL_REPLAY_LIST], 
-												re_filter=False, limit_filtered=True, headers = headers)
+		self.session = ThrottledClientSession(rate_limit=rate_limit, 
+												filters=[self.API_REPLAY_LIST, 
+														self.URL_REPLAY_INFO, 
+														self.URL_REPLAY_DL, 
+														self.URL_REPLAY_LIST
+														], 
+												re_filter=False, 
+												limit_filtered=True, 
+												headers = headers)
 
 
 	async def close(self) -> None:
@@ -133,9 +176,39 @@ class WoTinspector:
 		return cast(ClientResponse, await self.session.get(url))        # mypy checks fail with aiohttp _request() return type...
 
 
+	async def get_replay_ids(self, page: int = 0) -> list[str]:
+		"""Fetch replay ids from API"""
+		debug('starting')
+		ids : list[str] = list()
+		try:
+			url :str = self.get_url_replay_list(page=page)
+			resp : WoTInspectorAPI | None 
+			if (resp := await get_url_JSON_model(self.session, url=url, 
+												resp_model=WoTInspectorAPI)) is not None:
+				for replay in resp.data.replays:
+					ids.append(replay.id)
+
+		except Exception as err:
+			error(f'Failed get replay ids: {err}')
+		return ids
+
+
 	@classmethod
 	def get_url_replay_listing(cls, page : int) -> str:
 		return f'{cls.URL_REPLAY_LIST}{page}?vt=#filters'
+
+
+	@classmethod
+	def get_url_replay_list(cls, page : int = 0, 
+							player	: int = 0, 
+							clan	: int = 0, 
+							tier	: int = 0, 
+							type	: int = 0, 
+							tank_id : int = 0, 
+							map		: int = 0, 
+							mode	: int = 0) -> str:
+		# https://api.wotinspector.com/replay/list\?sort=ut\&player=\&tier=\&type=\&vehicle=\&map=\&mode=0\&clan=\&page=0
+		return f'{cls.API_REPLAY_LIST}?sort=ut&page={page}&player={player}&clan={clan}&tier={tier}&type={type}&vehicle={tank_id}&map={map}&mode={mode}'
 
 
 	@classmethod
