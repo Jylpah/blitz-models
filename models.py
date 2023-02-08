@@ -869,6 +869,12 @@ class WGTankStat(JSONExportable, JSONImportable):
 						('account_id', ASCENDING),
 						('tank_id', ASCENDING),
 						('last_battle_time', DESCENDING)
+						])
+		indexes.append([ 	
+						('region', ASCENDING),
+						('account_id', ASCENDING),
+						('last_battle_time', DESCENDING),
+						('tank_id', ASCENDING),
 						])					
 		indexes.append([
 					 	('region', ASCENDING),
