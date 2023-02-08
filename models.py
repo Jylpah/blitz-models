@@ -76,7 +76,7 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 				TXTExportable, TXTImportable):	
 
 	id					: int 		 	= Field(default=..., alias='_id')
-	region 				: Region | None	= Field(default=None, alias='r')
+	region 				: Region 		= Field(default=Region.eu, alias='r')
 	last_battle_time	: int 	 | None	= Field(default=None, alias='l')
 
 	_exclude_export_DB_fields  = None
@@ -122,23 +122,25 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 
 
 	@root_validator(pre=True)
-	def read_account_id(cls, values: dict[str, Any]) -> dict[str, Any]:
-		id = values.get('id')
-		if isinstance(id, str):
-			i, r = id.split(':')
+	def read_account_id(cls, values: TypeAccountDict) -> TypeAccountDict:
+		_id = values.get('id')		
+		if isinstance(_id, int):
+			values['region'] = Region.from_id(_id)
+		elif isinstance(_id, str):
+			i, r = _id.split(':')
 			values['id'] = int(i)
 			values['region'] = Region(r)
 		return values			
 
 
-	@root_validator(skip_on_failure=True)
-	def set_region(cls, values: TypeAccountDict) -> TypeAccountDict:
-		i = values.get('id')
-		assert isinstance(i, int), f'_id has to be int'
-		if values.get('region') is None:
-			# set default regions, but do not change region if set
-			values['region'] = Region.from_id(i)
-		return values
+	# @root_validator(skip_on_failure=True)
+	# def set_region(cls, values: TypeAccountDict) -> TypeAccountDict:
+	# 	i = values.get('id')
+	# 	assert isinstance(i, int), f'_id has to be int'
+	# 	if values.get('region') is None:
+	# 		# set default regions, but do not change region if set
+	# 		values['region'] = Region.from_id(i)
+	# 	return values
 
 
 	# TXTExportable()
