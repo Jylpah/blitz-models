@@ -889,7 +889,8 @@ class WGTankStat(JSONExportable, JSONImportable):
 	@classmethod
 	def arrow_schema(cls) -> pyarrow.schema:
 		return pyarrow.schema([
-			('region', 	pyarrow.string()),
+			#('region', 	pyarrow.string()),
+			('region', 	pyarrow.dictionary(pyarrow.uint8(), pyarrow.string())),
 			('last_battle_time', pyarrow.int64()),
 			('account_id', pyarrow.int64()),
 			('tank_id' , pyarrow.int32()),
