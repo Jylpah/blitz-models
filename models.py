@@ -7,6 +7,7 @@ from collections import defaultdict
 import logging
 import aiofiles
 import json
+import pyarrow 							# type: ignore
 from bson.objectid import ObjectId
 from bson.int64 import Int64
 from isort import place_module
@@ -883,6 +884,33 @@ class WGTankStat(JSONExportable, JSONImportable):
 						('account_id', ASCENDING),										
 						])
 		return indexes
+
+
+	@classmethod
+	def pa_schema(cls) -> pyarrow.schema:
+		return pyarrow.schema([
+			('region', 	pyarrow.string()),
+			('last_battle_time', pyarrow.int64()),
+			('account_id', pyarrow.int64()),
+			('tank_id' , pyarrow.int32()),
+			('mark_of_mastery' , pyarrow.int32()),
+			('battle_life_time' , pyarrow.int32()),
+			('release', pyarrow.string()),
+			('all.spotted' , pyarrow.int32()),
+			('all.hits' , pyarrow.int32()),
+			('all.frags' , pyarrow.int32()),
+			('all.wins' , pyarrow.int32()),
+			('all.losses' , pyarrow.int32()),
+			('all.capture_points' , pyarrow.int32()),
+			('all.battles' , pyarrow.int32()),
+			('all.damage_dealt' , pyarrow.int32()),
+			('all.damage_received' , pyarrow.int32()),
+			('all.max_frags' , pyarrow.int32()),
+			('all.shots' , pyarrow.int32()),
+			('all.win_and_survived' , pyarrow.int32()),
+			('all.survived_battles' , pyarrow.int32()),
+			('all.dropped_capture_points' , pyarrow.int32()),
+		])
 
 
 	@classmethod
