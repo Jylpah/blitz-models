@@ -834,7 +834,7 @@ class WGTankStat(JSONExportable, JSONImportable):
 																			'in_garage': True, 
 																			'in_garage_updated': True 
 																		}
-	_exclude_export_src_fields	: ClassVar[Optional[TypeExcludeDict]] = { '_id': True } 
+	_exclude_export_src_fields	: ClassVar[Optional[TypeExcludeDict]] = { 'id': True } 
 	# _include_export_DB_fields	: ClassVar[Optional[TypeExcludeDict]] = None
 	# _include_export_src_fields	: ClassVar[Optional[TypeExcludeDict]] = None
 
