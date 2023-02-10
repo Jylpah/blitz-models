@@ -1,10 +1,11 @@
 import logging
-from typing import Dict, Tuple, cast
+from typing import Dict, Tuple,  Sequence
 from collections import defaultdict
 from aiohttp import ClientTimeout
 from urllib.parse import quote
 
-from .models import Region, WGApiWoTBlitzTankStats, WGTankStat, WGApiWoTBlitzPlayerAchievements, WGPlayerAchievementsMaxSeries
+from .models import Region, WGApiWoTBlitzTankStats, WGTankStat, WGApiWoTBlitzPlayerAchievements, \
+					WGPlayerAchievementsMaxSeries, WGAccountInfo, WGApiWoTBlitzAccountInfo
 from pyutils import ThrottledClientSession, get_url_JSON_model
 
 TYPE_CHECKING = True
@@ -93,7 +94,12 @@ class WGApi():
 			error(f'Unknown region: {region.value}')
 		return None
 
-	
+	###########################################
+	# 
+	# get_tank_stats()
+	#
+	###########################################	
+
 	def get_tank_stats_url(self, account_id : int , region: Region, 
 							tank_ids: list[int] = [], fields: list[str] = []) -> Tuple[str, Region] | None:
 		assert type(account_id) is int, "account_id must be int"
@@ -159,7 +165,94 @@ class WGApi():
 		return None	
 		
 
-	def get_player_achievements_url(self, account_ids : list[int], 
+	###########################################
+	# 
+	# get_account_info()
+	#
+	###########################################
+
+	def get_account_info_url(self, 
+							  account_ids : Sequence[int], 
+							  region: Region, 
+							  fields: list[str] = ['account_id', 
+													'created_at', 
+													'updated_at', 
+													'last_battle_time', 
+													'nickname']) -> str | None:
+		"""get URL for /wotb/account/info/"""
+		URL_WG_ACCOUNT_INFO: str = 'account/info/'
+		try:
+			debug(f'starting, account_ids={account_ids}, region={region}')
+			server : str | None
+			if (server :=  self.get_server_url(region)) is None:
+				raise ValueError(f'No API server for region {region}')
+			if len(account_ids) == 0:
+				raise ValueError('Empty account_id list given')
+			
+			account_str: str = quote(','.join([ str(a) for a in account_ids] ))			
+			field_str : str = ''
+			if len(fields) > 0:
+				field_str = '&fields=' + quote(','.join(fields))
+			
+			return f'{server}{URL_WG_ACCOUNT_INFO}?application_id={self.app_id}&account_id={account_str}{field_str}'
+		except Exception as err:
+			debug(f'Failed to form url: {err}')
+		return None
+
+
+	async def get_account_info_full(self, 
+									account_ids : Sequence[int], 
+									region: Region,
+									fields: list[str] = ['account_id', 
+														'created_at', 
+														'updated_at', 
+														'last_battle_time', 
+														'nickname'] 
+										) -> WGApiWoTBlitzAccountInfo | None:
+		"""get WG API response for account/info"""
+		assert self.session is not None, "session must be initialized"
+		try:
+			url : str | None
+			if (url := self.get_account_info_url(account_ids=account_ids, region=region, fields=fields)) is None:
+				raise ValueError(f'No account info available')
+			debug(f'URL: {url}')
+			return await get_url_JSON_model(self.session[region.value], url, resp_model=WGApiWoTBlitzAccountInfo)
+			
+		except Exception as err:
+			error(f'Failed to fetch account info: {err}')
+		return None	
+
+	
+	async def get_account_info(self, 
+								account_ids : Sequence[int], 
+								region: Region,
+								fields: list[str] = ['account_id', 
+													'created_at', 
+													'updated_at', 
+													'last_battle_time', 
+													'nickname'] 
+								) -> list[WGAccountInfo] | None:
+		assert self.session is not None, "session must be initialized"
+		try:
+			resp : WGApiWoTBlitzAccountInfo | None 
+			resp = await self.get_account_info_full(account_ids=account_ids, region=region, fields=fields)
+			if resp is None or resp.data is None:
+				error('No stats found')
+				return None
+			else:				
+				return [ info for info in resp.data.values() if info is not None ]
+		except Exception as err:
+			error(f'Failed to fetch player achievements: {err}')
+		return None	
+
+
+	###########################################
+	# 
+	# get_player_achievements()
+	#
+	###########################################
+
+	def get_player_achievements_url(self, account_ids : Sequence[int], 
 									region: Region, 
 									fields: list[str] = list()) -> str | None:
 		# assert type(account_ids) is list, "account_ids must be list"
