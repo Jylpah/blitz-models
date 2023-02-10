@@ -1099,6 +1099,10 @@ class WGApiWoTBlitz(JSONExportable):
 class WGApiWoTBlitzAccountInfo(WGApiWoTBlitz):	
 	data	: dict[str, WGAccountInfo | None ] | None = Field(default=..., alias='d')
 
+	class Config:		
+		allow_mutation 			= True
+		validate_assignment 	= True
+		allow_population_by_field_name = True
 
 
 class WGApiWoTBlitzTankStats(WGApiWoTBlitz):	
