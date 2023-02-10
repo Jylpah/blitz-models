@@ -36,6 +36,7 @@ class Region(StrEnum):
 	com 	= 'com'
 	asia 	= 'asia'
 	china 	= 'china'
+# 	NONE 	= 'NONE'
 # #	API		= 'API'	
 
 	@classmethod
@@ -69,6 +70,48 @@ class Region(StrEnum):
 	def matches(self, other_region : 'Region') -> bool:
 		assert type(other_region) is type(self), 'other_region is not Region'
 		return self == other_region
+
+###########################################
+# 
+# WGAccountInfo()
+#
+###########################################
+
+class WGAccountInfo(JSONExportable):
+	account_id 	: int 			= Field(alias='id') 
+	region 		: Region 		= Field(alias='r')
+	created_at 	: int 			= Field(default=0, alias='c')
+	updated_at 	: int 			= Field(default=0, alias='u')
+	nickname 	: str | None	= Field(default=None, alias='n')
+	last_battle_time : int 		= Field(default=0, alias='l')
+
+	# _exclude_export_DB_fields	: ClassVar[Optional[TypeExcludeDict]] = None
+	# _exclude_export_src_fields	: ClassVar[Optional[TypeExcludeDict]] = None
+	# _include_export_DB_fields	: ClassVar[Optional[TypeExcludeDict]] = None
+	# _include_export_src_fields	: ClassVar[Optional[TypeExcludeDict]] = None
+
+	class Config:
+		arbitrary_types_allowed = True
+		allow_mutation 			= True
+		validate_assignment 	= True
+		allow_population_by_field_name = True
+		extra 					= Extra.allow
+
+
+	@root_validator(pre=True)
+	def set_region(cls, values: dict[str, Any]) -> dict[str, Any]:
+		account_id = values.get('account_id')
+		region = values.get('region')
+		if isinstance(account_id, int) and region is None:
+			values['region '] = Region.from_id(account_id)
+		return values
+
+
+###########################################
+# 
+# Account()
+#
+###########################################
 
 TypeAccountDict = dict[str, int|bool|Region|None]
 AccountSelf 	= TypeVar('AccountSelf', bound='Account')
@@ -139,16 +182,6 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 		return values			
 
 
-	# @root_validator(skip_on_failure=True)
-	# def set_region(cls, values: TypeAccountDict) -> TypeAccountDict:
-	# 	i = values.get('id')
-	# 	assert isinstance(i, int), f'_id has to be int'
-	# 	if values.get('region') is None:
-	# 		# set default regions, but do not change region if set
-	# 		values['region'] = Region.from_id(i)
-	# 	return values
-
-
 	# TXTExportable()
 	def txt_row(self, format : str = 'id') -> str:
 		"""export data as single row of text	"""
@@ -197,6 +230,40 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 	def __str__(self) -> str:
 		fields : list[str] = [ f for f in self.__fields__.keys() if f != 'id' ]
 		return f'{type(self).__name__} id={self.id}: { ", ".join( [ f + "=" + str(getattr(self,f)) for f in fields ]  ) }'
+
+
+	@classmethod
+	def transform_WGAccountInfo(cls, in_obj: 'WGAccountInfo') -> Optional['Account']:
+		"""Transform WGAccountInfo object to Account"""
+		try:			
+			return Account(id = in_obj.account_id, 
+							region = in_obj.region, 
+							last_battle_time = in_obj.last_battle_time,
+							created_at = in_obj.created_at,
+							updated_at = in_obj.updated_at,
+							nickname = in_obj.nickname)			
+		except Exception as err:
+			error(f'{err}')
+		return None
+
+
+	def update(self, update: 'WGAccountInfo') -> None:
+		"""Update Account() from WGACcountInfo i.e. from WG API"""
+		try:
+			if update.last_battle_time > 0:
+				self.last_battle_time = update.last_battle_time
+			if update.created_at > 0:
+				self.created_at = update.created_at
+			if update.updated_at > 0:
+				self.updated_at = update.updated_at
+			if update.nickname is not None:
+				self.nickname = update.nickname
+		except Exception as err:
+			error(f'{err}')
+		return None
+
+
+Account.register_transformation(WGAccountInfo, Account.transform_WGAccountInfo)
 
 
 class EnumWinnerTeam(IntEnum):
@@ -298,6 +365,12 @@ class EnumNation(IntEnum):
 		else:
 			return f'{self.name}'.capitalize()
 
+
+###########################################
+# 
+# WGBlitzRelease()
+#
+###########################################
 
 WGBlitzReleaseSelf = TypeVar('WGBlitzReleaseSelf', bound='WGBlitzRelease')
 class WGBlitzRelease(JSONExportable, JSONImportable, CSVExportable, \
@@ -423,13 +496,26 @@ class WGBlitzRelease(JSONExportable, JSONImportable, CSVExportable, \
 
 	def __str__(self) -> str:
 		return self.release
-	
+
+
+###########################################
+# 
+# Replays
+#
+###########################################
+
 class WoTBlitzReplayAchievement(BaseModel):
 	t: int
 	v: int
 
 
-# WoTBlitzReplayDetail = dict[str, Union[str, int, list[WoTBlitzReplayAchievement], None]]
+
+###########################################
+# 
+# WoTBlitzReplayDetail()
+#
+###########################################
+
 class WoTBlitzReplayDetail(BaseModel):
 	achievements : list[WoTBlitzReplayAchievement] | None = Field(default=None, alias='a')
 	base_capture_points	: int | None = Field(default=None, alias='bc')
@@ -479,6 +565,12 @@ class WoTBlitzReplayDetail(BaseModel):
 		validate_assignment = True
 		allow_population_by_field_name = True
 
+
+###########################################
+# 
+# WoTBlitzReplaySummary()
+#
+###########################################
 
 class WoTBlitzReplaySummary(BaseModel):
 	_TimestampFormat : str = "%Y-%m-%d %H:%M:%S"
@@ -546,6 +638,13 @@ class WoTBlitzReplaySummary(BaseModel):
 		values['battle_start_time'] = datetime.fromtimestamp(values['battle_start_timestamp']).strftime(cls._TimestampFormat)
 		return values
 
+
+
+###########################################
+# 
+# WoTBlitzReplayData()
+#
+###########################################
 
 class WoTBlitzReplayData(JSONExportable, JSONImportable):
 	id 			: str | None	= Field(default=None, alias='_id')
@@ -641,6 +740,14 @@ class WoTBlitzReplayData(JSONExportable, JSONImportable):
 			return values
 		except Exception as err:
 			raise ValueError(f'Error reading replay ID: {err}')
+
+
+
+###########################################
+# 
+# WoTBlitzReplayJSON()
+#
+###########################################
 
 		
 class WoTBlitzReplayJSON(JSONExportable, JSONImportable):
@@ -779,6 +886,13 @@ class WoTBlitzReplayJSON(JSONExportable, JSONImportable):
 
 
 WoTBlitzReplayData.register_transformation(WoTBlitzReplayJSON,WoTBlitzReplayData.transform_WoTBlitzReplayJSON )
+
+
+###########################################
+# 
+# WGApiError()
+#
+###########################################
 
 
 class WGApiError(BaseModel):
@@ -981,6 +1095,10 @@ class WGApiWoTBlitz(JSONExportable):
 		if v is not None:
 			error(v.str())
 		return v
+
+class WGApiWoTBlitzAccountInfo(WGApiWoTBlitz):	
+	data	: dict[str, WGAccountInfo | None ] | None = Field(default=..., alias='d')
+
 
 
 class WGApiWoTBlitzTankStats(WGApiWoTBlitz):	
