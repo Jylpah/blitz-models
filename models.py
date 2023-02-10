@@ -600,18 +600,18 @@ class WoTBlitzReplayData(JSONExportable, JSONImportable):
 		return indexes
 
 
-	@classmethod
-	def transform(cls, in_obj: 'JSONExportable') -> Optional['WoTBlitzReplayData']:
-		try:
-			if isinstance(in_obj, WoTBlitzReplayJSON):
-				return cls._transform_WoTBlitzReplayJSON(in_obj)
-		except Exception as err:
-			error(f'{err}')
-		return None
+	# @classmethod
+	# def transform(cls, in_obj: 'JSONExportable') -> Optional['WoTBlitzReplayData']:
+	# 	try:
+	# 		if isinstance(in_obj, WoTBlitzReplayJSON):
+	# 			return cls.transform_WoTBlitzReplayJSON(in_obj)
+	# 	except Exception as err:
+	# 		error(f'{err}')
+	# 	return None
 
 
 	@classmethod
-	def _transform_WoTBlitzReplayJSON(cls, in_obj: 'WoTBlitzReplayJSON') -> Optional['WoTBlitzReplayData']:
+	def transform_WoTBlitzReplayJSON(cls, in_obj: 'WoTBlitzReplayJSON') -> Optional['WoTBlitzReplayData']:
 		try:
 			return in_obj.data
 		except Exception as err:
@@ -776,6 +776,9 @@ class WoTBlitzReplayJSON(JSONExportable, JSONImportable):
 				return EnumBattleResult.incomplete
 		except Exception as err:
 			raise Exception('Error reading replay')
+
+
+WoTBlitzReplayData.register_transformation(WoTBlitzReplayJSON,WoTBlitzReplayData.transform_WoTBlitzReplayJSON )
 
 
 class WGApiError(BaseModel):
@@ -1161,19 +1164,19 @@ class Tank(JSONExportable, JSONImportable, \
 		return Tank(tank_id=id)
 
 
-	@classmethod
-	def transform(cls, in_obj: JSONExportable) -> Optional['Tank']:
-		"""Transform object to out_type if supported"""		
-		try:
-			if isinstance(in_obj, WGTank):
-				return cls._transform_WGTank(in_obj)
-		except Exception as err:
-			error(f'{err}')
-		return None
+	# @classmethod
+	# def transform(cls, in_obj: JSONExportable) -> Optional['Tank']:
+	# 	"""Transform object to out_type if supported"""		
+	# 	try:
+	# 		if isinstance(in_obj, WGTank):
+	# 			return cls.transform_WGTank(in_obj)
+	# 	except Exception as err:
+	# 		error(f'{err}')
+	# 	return None
 
 	
 	@classmethod
-	def _transform_WGTank(cls, in_obj: WGTank) -> Optional['Tank']:
+	def transform_WGTank(cls, in_obj: WGTank) -> Optional['Tank']:
 		"""Transform WGTank object to Tank"""
 		try:
 			# debug(f'type={type(in_obj)}')
@@ -1209,6 +1212,9 @@ class Tank(JSONExportable, JSONImportable, \
 		"""export data as single row of text"""
 		return f'({self.tank_id}) {self.name} tier {self.tier} {self.type} {self.nation}'
 		
+
+Tank.register_transformation(WGTank, Tank.transform_WGTank)
+
 
 class WGPlayerAchievements(JSONExportable):
 	"""Placeholder class for data.achievements that are not collected"""
@@ -1313,21 +1319,21 @@ class WGPlayerAchievementsMaxSeries(JSONExportable):
 		return f'account_id={self.account_id}:{self.region} added={self.added}'
 
 
-	@classmethod
-	def transform(cls, in_obj: JSONExportable) -> Optional['WGPlayerAchievementsMaxSeries']:
-		"""Transform object to out_type if supported"""
-		ms : WGPlayerAchievementsMaxSeries
-		try:
-			if isinstance(in_obj, WGPlayerAchievementsMain):
-				return cls._transform_WGPlayerAchievementsMain(in_obj)
+	# @classmethod
+	# def transform(cls, in_obj: JSONExportable) -> Optional['WGPlayerAchievementsMaxSeries']:
+	# 	"""Transform object to out_type if supported"""
+	# 	ms : WGPlayerAchievementsMaxSeries
+	# 	try:
+	# 		if isinstance(in_obj, WGPlayerAchievementsMain):
+	# 			return cls.transform_WGPlayerAchievementsMain(in_obj)
 
-		except Exception as err:
-			error(f'{err}')
-		return None
+	# 	except Exception as err:
+	# 		error(f'{err}')
+	# 	return None
 
 	
 	@classmethod
-	def _transform_WGPlayerAchievementsMain(cls, in_obj: 'WGPlayerAchievementsMain') -> Optional['WGPlayerAchievementsMaxSeries']:
+	def transform_WGPlayerAchievementsMain(cls, in_obj: 'WGPlayerAchievementsMain') -> Optional['WGPlayerAchievementsMaxSeries']:
 		"""Transform WGPlayerAchievementsMain object to WGPlayerAchievementsMaxSeries"""
 		try:
 			if in_obj.max_series is None:
@@ -1357,6 +1363,9 @@ class WGPlayerAchievementsMain(JSONExportable):
 		allow_mutation 			= True
 		validate_assignment 	= True
 		allow_population_by_field_name = True
+
+
+WGPlayerAchievementsMaxSeries.register_transformation(WGPlayerAchievementsMain, WGPlayerAchievementsMaxSeries.transform_WGPlayerAchievementsMain)
 
 
 class WGApiWoTBlitzPlayerAchievements(WGApiWoTBlitz):	
