@@ -77,8 +77,11 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 				TXTExportable, TXTImportable):	
 
 	id					: int 		 	= Field(default=..., alias='_id')
-	region 				: Region 		= Field(default=Region.eu, alias='r')
-	last_battle_time	: int 	 | None	= Field(default=None, alias='l')
+	region 				: Region 		= Field(alias='r')
+	last_battle_time	: int | None	= Field(default=None, alias='l')
+	created_at 			: int			= Field(default=0, alias='c')
+	updated_at 			: int			= Field(default=0, alias='u')
+	nickname 			: str | None	= Field(default=None, alias='n')
 
 	_exclude_export_DB_fields  = None
 	_exclude_export_src_fields = None
@@ -124,13 +127,15 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 
 	@root_validator(pre=True)
 	def read_account_id(cls, values: TypeAccountDict) -> TypeAccountDict:
-		_id = values.get('id')		
-		if isinstance(_id, int):
-			values['region'] = Region.from_id(_id)
-		elif isinstance(_id, str):
-			i, r = _id.split(':')
-			values['id'] = int(i)
-			values['region'] = Region(r)
+		_id = values.get('id')
+		region = values.get('region')		
+		if region is None:
+			if isinstance(_id, int):
+				values['region'] = Region.from_id(_id)
+			elif isinstance(_id, str):
+				i, r = _id.split(':')
+				values['id'] = int(i)
+				values['region'] = Region(r)
 		return values			
 
 
