@@ -19,24 +19,28 @@ class WGApi():
 
 	# constants
 	DEFAULT_WG_APP_ID 		: str = '81381d3f45fa4aa75b78a7198eb216ad'
+	DEFAULT_LESTA_APP_ID 	: str = ''
 
 	URL_SERVER = {
 		'eu'    : 'https://api.wotblitz.eu/wotb/',
 		'ru'    : 'https://api.wotblitz.ru/wotb/',
-		'com'    : 'https://api.wotblitz.com/wotb/',
+		'com'   : 'https://api.wotblitz.com/wotb/',
 		'asia'  : 'https://api.wotblitz.asia/wotb/',
 		'china' : None
 		}
 
-	def __init__(self, WG_app_id : str = DEFAULT_WG_APP_ID, 
+	def __init__(self, 
+				app_id 		: str = DEFAULT_WG_APP_ID, 
+				ru_app_id	: str = DEFAULT_LESTA_APP_ID,
 				# tankopedia_fn 	: str = 'tanks.json', 
 				# maps_fn 		: str = 'maps.json', 
 				rate_limit: float = 10):
-		assert WG_app_id is not None, "WG App ID must not be None"
+		assert app_id is not None, "WG App ID must not be None"
 		assert rate_limit is not None, "rate_limit must not be None"
 		debug(f'rate_limit: {rate_limit}')
-		self.app_id 	: str = WG_app_id
-		self.session : Dict[str, ThrottledClientSession] | None = None
+		self.app_id  	: str = app_id
+		self.ru_app_id 	: str = ru_app_id
+		self.session 	: Dict[str, ThrottledClientSession] | None = None
 
 		if self.app_id is not None:
 			headers = {'Accept-Encoding': 'gzip, deflate'} 	
@@ -127,8 +131,10 @@ class WGApi():
 			field_str : str = ''
 			if len(fields) > 0:
 				field_str = '&fields=' + quote(','.join(fields))
-
-			return f'{server}{URL_WG_TANK_STATS}?application_id={self.app_id}&account_id={account_id}{tank_id_str}{field_str}', account_region
+			if region == Region.ru:
+				return f'{server}{URL_WG_TANK_STATS}?application_id={self.ru_app_id}&account_id={account_id}{tank_id_str}{field_str}', account_region
+			else:
+				return f'{server}{URL_WG_TANK_STATS}?application_id={self.app_id}&account_id={account_id}{tank_id_str}{field_str}', account_region
 		except Exception as err:
 			debug(f'Failed to form url for account_id: {account_id}: {err}')
 		return None
@@ -193,8 +199,10 @@ class WGApi():
 			field_str : str = ''
 			if len(fields) > 0:
 				field_str = '&fields=' + quote(','.join(fields))
-			
-			return f'{server}{URL_WG_ACCOUNT_INFO}?application_id={self.app_id}&account_id={account_str}{field_str}'
+			if region == Region.ru:
+				return f'{server}{URL_WG_ACCOUNT_INFO}?application_id={self.ru_app_id}&account_id={account_str}{field_str}'
+			else:
+				return f'{server}{URL_WG_ACCOUNT_INFO}?application_id={self.app_id}&account_id={account_str}{field_str}'
 		except Exception as err:
 			debug(f'Failed to form url: {err}')
 		return None
@@ -273,8 +281,10 @@ class WGApi():
 			field_str : str = ''
 			if len(fields) > 0:
 				field_str = '&fields=' + quote(','.join(fields))
-			
-			return f'{server}{URL_WG_PLAYER_ACHIEVEMENTS}?application_id={self.app_id}&account_id={account_str}{field_str}'
+			if region == Region.ru:
+				return f'{server}{URL_WG_PLAYER_ACHIEVEMENTS}?application_id={self.ru_app_id}&account_id={account_str}{field_str}'
+			else:
+				return f'{server}{URL_WG_PLAYER_ACHIEVEMENTS}?application_id={self.app_id}&account_id={account_str}{field_str}'
 		except Exception as err:
 			debug(f'Failed to form url: {err}')
 		return None
