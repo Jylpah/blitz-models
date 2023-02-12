@@ -1110,7 +1110,7 @@ class WGApiWoTBlitz(JSONExportable):
 		return v
 
 class WGApiWoTBlitzAccountInfo(WGApiWoTBlitz):	
-	data	: dict[str, WGAccountInfo | None ] | None = Field(default=..., alias='d')
+	data	: dict[str, WGAccountInfo | None ] | None = Field(default=None, alias='d')
 
 	class Config:		
 		allow_mutation 			= True
@@ -1119,7 +1119,7 @@ class WGApiWoTBlitzAccountInfo(WGApiWoTBlitz):
 
 
 class WGApiWoTBlitzTankStats(WGApiWoTBlitz):	
-	data	: dict[str, list[WGTankStat] | None ] | None = Field(default=..., alias='d')
+	data	: dict[str, list[WGTankStat] | None ] | None = Field(default=None, alias='d')
 
 	class Config:		
 		allow_mutation 			= True
@@ -1565,7 +1565,7 @@ class WGApiWoTBlitzPlayerAchievements(WGApiWoTBlitz):
 
 
 class WGApiTankopedia(WGApiWoTBlitz):
-	data 	: dict[str, WGTank] | None = Field(default=..., alias='d')
+	data 	: dict[str, WGTank] | None = Field(default=None, alias='d')
 	userStr	: dict[str, str] | None  = Field(default=None, alias='d')
 
 	_exclude_export_DB_fields : ClassVar[Optional[TypeExcludeDict]] = {	'userStr': True }
