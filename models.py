@@ -92,7 +92,7 @@ class Region(StrEnum):
 
 class WGAccountInfo(JSONExportable):
 	account_id 	: int 			= Field(alias='id') 
-	region 		: Region 		= Field(alias='r')
+	region 		: Region | None	= Field(default=None, alias='r')
 	created_at 	: int 			= Field(default=0, alias='c')
 	updated_at 	: int 			= Field(default=0, alias='u')
 	nickname 	: str | None	= Field(default=None, alias='n')
@@ -111,7 +111,7 @@ class WGAccountInfo(JSONExportable):
 		extra 					= Extra.allow
 
 
-	@root_validator(pre=True)
+	@root_validator()
 	def set_region(cls, values: dict[str, Any]) -> dict[str, Any]:
 		account_id = values.get('account_id')
 		region = values.get('region')
