@@ -66,7 +66,7 @@ class WGApi():
 					error(f'{err}')
 		return None
 	
-	def print_server_stats(self) -> dict[str, str] | None:
+	def stats(self) -> dict[str, str] | None:
 		"""Return dict of stats per server"""		
 		try:
 			if self.session is not None:
@@ -87,6 +87,18 @@ class WGApi():
 		except Exception as err:
 			error(f'{err}')
 		return None
+
+
+	def print(self) -> None:
+		"""Print server stats"""
+		try:
+			stats : dict[str, str] | None = self.stats()
+			if stats is not None:
+				message('WG API stats:')
+				for server in stats:
+					message(f'{server.capitalize():7s}: {stats[server]}') 
+		except Exception as err:
+			error(f'{err}')
 
 
 	@classmethod
