@@ -48,6 +48,19 @@ class Region(StrEnum):
 	def has_stats(cls) -> set['Region']:
 		return { Region.eu, Region.com, Region.asia, Region.ru }
 
+	
+	def id_range(self) -> range:
+		if self == Region.ru:
+			return range(0, int(5e8))
+		elif self == Region.eu:
+			return range(int(5e8), int(10e8))
+		elif self == Region.com:
+			return range(int(10e8), int(20e8))
+		elif self == Region.asia:
+			return range(int(20e8), int(31e8))
+		else:
+			return range(int(31e8), int(42e8))
+	
 
 	@classmethod
 	def from_id(cls, account_id : int) -> Optional['Region']:
