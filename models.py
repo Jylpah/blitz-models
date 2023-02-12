@@ -262,19 +262,24 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 
 	def update(self, update: 'WGAccountInfo') -> bool:
 		"""Update Account() from WGACcountInfo i.e. from WG API"""
+		updated : bool = False
 		try:
+
 			if update.last_battle_time > 0:
 				self.last_battle_time = update.last_battle_time
+				updated = True
 			if update.created_at > 0:
 				self.created_at = update.created_at
+				updated = True
 			if update.updated_at > 0:
 				self.updated_at = update.updated_at
+				updated = True
 			if update.nickname is not None:
 				self.nickname = update.nickname
-			return True
+				updated = True
 		except Exception as err:
 			error(f'{err}')
-		return False
+		return updated
 
 
 Account.register_transformation(WGAccountInfo, Account.transform_WGAccountInfo)
