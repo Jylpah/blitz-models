@@ -40,50 +40,42 @@ class WGApi():
 		debug(f'rate_limit: {rate_limit}')
 		self.app_id  	: str = app_id
 		self.ru_app_id 	: str = ru_app_id
-		self.session 	: Dict[str, ThrottledClientSession] | None = None
+		self.session 	: dict[str, ThrottledClientSession] = dict()
 
-		if self.app_id is not None:
-			headers = {'Accept-Encoding': 'gzip, deflate'} 	
-			self.session  = dict()
-			for region in Region.API_regions():
-				timeout = ClientTimeout(total=10)
-				self.session[region.value] = ThrottledClientSession(rate_limit=rate_limit, 
-																	headers=headers, 
-																	timeout=timeout)
-			debug('WG aiohttp session initiated')            
-		else:			
-			debug('WG aiohttp session NOT initiated')
-
+		headers = {'Accept-Encoding': 'gzip, deflate'} 	
+		for region in Region.API_regions():
+			timeout = ClientTimeout(total=10)
+			self.session[region.value] = ThrottledClientSession(rate_limit=rate_limit, 
+																headers=headers, 
+																timeout=timeout)
+		debug('WG aiohttp session initiated')            
+		
 
 	async def close(self) -> None:
-		if self.session is not None:
-			for server in self.session:
-				try:
-					debug(f'trying to close session to {server} server')
-					await self.session[server].close()
-					debug(f'session to {server} server closed')
-				except Exception as err:
-					error(f'{err}')
+		"""Close aiohttp sessions"""
+		for server in self.session.keys():
+			try:
+				debug(f'trying to close session to {server} server')
+				await self.session[server].close()
+				debug(f'session to {server} server closed')
+			except Exception as err:
+				error(f'{err}')
 		return None
 	
 	def stats(self) -> dict[str, str] | None:
 		"""Return dict of stats per server"""		
 		try:
-			if self.session is not None:
-				# stats : dict[str, dict[str, float]] = dict()
-				totals : defaultdict[str, float] = defaultdict(float)
-				for region in self.session.keys():
-					server_stats : dict[str, float] = self.session[region].stats_dict
-					for stat in server_stats:
-						totals[stat] += server_stats[stat]
-					# stats[region] = server_stats
-				# stats['Total'] = totals
+			totals : defaultdict[str, float] = defaultdict(float)
+			for region in self.session.keys():
+				server_stats : dict[str, float] = self.session[region].stats_dict
+				for stat in server_stats:
+					totals[stat] += server_stats[stat]
 
-				res : dict[str, str] = dict()
-				for region in self.session.keys():
-					res[region] = self.session[region].stats
-				res['Total'] = ThrottledClientSession.print_stats(totals)	
-				return res
+			res : dict[str, str] = dict()
+			for region in self.session.keys():
+				res[region] = self.session[region].stats
+			res['Total'] = ThrottledClientSession.print_stats(totals)	
+			return res
 		except Exception as err:
 			error(f'{err}')
 		return None
@@ -154,7 +146,6 @@ class WGApi():
 	
 	async def get_tank_stats_full(self, account_id: int, region: Region,
 				tank_ids: list[int] = [], fields: list[str] = [] ) -> WGApiWoTBlitzTankStats | None:
-		assert self.session is not None, "session must be initialized"
 		try:
 			server_url : Tuple[str, Region] | None = self.get_tank_stats_url(account_id=account_id, region=region, tank_ids=tank_ids, fields=fields)
 			if server_url is None:
@@ -171,7 +162,6 @@ class WGApi():
 	
 	async def get_tank_stats(self, account_id: int, region: Region,
 			tank_ids: list[int] = [], fields: list[str] = [] ) -> list[WGTankStat] | None:
-		assert self.session is not None, "session must be initialized"
 		try:
 			resp : WGApiWoTBlitzTankStats | None = await self.get_tank_stats_full(account_id=account_id, region=region, tank_ids=tank_ids, fields=fields)
 			if resp is None or resp.data is None:
@@ -229,8 +219,7 @@ class WGApi():
 														'last_battle_time', 
 														'nickname'] 
 										) -> WGApiWoTBlitzAccountInfo | None:
-		"""get WG API response for account/info"""
-		assert self.session is not None, "session must be initialized"
+		"""get WG API response for account/info"""		
 		try:
 			url : str | None
 			if (url := self.get_account_info_url(account_ids=account_ids, region=region, fields=fields)) is None:
@@ -252,7 +241,6 @@ class WGApi():
 													'last_battle_time', 
 													'nickname'] 
 								) -> list[WGAccountInfo] | None:
-		assert self.session is not None, "session must be initialized"
 		try:
 			resp : WGApiWoTBlitzAccountInfo | None 
 			resp = await self.get_account_info_full(account_ids=account_ids, region=region, fields=fields)
@@ -275,12 +263,7 @@ class WGApi():
 	def get_player_achievements_url(self, account_ids : Sequence[int], 
 									region: Region, 
 									fields: list[str] = list()) -> str | None:
-		# assert type(account_ids) is list, "account_ids must be list"
-		# assert type(fields) is list,	"fields must be a list"
-		# assert type(region) is Region,	"region must be type of Region"
-
 		URL_WG_PLAYER_ACHIEVEMENTS: str = 'account/achievements/'
-
 		try:
 			debug(f'starting, account_ids={account_ids}, region={region}')
 			server : str | None = self.get_server_url(region)
@@ -304,7 +287,6 @@ class WGApi():
 	
 	async def get_player_achievements_full(self, account_ids : list[int], region: Region,
 											fields: list[str] = list() ) -> WGApiWoTBlitzPlayerAchievements | None:
-		assert self.session is not None, "session must be initialized"
 		try:
 			url : str | None
 			if (url := self.get_player_achievements_url(account_ids=account_ids, region=region, fields=fields)) is None:
@@ -320,7 +302,6 @@ class WGApi():
 	async def get_player_achievements(self, account_ids : list[int], 
 										region: Region,
 										fields: list[str] = list() ) -> list[WGPlayerAchievementsMaxSeries] | None:
-		assert self.session is not None, "session must be initialized"
 		try:
 			resp : WGApiWoTBlitzPlayerAchievements | None 
 			resp = await self.get_player_achievements_full(account_ids=account_ids, region=region, fields=fields)
