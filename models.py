@@ -1115,6 +1115,7 @@ class WGApiWoTBlitz(JSONExportable):
 			error(v.str())
 		return v
 
+
 class WGApiWoTBlitzAccountInfo(WGApiWoTBlitz):	
 	data	: dict[str, WGAccountInfo | None ] | None = Field(default=None, alias='d')
 
