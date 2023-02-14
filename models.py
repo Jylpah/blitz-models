@@ -134,7 +134,8 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 
 	id					: int 		 	= Field(default=..., alias='_id')
 	region 				: Region 		= Field(alias='r')
-	last_battle_time	: int | None	= Field(default=None, alias='l')
+	# last_battle_time	: int | None	= Field(default=None, alias='l')
+	last_battle_time	: int 			= Field(default=0, alias='l')
 	created_at 			: int			= Field(default=0, alias='c')
 	updated_at 			: int			= Field(default=0, alias='u')
 	nickname 			: str | None	= Field(default=None, alias='n')
@@ -173,9 +174,7 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 	
 	@validator('last_battle_time')
 	def check_epoch_ge_zero(cls, v):
-		if v is None:
-			return None
-		elif v >= 0:
+		if v >= 0:
 			return v
 		else:
 			raise ValueError('time field must be >= 0')
@@ -1056,8 +1055,15 @@ class WGTankStat(JSONExportable, JSONImportable):
 
 
 	@classmethod
-	def mk_id(cls, account_id: int, last_battle_time: int, tank_id: int = 0) -> ObjectId:
-		return ObjectId(hex(account_id)[2:].zfill(10) + hex(tank_id)[2:].zfill(6) + hex(last_battle_time)[2:].zfill(8))
+	def mk_id(cls, 
+			  account_id: int, 
+			  last_battle_time: int, 
+			  tank_id: int = 0
+			  ) -> ObjectId:
+		return ObjectId(hex(account_id)[2:].zfill(10) + \
+						hex(tank_id)[2:].zfill(6) + \
+						hex(last_battle_time)[2:].zfill(8)\
+						)
 
 
 	@validator('last_battle_time', pre=True)
