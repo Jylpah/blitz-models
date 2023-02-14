@@ -195,6 +195,7 @@ class WoTinspector:
 
 	@classmethod
 	def get_url_replay_listing(cls, page : int) -> str:
+		message('get_url_replay_listing(): DEPRECIATED')
 		return f'{cls.URL_REPLAY_LIST}{page}?vt=#filters'
 
 
@@ -216,23 +217,23 @@ class WoTinspector:
 		return cls.URL_REPLAY_VIEW + replay_id
 
 
-	@classmethod
-	def parse_replay_ids(cls, doc: str) -> set[str]:
-		"""Get replay ids links from WoTinspector.com replay listing page"""
-		replay_ids : set[str] = set()
-		try:
-			soup = BeautifulSoup(doc, 'lxml')
-			links = soup.find_all('a')
+	# @classmethod
+	# def parse_replay_ids(cls, doc: str) -> set[str]:
+	# 	"""Get replay ids links from WoTinspector.com replay listing page"""
+	# 	replay_ids : set[str] = set()
+	# 	try:
+	# 		soup = BeautifulSoup(doc, 'lxml')
+	# 		links = soup.find_all('a')
 			
-			for tag in links:
-				link = tag.get('href',None)
-				id : str | None = cls.get_replay_id(link)
-				if id is not None:
-					replay_ids.add(id)
-					debug('Adding replay link:' + link)
-		except Exception as err:
-			error(f'Failed to parse replay links {err}')
-		return replay_ids
+	# 		for tag in links:
+	# 			link = tag.get('href',None)
+	# 			id : str | None = cls.get_replay_id(link)
+	# 			if id is not None:
+	# 				replay_ids.add(id)
+	# 				debug('Adding replay link:' + link)
+	# 	except Exception as err:
+	# 		error(f'Failed to parse replay links {err}')
+	# 	return replay_ids
 	
 
 	@classmethod
