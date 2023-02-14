@@ -116,7 +116,7 @@ class WGAccountInfo(JSONExportable):
 		account_id = values.get('account_id')
 		region = values.get('region')
 		if isinstance(account_id, int) and region is None:
-			values['region '] = Region.from_id(account_id)
+			values['region'] = Region.from_id(account_id)
 		return values
 
 
