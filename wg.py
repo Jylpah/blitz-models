@@ -66,7 +66,7 @@ class WGApi():
 		"""Return dict of stats per server"""		
 		try:
 			totals : defaultdict[str, float] = defaultdict(float)
-			stats_dict : dict[str, dict[str, float]]
+			stats_dict : dict[str, dict[str, float]] = dict()
 			for region in self.session.keys():
 
 				if self.session[region].stats_dict['count'] > 0:
