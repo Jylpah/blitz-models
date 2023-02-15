@@ -66,15 +66,21 @@ class WGApi():
 		"""Return dict of stats per server"""		
 		try:
 			totals : defaultdict[str, float] = defaultdict(float)
+			stats_dict : dict[str, dict[str, float]]
 			for region in self.session.keys():
-				server_stats : dict[str, float] = self.session[region].stats_dict
-				for stat in server_stats:
-					totals[stat] += server_stats[stat]
 
+				if self.session[region].stats_dict['count'] > 0:
+					stats_dict[region] = self.session[region].stats_dict
+			
 			res : dict[str, str] = dict()
-			for region in self.session.keys():
-				res[region] = self.session[region].stats
-			res['Total'] = ThrottledClientSession.print_stats(totals)	
+			for region in stats_dict:
+				res[region] = ThrottledClientSession.print_stats(stats_dict[region])
+					
+			if len(stats_dict) > 1:
+				for region in stats_dict:
+					for stat in stats_dict[region]:
+						totals[stat] += stats_dict[region][stat]
+				res['Total'] = ThrottledClientSession.print_stats(totals)	
 			return res
 		except Exception as err:
 			error(f'{err}')
