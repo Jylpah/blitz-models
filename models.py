@@ -30,12 +30,15 @@ debug	= logger.debug
 
 B	= TypeVar('B', bound='BaseModel')
 
+MAX_UINT32 : int = 4294967295
+
 class Region(StrEnum):
 	ru 		= 'ru'
 	eu 		= 'eu'
 	com 	= 'com'
 	asia 	= 'asia'
 	china 	= 'china'
+	bot 	= 'BOTS'
 # 	NONE 	= 'NONE'
 # #	API		= 'API'	
 
@@ -58,13 +61,17 @@ class Region(StrEnum):
 			return range(int(10e8), int(20e8))
 		elif self == Region.asia:
 			return range(int(20e8), int(31e8))
-		else:
+		elif self == Region.china:
 			return range(int(31e8), int(42e8))
+		else:
+			return range(int(42e8), MAX_UINT32 + 1)
 	
 
 	@classmethod
 	def from_id(cls, account_id : int) -> Optional['Region']:
 		try:
+			if account_id >= 42e8:
+				return Region.bot  		# bots, same IDs on every server
 			if account_id >= 31e8:
 				return Region.china
 			elif account_id >= 20e8:
