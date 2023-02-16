@@ -34,7 +34,8 @@ class WGApi():
 				ru_app_id	: str = DEFAULT_LESTA_APP_ID,
 				# tankopedia_fn 	: str = 'tanks.json', 
 				# maps_fn 		: str = 'maps.json', 
-				rate_limit: float = 10):
+				rate_limit: float = 10, 
+				ru_rate_limit: float = -1):
 		assert app_id is not None, "WG App ID must not be None"
 		assert rate_limit is not None, "rate_limit must not be None"
 		debug(f'rate_limit: {rate_limit}')
@@ -42,10 +43,19 @@ class WGApi():
 		self.ru_app_id 	: str = ru_app_id
 		self.session 	: dict[str, ThrottledClientSession] = dict()
 
+		if ru_rate_limit < 0:
+			ru_rate_limit = rate_limit
+
 		headers = {'Accept-Encoding': 'gzip, deflate'} 	
-		for region in Region.API_regions():
+		
+		for region in [ Region.eu, Region.com, Region.asia ]:
 			timeout = ClientTimeout(total=10)
 			self.session[region.value] = ThrottledClientSession(rate_limit=rate_limit, 
+																headers=headers, 
+																timeout=timeout)
+		for region in [ Region.ru ]:
+			timeout = ClientTimeout(total=10)
+			self.session[region.value] = ThrottledClientSession(rate_limit=ru_rate_limit, 
 																headers=headers, 
 																timeout=timeout)
 		debug('WG aiohttp session initiated')            
