@@ -72,7 +72,7 @@ class Region(StrEnum):
 		try:
 			if account_id >= 42e8:
 				return Region.bot  		# bots, same IDs on every server
-			if account_id >= 31e8:
+			elif account_id >= 31e8:
 				return Region.china
 			elif account_id >= 20e8:
 				return Region.asia
