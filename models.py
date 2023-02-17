@@ -1,7 +1,5 @@
 from datetime import datetime, date
-from time import time
 from typing import Any, Mapping, Optional, Tuple, ClassVar, TypeVar, cast
-from os.path import basename
 from enum import Enum, IntEnum, StrEnum
 from collections import defaultdict
 import logging
@@ -14,10 +12,10 @@ from isort import place_module
 from pydantic import BaseModel, Extra, root_validator, validator, Field, HttpUrl, ValidationError
 from pydantic.utils import ValueItems
 
-from pyutils.utils import CSVExportable, CSVImportable, CSVImportableSelf, \
-							TXTExportable, TXTImportable, JSONExportable, \
-							JSONImportable, TypeExcludeDict, epoch_now, I, D, Idx, \
-							BackendIndexType, BackendIndex, DESCENDING, ASCENDING, TEXT
+from pyutils import CSVExportable, CSVImportable, CSVImportableSelf, \
+					TXTExportable, TXTImportable, JSONExportable, \
+					JSONImportable, Importable, TypeExcludeDict, epoch_now, I, D, Idx, \
+					BackendIndexType, BackendIndex, DESCENDING, ASCENDING, TEXT
 
 
 TYPE_CHECKING = True
@@ -137,7 +135,7 @@ TypeAccountDict = dict[str, int|bool|Region|None]
 AccountSelf 	= TypeVar('AccountSelf', bound='Account')
 
 class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable, 
-				TXTExportable, TXTImportable):	
+				TXTExportable, TXTImportable, Importable):	
 
 	id					: int 		 	= Field(default=..., alias='_id')
 	region 				: Region 		= Field(alias='r')
@@ -146,9 +144,6 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 	created_at 			: int			= Field(default=0, alias='c')
 	updated_at 			: int			= Field(default=0, alias='u')
 	nickname 			: str | None	= Field(default=None, alias='n')
-
-	_exclude_export_DB_fields  = None
-	_exclude_export_src_fields = None
 
 	class Config:
 		allow_population_by_field_name = True
@@ -212,10 +207,10 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 
 	# TXTImportable()
 	@classmethod
-	def from_txt(cls, text : str) -> 'Account':
+	def from_txt(cls, text : str, **kwargs) -> 'Account':
 		"""export data as single row of text	"""
 		try:
-			return Account(id=int(text))
+			return Account(id=int(text), **kwargs)
 		except Exception as err:
 			raise ValueError(f'Could not create Account() with id={text}: {err}')
 
