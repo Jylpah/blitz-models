@@ -4,8 +4,8 @@
 # replays.wotinspector.com
 ## -----------------------------------------------------------
 
-from typing import Optional, Union, cast, Any
-import logging, json, re, sys, urllib
+from typing import Optional, cast, Any
+import logging
 from aiohttp import ClientResponse
 from asyncio import sleep
 # from bs4 import BeautifulSoup                                       # type: ignore
