@@ -1,5 +1,5 @@
 from datetime import datetime, date
-from typing import Any, Mapping, Optional, Tuple, ClassVar, TypeVar, cast
+from typing import Any, Mapping, Optional, Self, Tuple, ClassVar, TypeVar, cast
 from enum import Enum, IntEnum, StrEnum
 from collections import defaultdict
 import logging
@@ -231,7 +231,7 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 	
 
 	@classmethod
-	def from_str(cls : type[AccountSelf], account: str) -> AccountSelf:
+	def from_str(cls, account: str) -> Self | None:
 		obj : dict[str, Any] = dict()
 		a = account.split(':')
 		obj['id'] = int(a[0])
