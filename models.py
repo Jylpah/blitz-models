@@ -925,14 +925,14 @@ class WGApiError(BaseModel):
 
 
 class WGTankStatAll(BaseModel):
+	battles			: int = Field(..., alias='b')
+	wins 			: int = Field(..., alias='w')
+	losses			: int = Field(..., alias='l')
 	spotted			: int = Field(..., alias='sp')
 	hits			: int = Field(..., alias='h')
 	frags			: int = Field(..., alias='k')
 	max_xp			: int | None
-	wins 			: int = Field(..., alias='w')
-	losses			: int = Field(..., alias='l')
-	capture_points 	: int = Field(..., alias='cp')
-	battles			: int = Field(..., alias='b')
+	capture_points 	: int = Field(..., alias='cp')	
 	damage_dealt	: int = Field(..., alias='dd')
 	damage_received	: int = Field(..., alias='dr')
 	max_frags		: int = Field(..., alias='mk')
