@@ -936,7 +936,7 @@ class WGTankStatAll(BaseModel):
 	damage_dealt	: int = Field(..., alias='dd')
 	damage_received	: int = Field(..., alias='dr')
 	max_frags		: int = Field(..., alias='mk')
-	shots			: int = Field(..., alias='sp')
+	shots			: int = Field(..., alias='sh')
 	frags8p			: int | None
 	xp				: int | None
 	win_and_survived: int = Field(..., alias='ws')
