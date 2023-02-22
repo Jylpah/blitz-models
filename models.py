@@ -1580,7 +1580,7 @@ class WGApiWoTBlitzPlayerAchievements(WGApiWoTBlitz):
 
 class WGApiTankopedia(WGApiWoTBlitz):
 	data 	: dict[str, WGTank] | None = Field(default=None, alias='d')
-	userStr	: dict[str, str] | None  = Field(default=None, alias='d')
+	userStr	: dict[str, str] | None  = Field(default=None, alias='s')
 
 	_exclude_export_DB_fields : ClassVar[Optional[TypeExcludeDict]] = {	'userStr': True }
 
