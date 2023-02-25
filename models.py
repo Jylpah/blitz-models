@@ -926,22 +926,22 @@ class WGApiError(BaseModel):
 
 class WGTankStatAll(BaseModel):
 	battles			: int = Field(..., alias='b')
-	wins 			: int = Field(..., alias='w')
-	losses			: int = Field(..., alias='l')
-	spotted			: int = Field(..., alias='sp')
-	hits			: int = Field(..., alias='h')
-	frags			: int = Field(..., alias='k')
+	wins 			: int = Field(default=-1, alias='w')
+	losses			: int = Field(default=-1, alias='l')
+	spotted			: int = Field(default=-1, alias='sp')
+	hits			: int = Field(default=-1, alias='h')
+	frags			: int = Field(default=-1, alias='k')
 	max_xp			: int | None
-	capture_points 	: int = Field(..., alias='cp')	
-	damage_dealt	: int = Field(..., alias='dd')
-	damage_received	: int = Field(..., alias='dr')
-	max_frags		: int = Field(..., alias='mk')
-	shots			: int = Field(..., alias='sh')
+	capture_points 	: int = Field(default=-1, alias='cp')	
+	damage_dealt	: int = Field(default=-1, alias='dd')
+	damage_received	: int = Field(default=-1, alias='dr')
+	max_frags		: int = Field(default=-1, alias='mk')
+	shots			: int = Field(default=-1, alias='sh')
 	frags8p			: int | None
 	xp				: int | None
-	win_and_survived: int = Field(..., alias='ws')
-	survived_battles: int = Field(..., alias='sb')
-	dropped_capture_points: int = Field(..., alias='dp')
+	win_and_survived: int = Field(default=-1, alias='ws')
+	survived_battles: int = Field(default=-1, alias='sb')
+	dropped_capture_points: int = Field(default=-1, alias='dp')
 
 	class Config:		
 		allow_mutation 			= True
