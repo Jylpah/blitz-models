@@ -206,10 +206,10 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 
 	# TXTImportable()
 	@classmethod
-	def from_txt(cls, text : str, **kwargs) -> 'Account':
+	def from_txt(cls, text : str, **kwargs) -> Self:
 		"""export data as single row of text	"""
 		try:
-			return Account(id=int(text), **kwargs)
+			return cls(id=int(text), **kwargs)
 		except Exception as err:
 			raise ValueError(f'Could not create Account() with id={text}: {err}')
 
