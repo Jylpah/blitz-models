@@ -265,16 +265,18 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 		updated : bool = False
 		try:
 
-			if update.last_battle_time > 0:
+			if update.last_battle_time > 0 and \
+				self.last_battle_time != update.last_battle_time:
 				self.last_battle_time = update.last_battle_time
 				updated = True
-			if update.created_at > 0:
+			if update.created_at > 0 and update.created_at != self.created_at:
 				self.created_at = update.created_at
 				updated = True
-			if update.updated_at > 0:
+			if update.updated_at > 0 and update.updated_at != self.updated_at:
 				self.updated_at = update.updated_at
 				updated = True
-			if update.nickname is not None:
+			if update.nickname is not None and \
+				(self.nickname is None or self.nickname != update.nickname):
 				self.nickname = update.nickname
 				updated = True
 		except Exception as err:
