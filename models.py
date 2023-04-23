@@ -1,11 +1,8 @@
 from datetime import datetime, date
-from time import time
-from typing import Any, Mapping, Optional, Tuple, ClassVar, TypeVar, cast
-from os.path import basename
+from typing import Any, Mapping, Optional, Self, Tuple, ClassVar, TypeVar, cast
 from enum import Enum, IntEnum, StrEnum
 from collections import defaultdict
 import logging
-import aiofiles
 import json
 import pyarrow 							# type: ignore
 from bson.objectid import ObjectId
@@ -14,10 +11,10 @@ from isort import place_module
 from pydantic import BaseModel, Extra, root_validator, validator, Field, HttpUrl, ValidationError
 from pydantic.utils import ValueItems
 
-from pyutils.utils import CSVExportable, CSVImportable, CSVImportableSelf, \
-							TXTExportable, TXTImportable, JSONExportable, \
-							JSONImportable, TypeExcludeDict, epoch_now, I, D, Idx, \
-							BackendIndexType, BackendIndex, DESCENDING, ASCENDING, TEXT
+from pyutils import CSVExportable, CSVImportable, CSVImportableSelf, \
+					TXTExportable, TXTImportable, JSONExportable, \
+					JSONImportable, Importable, TypeExcludeDict, epoch_now, I, D, Idx, \
+					BackendIndexType, BackendIndex, DESCENDING, ASCENDING, TEXT
 
 
 TYPE_CHECKING = True
@@ -51,7 +48,7 @@ class Region(StrEnum):
 	def has_stats(cls) -> set['Region']:
 		return { Region.eu, Region.com, Region.asia, Region.ru }
 
-	
+	@property
 	def id_range(self) -> range:
 		if self == Region.ru:
 			return range(0, int(5e8))
@@ -66,13 +63,28 @@ class Region(StrEnum):
 		else:
 			return range(int(42e8), MAX_UINT32 + 1)
 	
+	@property
+	def id_range_players(self) -> range:
+		if self == Region.ru:
+			return range(0, int(5e8))
+		elif self == Region.eu:
+			return range(int(5e8), int(10e8))
+		elif self == Region.com:
+			return range(int(10e8), int(20e8))
+		elif self == Region.asia:
+			return range(int(20e8), int(30e8))
+		elif self == Region.china:
+			return range(int(31e8), int(42e8))
+		else:
+			return range(int(42e8), MAX_UINT32 + 1)
+
 
 	@classmethod
 	def from_id(cls, account_id : int) -> Optional['Region']:
 		try:
 			if account_id >= 42e8:
 				return Region.bot  		# bots, same IDs on every server
-			if account_id >= 31e8:
+			elif account_id >= 31e8:
 				return Region.china
 			elif account_id >= 20e8:
 				return Region.asia
@@ -137,7 +149,7 @@ TypeAccountDict = dict[str, int|bool|Region|None]
 AccountSelf 	= TypeVar('AccountSelf', bound='Account')
 
 class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable, 
-				TXTExportable, TXTImportable):	
+				TXTExportable, TXTImportable, Importable):	
 
 	id					: int 		 	= Field(default=..., alias='_id')
 	region 				: Region 		= Field(alias='r')
@@ -146,9 +158,6 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 	created_at 			: int			= Field(default=0, alias='c')
 	updated_at 			: int			= Field(default=0, alias='u')
 	nickname 			: str | None	= Field(default=None, alias='n')
-
-	_exclude_export_DB_fields  = None
-	_exclude_export_src_fields = None
 
 	class Config:
 		allow_population_by_field_name = True
@@ -212,10 +221,10 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 
 	# TXTImportable()
 	@classmethod
-	def from_txt(cls, text : str) -> 'Account':
+	def from_txt(cls, text : str, **kwargs) -> Self:
 		"""export data as single row of text	"""
 		try:
-			return Account(id=int(text))
+			return cls(id=int(text), **kwargs)
 		except Exception as err:
 			raise ValueError(f'Could not create Account() with id={text}: {err}')
 
@@ -237,7 +246,7 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 	
 
 	@classmethod
-	def from_str(cls : type[AccountSelf], account: str) -> AccountSelf:
+	def from_str(cls, account: str) -> Self | None:
 		obj : dict[str, Any] = dict()
 		a = account.split(':')
 		obj['id'] = int(a[0])
@@ -271,16 +280,18 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 		updated : bool = False
 		try:
 
-			if update.last_battle_time > 0:
+			if update.last_battle_time > 0 and \
+				self.last_battle_time != update.last_battle_time:
 				self.last_battle_time = update.last_battle_time
 				updated = True
-			if update.created_at > 0:
+			if update.created_at > 0 and update.created_at != self.created_at:
 				self.created_at = update.created_at
 				updated = True
-			if update.updated_at > 0:
+			if update.updated_at > 0 and update.updated_at != self.updated_at:
 				self.updated_at = update.updated_at
 				updated = True
-			if update.nickname is not None:
+			if update.nickname is not None and \
+				(self.nickname is None or self.nickname != update.nickname):
 				self.nickname = update.nickname
 				updated = True
 		except Exception as err:
@@ -673,8 +684,8 @@ class WoTBlitzReplaySummary(BaseModel):
 
 class WoTBlitzReplayData(JSONExportable, JSONImportable):
 	id 			: str | None	= Field(default=None, alias='_id')
-	view_url	: HttpUrl 		= Field(default=None, alias='v')
-	download_url: HttpUrl 		= Field(default=None, alias='d')
+	view_url	: HttpUrl | None	= Field(default=None, alias='v')
+	download_url: HttpUrl | None	= Field(default=None, alias='d')
 	summary		: WoTBlitzReplaySummary  = Field(default=..., alias='s')
 
 	_ViewUrlBase : str = 'https://replays.wotinspector.com/en/view/'
@@ -691,7 +702,6 @@ class WoTBlitzReplayData(JSONExportable, JSONImportable):
 									'download_url': True,
 									'summary': { 'battle_start_time' }
 									}
-
 
 
 	@property
@@ -931,23 +941,23 @@ class WGApiError(BaseModel):
 
 
 class WGTankStatAll(BaseModel):
-	spotted			: int = Field(..., alias='sp')
-	hits			: int = Field(..., alias='h')
-	frags			: int = Field(..., alias='k')
-	max_xp			: int | None
-	wins 			: int = Field(..., alias='w')
-	losses			: int = Field(..., alias='l')
-	capture_points 	: int = Field(..., alias='cp')
 	battles			: int = Field(..., alias='b')
-	damage_dealt	: int = Field(..., alias='dd')
-	damage_received	: int = Field(..., alias='dr')
-	max_frags		: int = Field(..., alias='mk')
-	shots			: int = Field(..., alias='sp')
+	wins 			: int = Field(default=-1, alias='w')
+	losses			: int = Field(default=-1, alias='l')
+	spotted			: int = Field(default=-1, alias='sp')
+	hits			: int = Field(default=-1, alias='h')
+	frags			: int = Field(default=-1, alias='k')
+	max_xp			: int | None
+	capture_points 	: int = Field(default=-1, alias='cp')	
+	damage_dealt	: int = Field(default=-1, alias='dd')
+	damage_received	: int = Field(default=-1, alias='dr')
+	max_frags		: int = Field(default=-1, alias='mk')
+	shots			: int = Field(default=-1, alias='sh')
 	frags8p			: int | None
 	xp				: int | None
-	win_and_survived: int = Field(..., alias='ws')
-	survived_battles: int = Field(..., alias='sb')
-	dropped_capture_points: int = Field(..., alias='dp')
+	win_and_survived: int = Field(default=-1, alias='ws')
+	survived_battles: int = Field(default=-1, alias='sb')
+	dropped_capture_points: int = Field(default=-1, alias='dp')
 
 	class Config:		
 		allow_mutation 			= True
@@ -1035,8 +1045,7 @@ class WGTankStat(JSONExportable, JSONImportable):
 
 	@classmethod
 	def arrow_schema(cls) -> pyarrow.schema:
-		return pyarrow.schema([
-			#('region', 	pyarrow.string()),
+		return pyarrow.schema([			
 			('region', 	pyarrow.dictionary(pyarrow.uint8(), pyarrow.string())),
 			('last_battle_time', pyarrow.int64()),
 			('account_id', pyarrow.int64()),
@@ -1586,7 +1595,7 @@ class WGApiWoTBlitzPlayerAchievements(WGApiWoTBlitz):
 
 class WGApiTankopedia(WGApiWoTBlitz):
 	data 	: dict[str, WGTank] | None = Field(default=None, alias='d')
-	userStr	: dict[str, str] | None  = Field(default=None, alias='d')
+	userStr	: dict[str, str] | None  = Field(default=None, alias='s')
 
 	_exclude_export_DB_fields : ClassVar[Optional[TypeExcludeDict]] = {	'userStr': True }
 

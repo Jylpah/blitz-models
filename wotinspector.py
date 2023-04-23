@@ -1,17 +1,17 @@
 ## -----------------------------------------------------------
-#### Class WoTinspector 
+# Class WoTinspector 
 # 
 # replays.wotinspector.com
 ## -----------------------------------------------------------
 
-from typing import Optional, Union, cast, Any
-import logging, json, re, sys, urllib
+from typing import Optional, cast, Any
+import logging
 from aiohttp import ClientResponse
 from asyncio import sleep
-from bs4 import BeautifulSoup                                           # type: ignore
+# from bs4 import BeautifulSoup                                       # type: ignore
 from pydantic import BaseModel, Field, Extra
 from pyutils.throttledclientsession import ThrottledClientSession     # type: ignore
-from pyutils.utils import get_url, get_url_JSON, get_url_JSON_model, JSONExportable   
+from pyutils import get_url, get_url_JSON, get_url_JSON_model, JSONExportable   
 from .models import WoTBlitzReplayJSON, Region
 from hashlib import md5
 from urllib.parse import urlencode, quote
