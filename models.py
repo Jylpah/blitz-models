@@ -684,8 +684,8 @@ class WoTBlitzReplaySummary(BaseModel):
 
 class WoTBlitzReplayData(JSONExportable, JSONImportable):
 	id 			: str | None	= Field(default=None, alias='_id')
-	view_url	: HttpUrl 		= Field(default=None, alias='v')
-	download_url: HttpUrl 		= Field(default=None, alias='d')
+	view_url	: HttpUrl | None	= Field(default=None, alias='v')
+	download_url: HttpUrl | None	= Field(default=None, alias='d')
 	summary		: WoTBlitzReplaySummary  = Field(default=..., alias='s')
 
 	_ViewUrlBase : str = 'https://replays.wotinspector.com/en/view/'
@@ -702,7 +702,6 @@ class WoTBlitzReplayData(JSONExportable, JSONImportable):
 									'download_url': True,
 									'summary': { 'battle_start_time' }
 									}
-
 
 
 	@property
