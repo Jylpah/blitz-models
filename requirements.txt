@@ -2,7 +2,6 @@ aiofiles
 aiohttp
 aiosqlite
 asyncio
-bs4
 build
 isort
 mypy
