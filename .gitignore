@@ -129,3 +129,12 @@ dmypy.json
 .pyre/
 
 /export
+
+
+# VS Code
+*.code-workspace
+.vscode/
+
+# Tmp
+tmp/
+*.swp
