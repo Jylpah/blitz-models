@@ -10,13 +10,14 @@ from aiohttp import ClientResponse
 from asyncio import sleep
 # from bs4 import BeautifulSoup                                       # type: ignore
 from pydantic import BaseModel, Field, Extra
-from pyutils.throttledclientsession import ThrottledClientSession     # type: ignore
-from pyutils import get_url, get_url_JSON, get_url_JSON_model, JSONExportable   
 from .models import WoTBlitzReplayJSON, Region
 from hashlib import md5
 from urllib.parse import urlencode, quote
 from base64 import b64encode
 
+from pyutils.throttledclientsession import ThrottledClientSession
+from pyutils.utils import get_url_JSON_model
+from pyutils.exportable import JSONExportable   
 
 # Setup logging
 logger	= logging.getLogger()

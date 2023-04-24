@@ -11,10 +11,12 @@ from isort import place_module
 from pydantic import BaseModel, Extra, root_validator, validator, Field, HttpUrl, ValidationError
 from pydantic.utils import ValueItems
 
-from pyutils import CSVExportable, CSVImportable, CSVImportableSelf, \
-					TXTExportable, TXTImportable, JSONExportable, \
-					JSONImportable, Importable, TypeExcludeDict, epoch_now, I, D, Idx, \
-					BackendIndexType, BackendIndex, DESCENDING, ASCENDING, TEXT
+from pyutils.utils import epoch_now
+from pyutils.exportable import CSVExportable, TXTExportable,  JSONExportable, \
+					 			TypeExcludeDict, I, D, Idx, \
+								BackendIndexType, BackendIndex, DESCENDING, ASCENDING, TEXT
+
+from pyutils.importable import CSVImportable, TXTImportable, JSONImportable, Importable
 
 
 TYPE_CHECKING = True
@@ -494,19 +496,6 @@ class WGBlitzRelease(JSONExportable, JSONImportable, CSVExportable, \
 		# if 'launch_date' in res and res['launch_date'] is not None:
 		# 	res['launch_date'] = res['launch_date'].date()
 		return self.clear_None(res)
-
-
-	# # CSVImportable()
-	# @classmethod
-	# def from_csv(cls: type[CSVImportableSelf], row: dict[str, Any]) -> CSVImportableSelf | None:
-	# 	"""Provide CSV row as a dict for csv.DictWriter"""
-	# 	try:
-	# 		row = cls._set_field_types(row)
-	# 		debug(str(row))
-	# 		return cls.parse_obj(row)
-	# 	except Exception as err:
-	# 		error(f'Could not parse row ({row}): {err}')
-	# 	return None
 
 
 	def next(self: WGBlitzReleaseSelf, **kwargs) -> WGBlitzReleaseSelf:
@@ -1157,7 +1146,7 @@ class WGApiWoTBlitzTankStats(WGApiWoTBlitz):
 
 
 class WGTank(JSONExportable, JSONImportable):
-	id 			: int 						= Field(default=None, alias = '_id')
+	id 			: int 						= Field(default=0, alias = '_id')
 	tank_id 	: int 						= Field(default=...)
 	name   		: str | None				= Field(default=None)
 	nation   	: EnumNation | None	 		= Field(default=None)
@@ -1196,6 +1185,7 @@ class WGTank(JSONExportable, JSONImportable):
 						])		
 		return indexes
 
+
 	@validator('id', 'tank_id')
 	def validate_id(cls, v: int) -> int:
 		if v > 0:
@@ -1210,7 +1200,9 @@ class WGTank(JSONExportable, JSONImportable):
 		elif '_id' in values:
 			values['tank_id'] = values['_id']
 		elif 'id' in values:
-			values['tank_id'] = values['id']		
+			values['tank_id'] = values['id']
+		else:
+			raise ValueError("'tank_id' or 'id' is not defined")		
 		return values
 
 
