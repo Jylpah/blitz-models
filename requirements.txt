@@ -1,0 +1,13 @@
+aiofiles
+aiohttp
+aiosqlite
+asyncio
+bs4
+build
+isort
+mypy
+pyarrow
+pydantic
+pymongo
+pyutils
+types-aiofiles
