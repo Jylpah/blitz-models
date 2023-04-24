@@ -8,7 +8,6 @@ from typing import Optional, cast, Any
 import logging
 from aiohttp import ClientResponse
 from asyncio import sleep
-# from bs4 import BeautifulSoup                                       # type: ignore
 from pydantic import BaseModel, Field, Extra
 from .models import WoTBlitzReplayJSON, Region
 from hashlib import md5
