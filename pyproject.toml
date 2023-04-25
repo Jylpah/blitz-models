@@ -18,7 +18,6 @@ classifiers = [
 	"Topic :: Games/Entertainment"
 ]
 
-
 [project.urls]
 "Homepage" = "https://github.com/Jylpah/blitz-utils"
 "Bug Tracker" = "https://github.com/Jylpah/blitz-utils/issues"
