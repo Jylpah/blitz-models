@@ -11,7 +11,6 @@ from pyutils.importable import CSVImportable, TXTImportable, JSONImportable, Imp
 from .region import Region
 from .wg_api import WGAccountInfo
 
-TYPE_CHECKING = True
 logger = logging.getLogger()
 error 	= logger.error
 message	= logger.warning
