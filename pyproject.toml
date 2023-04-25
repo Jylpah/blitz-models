@@ -32,3 +32,6 @@ build-backend = "hatchling.build"
 plugins = [
   "pydantic.mypy"
 ]
+
+[tool.pyright]
+reportGeneralTypeIssues = false
