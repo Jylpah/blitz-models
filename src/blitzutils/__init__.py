@@ -13,10 +13,10 @@ from .wg_api 		import WGAccountInfo, WGApiError, WGApiWoTBlitz,\
                             WGTankStat, WGTankStatAll, WoTBlitzTankString
 
 __all__ = [ 'wg', 
+           	'wg_api',
 			'wotinspector', 
             'release',
 			'region',
             'account',
-            'tank',
-            'wg_api',
+            'tank',            
 			]
