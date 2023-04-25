@@ -8,7 +8,6 @@ from pyutils.exportable import CSVExportable, TXTExportable,  JSONExportable, \
 
 from pyutils.importable import CSVImportable, TXTImportable, JSONImportable, Importable
 
-TYPE_CHECKING = True
 
 ###########################################
 # 

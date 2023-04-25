@@ -1,22 +1,15 @@
-from datetime import datetime, date
-from typing import Any, Mapping, Optional, Self, Tuple, ClassVar, TypeVar, cast
-from enum import Enum, IntEnum, StrEnum
-from collections import defaultdict
+from typing import Any, Optional, ClassVar, TypeVar
 import logging
-import json
 import pyarrow 							# type: ignore
 from bson.objectid import ObjectId
-from bson.int64 import Int64
-from isort import place_module
 from pydantic import BaseModel, Extra, root_validator, validator, Field, HttpUrl
-from pydantic.utils import ValueItems
 
 from pyutils.utils import epoch_now
 from pyutils.exportable import CSVExportable, TXTExportable,  JSONExportable, \
 					 			TypeExcludeDict, I, D, Idx, \
 								BackendIndexType, BackendIndex, DESCENDING, ASCENDING, TEXT
 
-from pyutils.importable import CSVImportable, TXTImportable, JSONImportable, Importable
+from pyutils.importable import CSVImportable, TXTImportable, JSONImportable
 
 from .region 	import Region
 from .tank 		import WGTank
