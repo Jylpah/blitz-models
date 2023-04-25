@@ -4,12 +4,11 @@
 # replays.wotinspector.com
 ## -----------------------------------------------------------
 
-from typing import Optional, cast, Any
 import logging
+from typing import Optional, cast, Any
 from aiohttp import ClientResponse
 from asyncio import sleep
-from pydantic import BaseModel, Field, Extra
-from .models import WoTBlitzReplayJSON, Region
+from pydantic import Field, Extra
 from hashlib import md5
 from urllib.parse import urlencode, quote
 from base64 import b64encode
@@ -17,6 +16,8 @@ from base64 import b64encode
 from pyutils.throttledclientsession import ThrottledClientSession
 from pyutils.utils import get_url_JSON_model
 from pyutils.exportable import JSONExportable   
+
+from .replay import WoTBlitzReplayJSON
 
 # Setup logging
 logger	= logging.getLogger()
