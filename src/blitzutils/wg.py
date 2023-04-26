@@ -4,7 +4,7 @@ from collections import defaultdict
 from aiohttp import ClientTimeout
 from urllib.parse import quote
 
-from pyutils.throttledclientsession import ThrottledClientSession
+from pyutils import ThrottledClientSession
 from pyutils.utils import get_url_JSON_model
 
 from .wg_api import Region, WGApiWoTBlitzTankStats, WGTankStat,\

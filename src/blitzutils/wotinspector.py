@@ -13,9 +13,8 @@ from hashlib import md5
 from urllib.parse import urlencode, quote
 from base64 import b64encode
 
-from pyutils.throttledclientsession import ThrottledClientSession
+from pyutils import ThrottledClientSession, JSONExportable
 from pyutils.utils import get_url_JSON_model
-from pyutils.exportable import JSONExportable   
 
 from .replay import WoTBlitzReplayJSON
 
