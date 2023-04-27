@@ -1,4 +1,3 @@
-from typing import Optional
 from enum import StrEnum
 
 MAX_UINT32 : int = 4294967295
@@ -53,7 +52,7 @@ class Region(StrEnum):
 
 
 	@classmethod
-	def from_id(cls, account_id : int) -> Optional['Region']:
+	def from_id(cls, account_id : int) -> 'Region':
 		try:
 			if account_id >= 42e8:
 				return Region.bot  		# bots, same IDs on every server
@@ -65,11 +64,12 @@ class Region(StrEnum):
 				return Region.com
 			elif account_id >= 5e8:
 				return Region.eu
-			else:			
+			elif account_id >= 0:			
 				return Region.ru
+			else:
+				raise ValueError(f'account_id is out of id_range: {account_id}')
 		except Exception as err:
 			raise ValueError(f'accunt_id {account_id} is out of known id range: {err}')
-		return None
 
 	
 	def matches(self, other_region : 'Region') -> bool:
