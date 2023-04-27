@@ -1,5 +1,5 @@
 
-from typing import Any, Optional, Self, TypeVar
+from typing import Any, Optional, Self, TypeVar, Annotated
 import logging
 from bson.int64 import Int64
 from pydantic import BaseModel, Extra, root_validator, validator, Field, HttpUrl
@@ -29,16 +29,20 @@ B	= TypeVar('B', bound='BaseModel')
 
 TypeAccountDict = dict[str, int|bool|Region|None]
 
+
+def lateinit_region() -> Region:
+	"""Required for initializing a model w/o a 'region' field"""
+	raise RuntimeError("should never be called")
+
 class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable, 
 				TXTExportable, TXTImportable, Importable):	
 
-	id					: int 		 	= Field(default=..., alias='_id')
-	region 				: Region 		= Field(alias='r')
-	# last_battle_time	: int | None	= Field(default=None, alias='l')
-	last_battle_time	: int 			= Field(default=0, alias='l')
-	created_at 			: int			= Field(default=0, alias='c')
-	updated_at 			: int			= Field(default=0, alias='u')
-	nickname 			: str | None	= Field(default=None, alias='n')
+	id				: int 		 	= Field(alias='_id')	
+	region 			: Region 		= Field(default_factory=lateinit_region, alias='r')
+	last_battle_time: int 			= Field(default=0, alias='l')
+	created_at 		: int			= Field(default=0, alias='c')
+	updated_at 		: int			= Field(default=0, alias='u')
+	nickname 		: str | None	= Field(default=None, alias='n')
 
 	class Config:
 		allow_population_by_field_name = True
@@ -70,11 +74,22 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 
 	
 	@validator('last_battle_time')
-	def check_epoch_ge_zero(cls, v):
+	def check_epoch_ge_zero(cls, v: int) -> int:
 		if v >= 0:
 			return v
 		else:
 			raise ValueError('time field must be >= 0')
+
+	@validator('region', pre=True, always=True)
+	def default_region(cls, v, values) -> Region:
+		if v is not None:
+			if v is Region: 
+				return v
+			else:
+				return Region(v)
+		else:
+			id : int = int(values.get('id'))
+			return Region.from_id(id)
 
 
 	@root_validator(pre=True)
