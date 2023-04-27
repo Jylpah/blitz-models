@@ -80,18 +80,7 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 		else:
 			raise ValueError('time field must be >= 0')
 
-	@validator('region', pre=True, always=True)
-	def default_region(cls, v, values) -> Region:
-		if v is not None:
-			if v is Region: 
-				return v
-			else:
-				return Region(v)
-		else:
-			id : int = int(values.get('id'))
-			return Region.from_id(id)
-
-
+	
 	@root_validator(pre=True)
 	def read_account_id(cls, values: TypeAccountDict) -> TypeAccountDict:
 		_id = values.get('id')
