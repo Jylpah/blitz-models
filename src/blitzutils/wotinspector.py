@@ -1,9 +1,3 @@
-## -----------------------------------------------------------
-# Class WoTinspector 
-# 
-# replays.wotinspector.com
-## -----------------------------------------------------------
-
 import logging
 from typing import Optional, cast, Any
 from aiohttp import ClientResponse
@@ -60,6 +54,13 @@ class WoTInspectorAPI(JSONExportable):
 		allow_mutation 			= True
 		validate_assignment 	= True
 		extra 					= Extra.allow
+
+
+## -----------------------------------------------------------
+# Class WoTinspector 
+# 
+# replays.wotinspector.com
+## -----------------------------------------------------------
 
 class WoTinspector:
 	URL_WI          : str = 'https://replays.wotinspector.com'
