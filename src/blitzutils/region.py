@@ -13,12 +13,14 @@ class Region(StrEnum):
 
 	@classmethod
 	def API_regions(cls) -> set['Region']:
-		return { Region.eu, Region.com, Region.asia, Region.ru }
+		# RU removed 2023-04-28 since the app-id does not work anymore
+		return { Region.eu, Region.com, Region.asia }
 
 
 	@classmethod
 	def has_stats(cls) -> set['Region']:
-		return { Region.eu, Region.com, Region.asia, Region.ru }
+		# RU removed 2023-04-28 since the app-id does not work anymore
+		return { Region.eu, Region.com, Region.asia }
 
 	@property
 	def id_range(self) -> range:
