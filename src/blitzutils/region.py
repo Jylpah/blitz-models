@@ -22,6 +22,7 @@ class Region(StrEnum):
 		# RU removed 2023-04-28 since the app-id does not work anymore
 		return { Region.eu, Region.com, Region.asia }
 
+
 	@property
 	def id_range(self) -> range:
 		if self == Region.ru:
