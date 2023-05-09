@@ -34,11 +34,18 @@ class Region(StrEnum):
 			return range(int(20e8), int(31e8))
 		elif self == Region.china:
 			return range(int(31e8), int(42e8))
-		else:
+		elif self == Region.bot:
 			return range(int(42e8), MAX_UINT32 + 1)
+		else:
+			raise ValueError(f'Unknown region: {self}')
+			
 	
 	@property
 	def id_range_players(self) -> range:
+		"""Method needed for account_id farming fro WG ID
+			For some reasons Asia server has few account_ids 
+			between  30e8 - 31e8. These could be press accounts. 
+			These accounts do not have stats in the API"""
 		if self == Region.ru:
 			return range(0, int(5e8))
 		elif self == Region.eu:
@@ -46,7 +53,8 @@ class Region(StrEnum):
 		elif self == Region.com:
 			return range(int(10e8), int(20e8))
 		elif self == Region.asia:
-			return range(int(20e8), int(30e8))
+			# note the range
+			return range(int(20e8), int(30e8))  
 		elif self == Region.china:
 			return range(int(31e8), int(42e8))
 		else:
