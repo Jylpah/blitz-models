@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Any, Tuple
-from enum import IntEnum
+from enum import IntEnum, StrEnum
 from collections import defaultdict
 import logging
 from bson.objectid import ObjectId
@@ -33,6 +33,40 @@ class EnumBattleResult(IntEnum):
 
 	def __str__(self) -> str:
 		return f'{self.name}'.capitalize()
+
+
+class WoTBlitzMaps(StrEnum):
+	Random			= "Random map"
+	amigosville		= "Falls Creek"
+	asia			= "Lost Temple"
+	canal			= "Canal"
+	canyon 			= "Canyon"
+	desert_train 	= "Desert Sands"
+	erlenberg 		= "Middleburg"
+	faust 			= "Faust"
+	fort 			= "Macragge"
+	grossberg 		= "Dynasty's Pearl"
+	himmelsdorf 	= "Himmelsdorf"
+	italy 			= "Vineyards"
+	karelia 		= "Rockfield"
+	karieri 		= "Copperfield"
+	lake 			= "Mirage"
+	lumber			= "Alpenstadt"
+	malinovka 		= "Winter Malinovka"
+	medvedkovo 		= "Dead Rail"
+	milbase 		= "Yamato Harbor"
+	mountain 		= "Black Goldville"
+	north 			= "North"
+	ordeal 			= "Trial by Fire"
+	pliego 			= "Castilla"
+	port 			= "Port Bay"
+	rock 			= "Mayan Ruins"
+	rudniki 		= "Mines"
+	savanna 		= "Oasis Palms"
+	skit 			= "Naval Frontier"
+	test 			= "World of Ducks"
+	tutorial 		= "Proving Grounds"
+
 
 
 

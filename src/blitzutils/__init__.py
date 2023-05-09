@@ -1,11 +1,11 @@
-from .wg 			import WGApi as WGApi,\
-     					  WoTBlitzMaps as WoTBlitzMaps
+from .wg 			import WGApi as WGApi     					  
 from .wotinspector 	import WoTinspector as WoTinspector
 from .replay 		import WoTBlitzReplayJSON as WoTBlitzReplayJSON,\
      						WoTBlitzReplayData as WoTBlitzReplayData, \
                             WoTBlitzReplaySummary as WoTBlitzReplaySummary, \
                             WoTBlitzReplayDetail as WoTBlitzReplayDetail, \
-                            WoTBlitzReplayAchievement as WoTBlitzReplayAchievement
+                            WoTBlitzReplayAchievement as WoTBlitzReplayAchievement, \
+                            WoTBlitzMaps as WoTBlitzMaps
 from .region 		import Region as Region
 from .release 		import WGBlitzRelease as WGBlitzRelease
 from .account 		import Account as Account
