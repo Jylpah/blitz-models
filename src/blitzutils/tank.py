@@ -45,14 +45,20 @@ class EnumVehicleTypeStr(StrEnum):
 		return f'{self.name}'.replace('_', ' ').capitalize()
 
 
+	@property
+	def int_type(self) -> 'EnumVehicleTypeInt':
+		return EnumVehicleTypeInt[self.name]
+	
+	## DEPRECIATED ############################
 	def as_int(self) -> EnumVehicleTypeInt:
+		warn("This method will deprecated in favor of 'int_type' property; version=0.2.0", 
+			DeprecationWarning, stacklevel=2)
 		return EnumVehicleTypeInt[self.name]
 
 
 	@classmethod
 	def from_int(cls, t: int) -> 'EnumVehicleTypeStr':
-		return EnumVehicleTypeInt(t).as_str()
-
+		return EnumVehicleTypeInt(t).str_type
 
 
 class EnumVehicleTier(IntEnum):
