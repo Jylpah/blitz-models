@@ -2,7 +2,7 @@ import logging
 import json
 from typing import Any, Optional
 from enum import IntEnum, StrEnum
-from pydantic import root_validator, validator, Field
+from pydantic import root_validator, validator, Field, Extra
 
 from pyutils import CSVExportable, TXTExportable,  JSONExportable, \
 					CSVImportable, TXTImportable, JSONImportable, \
@@ -114,6 +114,7 @@ class WGTank(JSONExportable, JSONImportable):
 		allow_mutation 			= True
 		validate_assignment 	= True
 		allow_population_by_field_name = True
+		extra 					= Extra.allow
 
 
 	@property
