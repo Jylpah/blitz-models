@@ -36,6 +36,8 @@ dev = [
 	"pytest",
 	"pytest-asyncio",
 	"pytest-datafiles",
+	"pytest-cov>=4",
+	"pytest-timeout",
 	"types-aiofiles>=23.1.0.1",
 	"pyutils[dev] @ git+https://github.com/Jylpah/pyutils.git@dev",
 ]
@@ -62,3 +64,11 @@ plugins = [
 
 [tool.pyright]
 reportGeneralTypeIssues = false
+
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-v --cov=src"
+filterwarnings = [
+	'ignore:Inheritance class ThrottledClientSession from ClientSession is discouraged:DeprecationWarning',
+]

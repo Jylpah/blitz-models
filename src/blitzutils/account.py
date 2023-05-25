@@ -38,6 +38,7 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 				TXTExportable, TXTImportable, Importable):	
 
 	id				: int 		 	= Field(alias='_id')	
+	# lateinit is a trick to fool mypy since region is set in root_validator
 	region 			: Region 		= Field(default_factory=lateinit_region, alias='r')
 	last_battle_time: int 			= Field(default=0, alias='l')
 	created_at 		: int			= Field(default=0, alias='c')
@@ -154,7 +155,7 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 							last_battle_time = in_obj.last_battle_time,
 							created_at = in_obj.created_at,
 							updated_at = in_obj.updated_at,
-							nickname = in_obj.nickname)			
+							nickname = in_obj.nickname)
 		except Exception as err:
 			error(f'{err}')
 		return None

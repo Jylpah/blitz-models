@@ -102,8 +102,8 @@ class EnumNation(IntEnum):
 
 
 class WGTank(JSONExportable, JSONImportable):
-	id 			: int 						= Field(default=0, alias = '_id')
-	tank_id 	: int 						= Field(default=...)
+	#id 			: int 						= Field(default=0, alias = '_id')
+	tank_id 	: int 						= Field(default=..., alias = '_id')
 	name   		: str | None				= Field(default=None)
 	nation   	: EnumNation | None	 		= Field(default=None)
 	type 	  	: EnumVehicleTypeStr| None	= Field(default=None)
@@ -142,24 +142,24 @@ class WGTank(JSONExportable, JSONImportable):
 		return indexes
 
 
-	@validator('id', 'tank_id')
+	@validator('tank_id')
 	def validate_id(cls, v: int) -> int:
 		if v > 0:
 			return v
 		raise ValueError('id must be > 0')
 
 
-	@root_validator(pre=True)
-	def set_tank_id(cls, values: dict[str, Any])  -> dict[str, Any]:
-		if 'tank_id' in values:
-			values['id'] = values['tank_id']
-		elif '_id' in values:
-			values['tank_id'] = values['_id']
-		elif 'id' in values:
-			values['tank_id'] = values['id']
-		else:
-			raise ValueError("'tank_id' or 'id' is not defined")		
-		return values
+	# @root_validator(pre=True)
+	# def set_tank_id(cls, values: dict[str, Any])  -> dict[str, Any]:
+	# 	if 'tank_id' in values:
+	# 		values['id'] = values['tank_id']
+	# 	elif '_id' in values:
+	# 		values['tank_id'] = values['_id']
+	# 	elif 'id' in values:
+	# 		values['tank_id'] = values['id']
+	# 	else:
+	# 		raise ValueError("'tank_id' or 'id' is not defined")		
+	# 	return values
 
 
 	# @validator('tier')
@@ -271,9 +271,9 @@ class Tank(JSONExportable, JSONImportable, \
 		return f'{self.name}'
 
 
-	@classmethod
-	def from_id(cls, id : int) -> 'Tank':
-		return Tank(tank_id=id)
+	# @classmethod
+	# def from_id(cls, id : int) -> 'Tank':
+	# 	return Tank(tank_id=id)
 
 
 	# @classmethod
@@ -296,7 +296,7 @@ class Tank(JSONExportable, JSONImportable, \
 			tank_type : EnumVehicleTypeInt | None = None
 			if in_obj.type is not None:
 				tank_type = EnumVehicleTypeInt[in_obj.type.name]
-			return Tank(tank_id=in_obj.id, 
+			return Tank(tank_id=in_obj.tank_id, 
 						name=in_obj.name, 
 						tier=in_obj.tier, 
 						type=tank_type, 
