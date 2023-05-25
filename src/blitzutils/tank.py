@@ -1,5 +1,6 @@
 import logging
 import json
+from warnings import warn
 from typing import Any, Optional
 from enum import IntEnum, StrEnum
 from pydantic import root_validator, validator, Field, Extra
@@ -25,14 +26,21 @@ class EnumVehicleTypeInt(IntEnum):
 	def __str__(self) -> str:
 		return f'{self.name}'.replace('_', ' ').capitalize()
 
-	
+	## DEPRECIATED ############################
 	def as_str(self) -> 'EnumVehicleTypeStr':
+		warn("This method will deprecated in favor of 'str_type' property; version=0.2.0", 
+			DeprecationWarning, stacklevel=2)
+		return EnumVehicleTypeStr[self.name]
+
+
+	@property
+	def str_type(self) -> 'EnumVehicleTypeStr':
 		return EnumVehicleTypeStr[self.name]
 
 
 	@classmethod
 	def from_str(cls, t: str) -> 'EnumVehicleTypeInt':
-		return EnumVehicleTypeStr(t).as_int()
+		return EnumVehicleTypeStr(t).int_type
 
 
 class EnumVehicleTypeStr(StrEnum):
