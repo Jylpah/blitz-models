@@ -34,7 +34,6 @@ def ids_com() -> list[int]:
 def ids_asia() -> list[int]:
 	return [ int(20e8), int(20e8) + 23452, int(20e8) + 7845235 ]
 
-
 @pytest.fixture
 def ids_ru_fail() -> list[int]:
 	return [ -1234, int(5e8) + 1 ]
@@ -68,8 +67,6 @@ def test_2_ru(ids_ru, ids_ru_fail) -> None:
 			assert r != Region.ru
 		except ValueError:
 			pass # OK
-	
-
 
 
 def test_3_eu(ids_eu, ids_eu_fail) -> None:
