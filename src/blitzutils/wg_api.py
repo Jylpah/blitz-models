@@ -34,11 +34,16 @@ B	= TypeVar('B', bound='BaseModel')
 ###########################################
 
 
-class WGApiError(BaseModel):
+class WGApiError(JSONExportable):
 	code: 	int | None
 	message:str | None
 	field: 	str | None
 	value: 	str | None
+
+	class Config:
+		allow_mutation 					= True
+		validate_assignment 			= True
+		allow_population_by_field_name 	= True
 
 	def str(self) -> str:
 		return f'code: {self.code} {self.message}'
