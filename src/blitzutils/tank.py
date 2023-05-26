@@ -3,6 +3,7 @@ import json
 from warnings import warn
 from typing import Any, Optional
 from enum import IntEnum, StrEnum
+from aenum import Enum as AEnum, MultiValue 	# type: ignore
 from pydantic import root_validator, validator, Field, Extra
 
 from pyutils import CSVExportable, TXTExportable,  JSONExportable, \
@@ -15,6 +16,23 @@ error 	= logger.error
 message	= logger.warning
 verbose	= logger.info
 debug	= logger.debug
+
+
+class EnumVehicleType(AEnum):
+	""""Advanced Enum class to combine EnumVehicleTypeInt and 
+		EnumVehicleTypeStr. 
+		use vehicle_type.value to get int value
+		use vehicle_type.fullname to get str value"""
+	_init_ = 'value fullname'
+	_settings_ = MultiValue
+	
+	light_tank		= 0, 'lightTank'
+	medium_tank		= 1, 'mediumTank'
+	heavy_tank		= 2, 'heavyTank'
+	tank_desroyer	= 3, 'AT-SPG'
+
+	def __str__(self) -> str:
+		return f'{self.name}'.replace('_', ' ').capitalize()
 
 
 class EnumVehicleTypeInt(IntEnum):
