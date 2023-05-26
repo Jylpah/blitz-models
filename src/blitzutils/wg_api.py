@@ -276,12 +276,33 @@ class WGApiWoTBlitz(JSONExportable):
 	meta	: dict[str, Any] 	| None	
 	error	: WGApiError 		| None
 
+	_exclude_defaults : bool = False
+
+	class Config:		
+		allow_mutation 					= True
+		validate_assignment 			= True
+		allow_population_by_field_name 	= True
+
+
 	@validator('error')
 	def if_error(cls, v : WGApiError | None) -> WGApiError | None:
 		if v is not None:
 			error(v.str())
 		return v
 
+
+	def status_error(self) -> None:
+		self.status = 'error'
+
+
+	def status_ok(self) -> None:
+		self.status = 'ok'
+
+
+	@property
+	def is_ok(self):
+		return self.status == 'ok'
+	
 
 class WGApiWoTBlitzAccountInfo(WGApiWoTBlitz):	
 	data	: dict[str, WGAccountInfo | None ] | None = Field(default=None, alias='d')
@@ -495,7 +516,6 @@ class WGApiTankopedia(WGApiWoTBlitz):
 	data 	: dict[str, WGTank] 	= Field(default=dict(), alias='d')
 	userStr	: dict[str, str] | None = Field(default=None, alias='s')
 
-	_exclude_defaults 			: bool = False
 	_exclude_export_DB_fields : ClassVar[Optional[TypeExcludeDict]] = {	'userStr': True }
 
 	class Config:		
