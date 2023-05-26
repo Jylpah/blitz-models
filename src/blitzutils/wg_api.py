@@ -1,5 +1,6 @@
 from typing import Any, Optional, ClassVar, TypeVar
 import logging
+from sys import path
 import pyarrow 							# type: ignore
 from bson.objectid import ObjectId
 from pydantic import BaseModel, Extra, root_validator, validator, Field, HttpUrl
@@ -9,8 +10,12 @@ from pyutils import JSONExportable, JSONImportable, \
 from pyutils.utils 		import epoch_now
 from pyutils.exportable import	DESCENDING, ASCENDING, TEXT
 
-from .region 	import Region
-from .tank 		import WGTank
+# Fix relative imports 
+from pathlib import Path
+path.insert(0, str(Path(__file__).parent.parent.resolve()))
+
+from blitzutils.region 	import Region
+from blitzutils.tank 	import WGTank
 
 TYPE_CHECKING = True
 logger = logging.getLogger()
@@ -18,7 +23,6 @@ error 	= logger.error
 message	= logger.warning
 verbose	= logger.info
 debug	= logger.debug
-
 
 B	= TypeVar('B', bound='BaseModel')
 
@@ -38,8 +42,6 @@ class WGApiError(BaseModel):
 
 	def str(self) -> str:
 		return f'code: {self.code} {self.message}'
-
-
 	
 	
 ###########################################
@@ -485,8 +487,8 @@ class WGApiWoTBlitzPlayerAchievements(WGApiWoTBlitz):
 
 
 class WGApiTankopedia(WGApiWoTBlitz):
-	data 	: dict[str, WGTank] | None = Field(default=None, alias='d')
-	userStr	: dict[str, str] | None  = Field(default=None, alias='s')
+	data 	: dict[str, WGTank] 	= Field(default=dict(), alias='d')
+	userStr	: dict[str, str] | None = Field(default=None, alias='s')
 
 	_exclude_export_DB_fields : ClassVar[Optional[TypeExcludeDict]] = {	'userStr': True }
 
@@ -494,6 +496,24 @@ class WGApiTankopedia(WGApiWoTBlitz):
 		allow_mutation 					= True
 		validate_assignment 			= True
 		allow_population_by_field_name 	= True
+
+
+	def update_count(self) -> None:
+		if self.meta is None:
+			self.meta = dict()
+		self.meta['count'] = len(self.data)
+		
+
+	def add(self, tank: WGTank) -> None:
+		self.data[str(tank.tank_id)] = tank
+		self.update_count()
+
+
+	def pop(self, tank_id: int) -> WGTank:
+		"""Raises KeyError if tank_id is not found in self.data"""
+		wgtank : WGTank = self.data.pop(str(tank_id))
+		self.update_count()
+		return wgtank
 
 
 class WoTBlitzTankString(JSONExportable):
