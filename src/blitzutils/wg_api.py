@@ -490,6 +490,7 @@ class WGApiTankopedia(WGApiWoTBlitz):
 	data 	: dict[str, WGTank] 	= Field(default=dict(), alias='d')
 	userStr	: dict[str, str] | None = Field(default=None, alias='s')
 
+	_exclude_defaults 			: bool = False
 	_exclude_export_DB_fields : ClassVar[Optional[TypeExcludeDict]] = {	'userStr': True }
 
 	class Config:		
