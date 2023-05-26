@@ -276,7 +276,7 @@ class WGApiWoTBlitz(JSONExportable):
 	meta	: dict[str, Any] 	| None	
 	error	: WGApiError 		| None
 
-	_exclude_defaults : bool = False
+	_exclude_unset : bool = False
 
 	class Config:		
 		allow_mutation 					= True
