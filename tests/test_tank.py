@@ -84,11 +84,11 @@ def test_4_EnumVehicleTypestr_complete(enum_vehicle_type_names: list[str]) -> No
 def test_5_EnumVehicleType_conversion() -> None:
 	"""Test converstions between EnumVehicleTypeInt and EnumVehicleTypeStr"""
 	for tt_int in EnumVehicleTypeInt:
-		tt_str : EnumVehicleTypeStr = tt_int.str_type
+		tt_str : EnumVehicleTypeStr = tt_int.as_str
 		assert tt_int.name == tt_str.name, \
 				f'Conversion from EnumVehicleTypeInt to EnumVehicleTypeStr failed: {tt_int.name}'
 		assert EnumVehicleTypeInt.from_str(tt_str.value) is tt_int, f"from_str() failed for {tt_str}"
-		assert tt_int is tt_str.int_type, \
+		assert tt_int is tt_str.as_int, \
 				f'Conversion from EnumVehicleTypeStr to EnumVehicleTypeInt failed: {tt_int.name}'
 		assert EnumVehicleTypeStr.from_int(tt_int.value) is tt_str, f"from_int() failed for {tt_int}"
 		
@@ -101,3 +101,4 @@ def test_6_EnumVehicleTier_create(enum_vehicle_tier) -> None:
 		assert EnumVehicleTier(tier_int) is EnumVehicleTier[tier_str], f"Failed to create EnumVehicleTier for {tier_str}"
 		assert EnumVehicleTier.read_tier(tier_str) is EnumVehicleTier[tier_str], f"read_tier({tier_str}) failed"
 		assert EnumVehicleTier.read_tier(str(tier_int)) is EnumVehicleTier[tier_str], f"read_tier({tier_int}) failed"
+		assert EnumVehicleTier(tier_int) == tier_int, f"EnumVehicleTier.N != N for {tier_int}"

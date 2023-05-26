@@ -13,7 +13,6 @@ from .tank 			import EnumNation as EnumNation, \
 							EnumVehicleTier as EnumVehicleTier, \
 							EnumVehicleTypeInt as EnumVehicleTypeInt, \
 							EnumVehicleTypeStr as EnumVehicleTypeStr, \
-							EnumVehicleType as EnumVehicleType, \
 							Tank as Tank, \
 							WGTank as WGTank
 from .wg_api 		import WGAccountInfo as WGAccountInfo, \
