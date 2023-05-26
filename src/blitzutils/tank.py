@@ -26,21 +26,15 @@ class EnumVehicleTypeInt(IntEnum):
 	def __str__(self) -> str:
 		return f'{self.name}'.replace('_', ' ').capitalize()
 
-	## DEPRECIATED ############################
-	def as_str(self) -> 'EnumVehicleTypeStr':
-		warn("This method will deprecated in favor of 'str_type' property; version=0.2.0", 
-			DeprecationWarning, stacklevel=2)
-		return EnumVehicleTypeStr[self.name]
-
 
 	@property
-	def str_type(self) -> 'EnumVehicleTypeStr':
+	def as_str(self) -> 'EnumVehicleTypeStr':
 		return EnumVehicleTypeStr[self.name]
 
 
 	@classmethod
 	def from_str(cls, t: str) -> 'EnumVehicleTypeInt':
-		return EnumVehicleTypeStr(t).int_type
+		return EnumVehicleTypeStr(t).as_int
 
 
 class EnumVehicleTypeStr(StrEnum):
@@ -49,24 +43,19 @@ class EnumVehicleTypeStr(StrEnum):
 	heavy_tank 		= 'heavyTank'
 	tank_destroyer	= 'AT-SPG'
 
+
 	def __str__(self) -> str:
 		return f'{self.name}'.replace('_', ' ').capitalize()
 
 
 	@property
-	def int_type(self) -> 'EnumVehicleTypeInt':
-		return EnumVehicleTypeInt[self.name]
-	
-	## DEPRECIATED ############################
-	def as_int(self) -> EnumVehicleTypeInt:
-		warn("This method will deprecated in favor of 'int_type' property; version=0.2.0", 
-			DeprecationWarning, stacklevel=2)
+	def as_int(self) -> 'EnumVehicleTypeInt':
 		return EnumVehicleTypeInt[self.name]
 
 
 	@classmethod
 	def from_int(cls, t: int) -> 'EnumVehicleTypeStr':
-		return EnumVehicleTypeInt(t).str_type
+		return EnumVehicleTypeInt(t).as_str
 
 
 class EnumVehicleTier(IntEnum):
@@ -83,6 +72,7 @@ class EnumVehicleTier(IntEnum):
 
 	def __str__(self) -> str:
 		return str(self.name)
+
 
 	@classmethod
 	def read_tier(cls, tier: str) -> 'EnumVehicleTier':
