@@ -8,7 +8,8 @@ from pydantic import BaseModel
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / 'src'))
 
 from blitzutils import Tank, WGTank, EnumNation, EnumVehicleTier, \
-						EnumVehicleTypeInt, EnumVehicleTypeStr
+						EnumVehicleTypeInt, EnumVehicleTypeStr, \
+						WGApiTankopedia
 
 
 ########################################################
@@ -122,11 +123,22 @@ def test_5_EnumVehicleType_conversion() -> None:
 		assert tt_int is tt_str.as_int, \
 				f'Conversion from EnumVehicleTypeStr to EnumVehicleTypeInt failed: {tt_int.name}'
 		assert EnumVehicleTypeStr.from_int(tt_int.value) is tt_str, f"from_int() failed for {tt_int}"
-		
+
+
+def test_6_EnumVehicleTier_create(enum_vehicle_tier) -> None:
+	for ndx in range(len(enum_vehicle_tier)):
+		tier_str : str = enum_vehicle_tier[ndx]
+		tier_int : int = ndx + 1
+
+		assert EnumVehicleTier(tier_int) is EnumVehicleTier[tier_str], f"Failed to create EnumVehicleTier for {tier_str}"
+		assert EnumVehicleTier.read_tier(tier_str) is EnumVehicleTier[tier_str], f"read_tier({tier_str}) failed"
+		assert EnumVehicleTier.read_tier(str(tier_int)) is EnumVehicleTier[tier_str], f"read_tier({tier_int}) failed"
+		assert EnumVehicleTier(tier_int) == tier_int, f"EnumVehicleTier.N != N for {tier_int}"
+
 
 @pytest.mark.asyncio
 @TANKS_JSON_FILES
-async def test_6_Tank_import(datafiles : Path) -> None:
+async def test_7_Tank_import(datafiles : Path) -> None:
 	tanks_json = TanksJsonList()
 	for tanks_json_fn in datafiles.iterdir():
 		async with aiofiles.open(tanks_json_fn) as file:			
@@ -141,7 +153,7 @@ async def test_6_Tank_import(datafiles : Path) -> None:
 
 @pytest.mark.asyncio
 @TANKS_JSON_FILES
-async def test_7_Tank_WGTank_transformation(datafiles: Path) -> None:
+async def test_8_Tank_WGTank_transformation(datafiles: Path) -> None:
 	tanks_json = TanksJsonList()
 	for tanks_json_fn in datafiles.iterdir():
 		async with aiofiles.open(tanks_json_fn) as file:			
@@ -158,12 +170,23 @@ async def test_7_Tank_WGTank_transformation(datafiles: Path) -> None:
 		assert wgtank.type.name == tank.type.name, f'tank type does not match after WGTank.transform(Tank): tank_id={tank.tank_id} {tank}'
 
 
-def test_8_EnumVehicleTier_create(enum_vehicle_tier) -> None:
-	for ndx in range(len(enum_vehicle_tier)):
-		tier_str : str = enum_vehicle_tier[ndx]
-		tier_int : int = ndx + 1
 
-		assert EnumVehicleTier(tier_int) is EnumVehicleTier[tier_str], f"Failed to create EnumVehicleTier for {tier_str}"
-		assert EnumVehicleTier.read_tier(tier_str) is EnumVehicleTier[tier_str], f"read_tier({tier_str}) failed"
-		assert EnumVehicleTier.read_tier(str(tier_int)) is EnumVehicleTier[tier_str], f"read_tier({tier_int}) failed"
-		assert EnumVehicleTier(tier_int) == tier_int, f"EnumVehicleTier.N != N for {tier_int}"
+
+@pytest.mark.asyncio
+@TANKS_JSON_FILES
+async def test_9_WGApiTankopedia(datafiles: Path) -> None:
+	tankopedia = WGApiTankopedia()
+	tanks_json = TanksJsonList()
+	for tanks_json_fn in datafiles.iterdir():
+		async with aiofiles.open(tanks_json_fn) as file:			
+			try:
+				tanks_json = TanksJsonList.parse_raw(await file.read())
+			except Exception as err:
+				assert False, f"Parsing test file List[Tank] failed: {basename(tanks_json_fn)}"
+	for tank in tanks_json:
+		if (wgtank := WGTank.transform(tank)) is not None:
+			tankopedia.add(wgtank)
+		else:
+			assert False, f"WGTank.transform(Tank) failed: tank_id={tank.tank_id}"
+	assert tankopedia.meta is not None, f"Failed to update meta"
+	assert tankopedia.meta['count'] == len(tanks_json), f"failed to update meta.count"
