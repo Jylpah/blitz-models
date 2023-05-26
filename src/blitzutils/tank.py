@@ -181,24 +181,30 @@ class WGTank(JSONExportable, JSONImportable):
 
 
 	@validator('nation', pre=True)
-	def validate_nation(cls, v: str) -> EnumNation:
-		return EnumNation[v]
+	def validate_nation(cls, v: Any) -> Any:
+		if isinstance(v, str):
+			return EnumNation[v].value
+		else:
+			return v
 	
 
 	@classmethod
 	def transform_Tank(cls, in_obj: 'Tank') -> Optional['WGTank']:
 		"""Transform Tank object to WGTank"""
 		try:
+			# debug(f'type={type(in_obj)}')
+			# debug(f'in_obj={in_obj}')
 			tank_type : EnumVehicleTypeStr | None = None
 			if in_obj.type is not None:
 				tank_type = in_obj.type.as_str
+			# debug(f'trying to transform tank:{in_obj.dict()}')
 			return WGTank(tank_id=in_obj.tank_id, 
 							name=in_obj.name, 
 							tier=in_obj.tier, 
 							type=tank_type, 
 							is_premium=in_obj.is_premium, 
 							nation=in_obj.nation,
-						)			
+							)
 		except Exception as err:
 			error(f'{err}')
 		return None
@@ -222,6 +228,7 @@ class Tank(JSONExportable, JSONImportable, \
 		validate_assignment 	= True
 		allow_population_by_field_name = True
 		# use_enum_values			= True
+		extra 					= Extra.allow
 
 
 	@property
@@ -277,7 +284,7 @@ class Tank(JSONExportable, JSONImportable, \
 
 
 	@validator('tier', pre=True)
-	def prevalidate_tier(cls, v: Any):
+	def prevalidate_tier(cls, v: Any) -> Any:
 		if isinstance(v, str):
 			return EnumVehicleTier[v.upper()].value
 		else:
@@ -313,7 +320,7 @@ class Tank(JSONExportable, JSONImportable, \
 
 	
 	@classmethod
-	def transform_WGTank(cls, in_obj: WGTank) -> Optional['Tank']:
+	def transform_WGTank(cls, in_obj: 'WGTank') -> Optional['Tank']:
 		"""Transform WGTank object to Tank"""
 		try:
 			# debug(f'type={type(in_obj)}')
