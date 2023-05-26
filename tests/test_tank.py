@@ -141,7 +141,7 @@ async def test_6_Tank_import(datafiles : Path) -> None:
 
 @pytest.mark.asyncio
 @TANKS_JSON_FILES
-async def test_7_Tank_transformation(datafiles: Path) -> None:
+async def test_7_Tank_WGTank_transformation(datafiles: Path) -> None:
 	tanks_json = TanksJsonList()
 	for tanks_json_fn in datafiles.iterdir():
 		async with aiofiles.open(tanks_json_fn) as file:			
@@ -158,7 +158,7 @@ async def test_7_Tank_transformation(datafiles: Path) -> None:
 		assert wgtank.type.name == tank.type.name, f'tank type does not match after WGTank.transform(Tank): tank_id={tank.tank_id} {tank}'
 
 
-def test_7_EnumVehicleTier_create(enum_vehicle_tier) -> None:
+def test_8_EnumVehicleTier_create(enum_vehicle_tier) -> None:
 	for ndx in range(len(enum_vehicle_tier)):
 		tier_str : str = enum_vehicle_tier[ndx]
 		tier_int : int = ndx + 1
