@@ -1,6 +1,6 @@
 import sys
 import pytest # type: ignore
-from os.path import dirname, realpath, join as pjoin
+from os.path import dirname, realpath, join as pjoin, basename
 from pathlib import Path
 import aiofiles
 from pydantic import BaseModel
@@ -45,8 +45,22 @@ def enum_vehicle_tier() -> list[str]:
 def enum_nation() -> list[str]:
 	return [ 'ussr', 'germany', 'usa', 'china', 'france', 'uk', 'japan', 'other', 'european' ]
 
-FIXTURE_DIR = dirname(realpath(__file__))
 
+FIXTURE_DIR = Path(dirname(realpath(__file__)))
+TANKS_JSON_FILES = pytest.mark.datafiles(FIXTURE_DIR / '01_Tanks.json')
+
+class TanksJsonList(BaseModel):
+	__root__ : list[Tank] = list()
+
+	def __iter__(self):
+		return iter(self.__root__)
+
+	def __getitem__(self, item):
+		return self.__root__[item]
+
+	def __len__(self) -> int:
+		return len(self.__root__)
+	
 
 ########################################################
 #
@@ -111,34 +125,37 @@ def test_5_EnumVehicleType_conversion() -> None:
 		
 
 @pytest.mark.asyncio
-@pytest.mark.datafiles(	pjoin(FIXTURE_DIR, '01_Tanks.json')	)
+@TANKS_JSON_FILES
 async def test_6_Tank_import(datafiles : Path) -> None:
-	class TanksJsonList(BaseModel):
-		__root__ : list[Tank]
-
-		def __iter__(self):
-			return iter(self.__root__)
-
-		def __getitem__(self, item):
-			return self.__root__[item]
-
-		def __len__(self) -> int:
-			return len(self.__root__)
-
-
+	tanks_json = TanksJsonList()
 	for tanks_json_fn in datafiles.iterdir():
-		async with aiofiles.open(tanks_json_fn) as file:
+		async with aiofiles.open(tanks_json_fn) as file:			
 			try:
 				tanks_json = TanksJsonList.parse_raw(await file.read())
 			except Exception as err:
-				assert False, f"Parsing test file List[Tank] failed: 01_Tanks.json"
-		tanks : set[Tank] = set([tank.tank_id for tank in tanks_json])
-		assert len(tanks) == len(tanks_json), f'Parsing test file List[Tank] failed: 01_Tanks.json'
+				assert False, f"Parsing test file List[Tank] failed: {basename(tanks_json_fn)}"
+		tanks : set[int] = set([tank.tank_id for tank in tanks_json])
+		assert len(tanks) == len(tanks_json), f'Parsing test file List[Tank] failed: {basename(tanks_json_fn)}'
+		assert len(tanks_json) > 0, f'could not parse any Tank from file: {basename(tanks_json_fn)}'
 
 
-
-def test_6_Tank_transformation() -> None:
-	pass
+@pytest.mark.asyncio
+@TANKS_JSON_FILES
+async def test_7_Tank_transformation(datafiles: Path) -> None:
+	tanks_json = TanksJsonList()
+	for tanks_json_fn in datafiles.iterdir():
+		async with aiofiles.open(tanks_json_fn) as file:			
+			try:
+				tanks_json = TanksJsonList.parse_raw(await file.read())
+			except Exception as err:
+				assert False, f"Parsing test file List[Tank] failed: {basename(tanks_json_fn)}"
+	for tank in tanks_json:
+		if (wgtank := WGTank.transform(tank)) is None:
+			assert False, f"could transform Tank to WGTank: tank_id={tank.tank_id} {tank}"
+		assert wgtank.tank_id == tank.tank_id, f'tank_id does not match after WGTank.transform(Tank): tank_id={tank.tank_id} {tank}'
+		assert wgtank.name == tank.name, f'name does not match after WGTank.transform(Tank): tank_id={tank.tank_id} {tank}'
+		assert wgtank.type is not None and tank.type is not None, f'could not transform tank type: tank_id={tank.tank_id} {tank}'
+		assert wgtank.type.name == tank.type.name, f'tank type does not match after WGTank.transform(Tank): tank_id={tank.tank_id} {tank}'
 
 
 def test_7_EnumVehicleTier_create(enum_vehicle_tier) -> None:
