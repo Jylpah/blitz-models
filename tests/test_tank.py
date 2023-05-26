@@ -2,6 +2,8 @@ import sys
 import pytest # type: ignore
 from os.path import dirname, realpath, join as pjoin
 from pathlib import Path
+import aiofiles
+from pydantic import BaseModel
 
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / 'src'))
 
@@ -21,6 +23,12 @@ from blitzutils import Tank, WGTank, EnumNation, EnumVehicleTier, \
 # 3) Test equality (pass/fail)
 # 3) Test errors
 
+########################################################
+#
+# Fixtures
+#
+########################################################
+
 @pytest.fixture
 def enum_vehicle_type_names() -> list[str]:
 	return [ 'light_tank', 'medium_tank', 'heavy_tank', 'tank_destroyer' ]
@@ -36,6 +44,15 @@ def enum_vehicle_tier() -> list[str]:
 @pytest.fixture
 def enum_nation() -> list[str]:
 	return [ 'ussr', 'germany', 'usa', 'china', 'france', 'uk', 'japan', 'other', 'european' ]
+
+FIXTURE_DIR = dirname(realpath(__file__))
+
+
+########################################################
+#
+# Tests
+#
+########################################################
 
 
 def test_1_EnumVehicleTypeInt_create(enum_vehicle_type_names : list[str]) -> None:
@@ -93,7 +110,38 @@ def test_5_EnumVehicleType_conversion() -> None:
 		assert EnumVehicleTypeStr.from_int(tt_int.value) is tt_str, f"from_int() failed for {tt_int}"
 		
 
-def test_6_EnumVehicleTier_create(enum_vehicle_tier) -> None:
+@pytest.mark.asyncio
+@pytest.mark.datafiles(	pjoin(FIXTURE_DIR, '01_Tanks.json')	)
+async def test_6_Tank_import(datafiles : Path) -> None:
+	class TanksJsonList(BaseModel):
+		__root__ : list[Tank]
+
+		def __iter__(self):
+			return iter(self.__root__)
+
+		def __getitem__(self, item):
+			return self.__root__[item]
+
+		def __len__(self) -> int:
+			return len(self.__root__)
+
+
+	for tanks_json_fn in datafiles.iterdir():
+		async with aiofiles.open(tanks_json_fn) as file:
+			try:
+				tanks_json = TanksJsonList.parse_raw(await file.read())
+			except Exception as err:
+				assert False, f"Parsing test file List[Tank] failed: 01_Tanks.json"
+		tanks : set[Tank] = set([tank.tank_id for tank in tanks_json])
+		assert len(tanks) == len(tanks_json), f'Parsing test file List[Tank] failed: 01_Tanks.json'
+
+
+
+def test_6_Tank_transformation() -> None:
+	pass
+
+
+def test_7_EnumVehicleTier_create(enum_vehicle_tier) -> None:
 	for ndx in range(len(enum_vehicle_tier)):
 		tier_str : str = enum_vehicle_tier[ndx]
 		tier_int : int = ndx + 1
