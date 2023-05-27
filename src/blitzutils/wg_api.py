@@ -276,7 +276,9 @@ class WGApiWoTBlitz(JSONExportable):
 	meta	: dict[str, Any] 	| None	
 	error	: WGApiError 		| None
 
-	_exclude_defaults : bool = False
+	_exclude_defaults = False
+	_exclude_none	  = True
+	_exclude_unset 	  = False
 
 	class Config:		
 		allow_mutation 					= True
@@ -348,6 +350,7 @@ class WGPlayerAchievementsMaxSeries(JSONExportable):
 																		}
 
 	_exclude_defaults = False
+
 	class Config:		
 		allow_mutation 			= True
 		validate_assignment 	= True
@@ -514,7 +517,7 @@ class WGApiWoTBlitzPlayerAchievements(WGApiWoTBlitz):
 
 class WGApiTankopedia(WGApiWoTBlitz):
 	data 	: dict[str, WGTank] 	= Field(default=dict(), alias='d')
-	userStr	: dict[str, str] | None = Field(default=None, alias='s')
+	# userStr	: dict[str, str] | None = Field(default=None, alias='s')
 
 	_exclude_export_DB_fields : ClassVar[Optional[TypeExcludeDict]] = {	'userStr': True }
 
@@ -570,15 +573,15 @@ class WoTBlitzTankString(JSONExportable):
 		return indexes
 
 
-	@classmethod
-	def from_tankopedia(cls, tankopedia: WGApiTankopedia) -> list['WoTBlitzTankString'] | None:
-		res : list[WoTBlitzTankString] = list()
-		try:
-			if tankopedia.userStr is not None:
-				for k, v in tankopedia.userStr.items():
-					res.append(WoTBlitzTankString(code=k, name=v))
-				return res
-		except Exception as err:
-			error(f"Could not read tank strings from Tankopedia: {err}")
+	# @classmethod
+	# def from_tankopedia(cls, tankopedia: WGApiTankopedia) -> list['WoTBlitzTankString'] | None:
+	# 	res : list[WoTBlitzTankString] = list()
+	# 	try:
+	# 		if tankopedia.userStr is not None:
+	# 			for k, v in tankopedia.userStr.items():
+	# 				res.append(WoTBlitzTankString(code=k, name=v))
+	# 			return res
+	# 	except Exception as err:
+	# 		error(f"Could not read tank strings from Tankopedia: {err}")
 
-		return None
+	# 	return None
