@@ -276,7 +276,9 @@ class WGApiWoTBlitz(JSONExportable):
 	meta	: dict[str, Any] 	| None	
 	error	: WGApiError 		| None
 
-	_exclude_unset : bool = False
+	_exclude_defaults = False
+	_exclude_none	  = True
+	_exclude_unset 	  = False
 
 	class Config:		
 		allow_mutation 					= True
@@ -348,6 +350,7 @@ class WGPlayerAchievementsMaxSeries(JSONExportable):
 																		}
 
 	_exclude_defaults = False
+
 	class Config:		
 		allow_mutation 			= True
 		validate_assignment 	= True
