@@ -272,9 +272,9 @@ class WGTankStat(JSONExportable, JSONImportable):
 
 
 class WGApiWoTBlitz(JSONExportable):
-	status	: str	= Field(default="ok", alias='s')
-	meta	: dict[str, Any] 	| None	
-	error	: WGApiError 		| None
+	status	: str					   = Field(default="ok", alias='s')
+	meta	: dict[str, Any] 	| None = Field(default=None, alias='m')
+	error	: WGApiError 		| None = Field(default=None, alias='e')
 
 	_exclude_defaults = False
 	_exclude_none	  = True
@@ -419,7 +419,8 @@ class WGPlayerAchievementsMaxSeries(JSONExportable):
 	
 
 	@classmethod
-	def transform_WGPlayerAchievementsMain(cls, in_obj: 'WGPlayerAchievementsMain') -> Optional['WGPlayerAchievementsMaxSeries']:
+	def transform_WGPlayerAchievementsMain(cls, in_obj: 'WGPlayerAchievementsMain'
+											) -> Optional['WGPlayerAchievementsMaxSeries']:
 		"""Transform WGPlayerAchievementsMain object to WGPlayerAchievementsMaxSeries"""
 		try:
 			if in_obj.max_series is None:
