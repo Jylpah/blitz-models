@@ -86,7 +86,7 @@ class WoTBlitzReplayAchievement(BaseModel):
 #
 ###########################################
 
-class WoTBlitzReplayDetail(BaseModel):
+class WoTBlitzReplayDetail(JSONExportable):
 	achievements : list[WoTBlitzReplayAchievement] | None = Field(default=None, alias='a')
 	base_capture_points	: int | None = Field(default=None, alias='bc')
 	base_defend_points	: int | None = Field(default=None, alias='bd')
