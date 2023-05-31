@@ -142,7 +142,7 @@ class WoTBlitzReplayDetail(BaseModel):
 #
 ###########################################
 
-class WoTBlitzReplaySummary(BaseModel):
+class WoTBlitzReplaySummary(JSONExportable):
 	_TimestampFormat : str = "%Y-%m-%d %H:%M:%S"
 
 	winner_team 	: EnumWinnerTeam 	| None 	= Field(default=..., alias='wt')
