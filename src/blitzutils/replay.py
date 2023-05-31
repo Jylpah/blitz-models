@@ -230,7 +230,7 @@ class WoTBlitzReplayData(JSONExportable, JSONImportable):
 		allow_mutation 			= True
 		validate_assignment 	= True
 		allow_population_by_field_name = True
-		json_encoders = { ObjectId: str }
+		# json_encoders = { ObjectId: str }
 
 	_exclude_export_DB_fields	= { 'view_url': True,
 									'download_url': True,
@@ -445,4 +445,4 @@ class WoTBlitzReplayJSON(JSONExportable, JSONImportable):
 			raise Exception('Error reading replay')
 
 
-WoTBlitzReplayData.register_transformation(WoTBlitzReplayJSON,WoTBlitzReplayData.transform_WoTBlitzReplayJSON )
+WoTBlitzReplayData.register_transformation(WoTBlitzReplayJSON,WoTBlitzReplayData.transform_WoTBlitzReplayJSON)
