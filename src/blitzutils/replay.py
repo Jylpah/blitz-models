@@ -86,7 +86,7 @@ class WoTBlitzReplayAchievement(BaseModel):
 #
 ###########################################
 
-class WoTBlitzReplayDetail(BaseModel):
+class WoTBlitzReplayDetail(JSONExportable):
 	achievements : list[WoTBlitzReplayAchievement] | None = Field(default=None, alias='a')
 	base_capture_points	: int | None = Field(default=None, alias='bc')
 	base_defend_points	: int | None = Field(default=None, alias='bd')
@@ -142,7 +142,7 @@ class WoTBlitzReplayDetail(BaseModel):
 #
 ###########################################
 
-class WoTBlitzReplaySummary(BaseModel):
+class WoTBlitzReplaySummary(JSONExportable):
 	_TimestampFormat : str = "%Y-%m-%d %H:%M:%S"
 
 	winner_team 	: EnumWinnerTeam 	| None 	= Field(default=..., alias='wt')
@@ -230,7 +230,7 @@ class WoTBlitzReplayData(JSONExportable, JSONImportable):
 		allow_mutation 			= True
 		validate_assignment 	= True
 		allow_population_by_field_name = True
-		json_encoders = { ObjectId: str }
+		# json_encoders = { ObjectId: str }
 
 	_exclude_export_DB_fields	= { 'view_url': True,
 									'download_url': True,
@@ -445,4 +445,4 @@ class WoTBlitzReplayJSON(JSONExportable, JSONImportable):
 			raise Exception('Error reading replay')
 
 
-WoTBlitzReplayData.register_transformation(WoTBlitzReplayJSON,WoTBlitzReplayData.transform_WoTBlitzReplayJSON )
+WoTBlitzReplayData.register_transformation(WoTBlitzReplayJSON,WoTBlitzReplayData.transform_WoTBlitzReplayJSON)
