@@ -343,19 +343,19 @@ class WoTBlitzReplayJSON(JSONExportable, JSONImportable):
 		return { 'id': self.index }
 
 
-	@root_validator(pre=False)
-	def store_id(cls, values : dict[str, Any]) -> dict[str, Any]:
-		try:
-			debug('validating: WoTBlitzReplayJSON(pre=False)')
-			if 'id' not in values or values['id'] is None:
-				values['id'] = values['data'].id
-				debug(f"adding ROOT.id")
-			elif 'id' in values and values['id'] is not None:
-				debug(f"adding data.id from ROOT.id")
-				values['data'].id = values['id']		
-			return values
-		except Exception as err:
-			raise ValueError(f'Could not store replay ID: {err}')
+	# @root_validator(pre=False)
+	# def store_id(cls, values : dict[str, Any]) -> dict[str, Any]:
+	# 	try:
+	# 		debug('validating: WoTBlitzReplayJSON(pre=False)')
+	# 		if 'id' not in values or values['id'] is None:
+	# 			values['id'] = values['data'].id
+	# 			debug(f"adding ROOT.id")
+	# 		elif 'id' in values and values['id'] is not None:
+	# 			debug(f"adding data.id from ROOT.id")
+	# 			values['data'].id = values['id']		
+	# 		return values
+	# 	except Exception as err:
+	# 		raise ValueError(f'Could not store replay ID: {err}')
 
 
 	def get_id(self) -> str | None:
@@ -367,6 +367,11 @@ class WoTBlitzReplayJSON(JSONExportable, JSONImportable):
 		except Exception as err:
 			error(f'Could not read replay id: {err}')
 		return None
+	
+
+	def store_id(self) -> bool:
+		self.id = self.get_id()
+		return self.id is not None
 
 
 	def get_url_json(self) -> str:
