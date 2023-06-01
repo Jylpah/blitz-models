@@ -6,7 +6,7 @@ import logging
 from bson.objectid import ObjectId
 from pydantic import BaseModel, Extra, root_validator, validator, Field, HttpUrl
 
-from pyutils import JSONExportable, JSONImportable, Idx, BackendIndexType
+from pyutils import JSONExportable, JSONImportable, Idx, BackendIndexType, call_clsinit
 from pyutils.exportable import	DESCENDING, ASCENDING, TEXT
 
 from .tank 		import EnumVehicleTypeInt
@@ -75,7 +75,8 @@ class WoTBlitzMaps(StrEnum):
 #
 ###########################################
 
-class WoTBlitzReplayAchievement(BaseModel):
+@call_clsinit
+class WoTBlitzReplayAchievement(JSONExportable):
 	t: int
 	v: int
 
@@ -86,6 +87,7 @@ class WoTBlitzReplayAchievement(BaseModel):
 #
 ###########################################
 
+@call_clsinit
 class WoTBlitzReplayDetail(JSONExportable):
 	achievements : list[WoTBlitzReplayAchievement] | None = Field(default=None, alias='a')
 	base_capture_points	: int | None = Field(default=None, alias='bc')
@@ -129,6 +131,7 @@ class WoTBlitzReplayDetail(JSONExportable):
 	wp_points_earned	: int | None = Field(default=None, alias='we')
 	wp_points_stolen	: int | None = Field(default=None, alias='ws')
 
+
 	class Config:
 		extra 				= Extra.allow
 		allow_mutation 		= True
@@ -142,6 +145,7 @@ class WoTBlitzReplayDetail(JSONExportable):
 #
 ###########################################
 
+@call_clsinit
 class WoTBlitzReplaySummary(JSONExportable):
 	_TimestampFormat : str = "%Y-%m-%d %H:%M:%S"
 
@@ -216,6 +220,7 @@ class WoTBlitzReplaySummary(JSONExportable):
 #
 ###########################################
 
+@call_clsinit
 class WoTBlitzReplayData(JSONExportable, JSONImportable):
 	id 			: str | None		= Field(default=None, alias='_id')
 	view_url	: HttpUrl | None	= Field(default=None, alias='v')
@@ -224,7 +229,7 @@ class WoTBlitzReplayData(JSONExportable, JSONImportable):
 
 	_ViewUrlBase : str = 'https://replays.wotinspector.com/en/view/'
 	_DLurlBase	: str = 'https://replays.wotinspector.com/en/download/'
-
+	
 	class Config:
 		arbitrary_types_allowed = True
 		allow_mutation 			= True
@@ -304,12 +309,13 @@ class WoTBlitzReplayData(JSONExportable, JSONImportable):
 #
 ###########################################
 
-		
+@call_clsinit
 class WoTBlitzReplayJSON(JSONExportable, JSONImportable):
 	id 		: str | None 		= Field(default=None, alias='_id')
 	status	: str				= Field(default="ok", alias='s')
 	data	: WoTBlitzReplayData= Field(default=..., alias='d')
 	error	: dict				= Field(default={}, alias='e')
+
 	_URL_REPLAY_JSON : str 		= 'https://api.wotinspector.com/replay/upload?details=full&key='
 
 	_exclude_export_src_fields 	= { 'id': True, 'data': { 'id': True }}

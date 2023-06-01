@@ -7,7 +7,7 @@ from hashlib import md5
 from urllib.parse import urlencode, quote
 from base64 import b64encode
 
-from pyutils import ThrottledClientSession, JSONExportable
+from pyutils import ThrottledClientSession, JSONExportable, call_clsinit
 from pyutils.utils import get_url_JSON_model
 
 from .replay import WoTBlitzReplayJSON
@@ -21,6 +21,7 @@ debug	= logger.debug
 
 SLEEP : float = 1
 
+@call_clsinit
 class WoTInspectorReplaySummary(JSONExportable):
 	id			: str 	= Field(default=..., alias= '_id')
 	player_name	: str 
@@ -34,6 +35,7 @@ class WoTInspectorReplaySummary(JSONExportable):
 		extra 							= Extra.allow
 
 
+@call_clsinit
 class WoTInspectorReplaysData(JSONExportable):
 	replays: list[WoTInspectorReplaySummary]
 
@@ -44,6 +46,7 @@ class WoTInspectorReplaysData(JSONExportable):
 		extra 							= Extra.allow
 
 
+@call_clsinit
 class WoTInspectorAPIReplays(JSONExportable):
 	"""WoTinspector.com API to list replays available. 
 		Preferred over spidering  web page listing"""
