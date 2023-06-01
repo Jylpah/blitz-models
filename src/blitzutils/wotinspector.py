@@ -28,25 +28,27 @@ class WoTInspectorReplaySummary(JSONExportable):
 	region		: str
 
 	class Config:	
-		allow_population_by_field_name = True
-		allow_mutation 			= True
-		validate_assignment 	= True
-		extra 					= Extra.allow
-	
+		allow_population_by_field_name  = True
+		allow_mutation 					= True
+		validate_assignment 			= True
+		extra 							= Extra.allow
 
-class WoTInspectorAPIdata(JSONExportable):
+
+class WoTInspectorReplaysData(JSONExportable):
 	replays: list[WoTInspectorReplaySummary]
 
 	class Config:	
-		allow_population_by_field_name = True
-		allow_mutation 			= True
-		validate_assignment 	= True
-		extra 					= Extra.allow
+		allow_population_by_field_name  = True
+		allow_mutation 					= True
+		validate_assignment 			= True
+		extra 							= Extra.allow
 
 
-class WoTInspectorAPI(JSONExportable):
+class WoTInspectorAPIReplays(JSONExportable):
+	"""WoTinspector.com API to list replays available. 
+		Preferred over spidering  web page listing"""
 	status	: str	= Field(default="ok")
-	data 	: WoTInspectorAPIdata
+	data 	: WoTInspectorReplaysData
 	error 	: dict[str, Any]
 
 	class Config:	
@@ -183,9 +185,9 @@ class WoTinspector:
 		ids : list[str] = list()
 		try:
 			url :str = self.get_url_replay_list(page=page)
-			resp : WoTInspectorAPI | None 
+			resp : WoTInspectorAPIReplays | None 
 			if (resp := await get_url_JSON_model(self.session, url=url, 
-												resp_model=WoTInspectorAPI)) is not None:
+												resp_model=WoTInspectorAPIReplays)) is not None:
 				for replay in resp.data.replays:
 					ids.append(replay.id)
 
