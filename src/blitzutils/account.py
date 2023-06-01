@@ -6,7 +6,7 @@ from pydantic import BaseModel, Extra, root_validator, validator, Field, HttpUrl
 
 from pyutils import CSVExportable, TXTExportable,  JSONExportable, \
 					CSVImportable, TXTImportable, JSONImportable, Importable, \
-					TypeExcludeDict, Idx
+					TypeExcludeDict, Idx, call_clsinit
 
 from .region import Region
 from .wg_api import WGAccountInfo
@@ -34,6 +34,7 @@ def lateinit_region() -> Region:
 	"""Required for initializing a model w/o a 'region' field"""
 	raise RuntimeError("should never be called")
 
+@call_clsinit
 class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable, 
 				TXTExportable, TXTImportable, Importable):	
 
@@ -44,6 +45,7 @@ class Account(JSONExportable, JSONImportable, CSVExportable, CSVImportable,
 	created_at 		: int			= Field(default=0, alias='c')
 	updated_at 		: int			= Field(default=0, alias='u')
 	nickname 		: str | None	= Field(default=None, alias='n')
+
 
 	class Config:
 		allow_population_by_field_name = True

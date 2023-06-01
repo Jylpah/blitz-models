@@ -1,12 +1,13 @@
-from typing import Any, Optional, ClassVar, TypeVar
+from typing import Any, Optional, ClassVar, TypeVar, Callable, Self, Type
 import logging
 from sys import path
 import pyarrow 							# type: ignore
 from bson.objectid import ObjectId
 from pydantic import BaseModel, Extra, root_validator, validator, Field, HttpUrl
 
-from pyutils import JSONExportable, JSONImportable, \
-					TypeExcludeDict, Idx, BackendIndexType, BackendIndex
+from pyutils import JSONExportable, JSONImportable, D, \
+					TypeExcludeDict, Idx, BackendIndexType, BackendIndex, \
+					call_clsinit
 from pyutils.utils 		import epoch_now
 from pyutils.exportable import	DESCENDING, ASCENDING, TEXT
 
@@ -34,6 +35,7 @@ B	= TypeVar('B', bound='BaseModel')
 ###########################################
 
 
+@call_clsinit
 class WGApiError(JSONExportable):
 	code: 	int | None
 	message:str | None
@@ -55,6 +57,7 @@ class WGApiError(JSONExportable):
 #
 ###########################################
 
+@call_clsinit
 class WGAccountInfo(JSONExportable):
 	account_id 	: int 			= Field(alias='id') 
 	region 		: Region | None	= Field(default=None, alias='r')
@@ -63,10 +66,10 @@ class WGAccountInfo(JSONExportable):
 	nickname 	: str | None	= Field(default=None, alias='n')
 	last_battle_time : int 		= Field(default=0, alias='l')
 
-	# _exclude_export_DB_fields	: ClassVar[Optional[TypeExcludeDict]] = None
-	# _exclude_export_src_fields	: ClassVar[Optional[TypeExcludeDict]] = None
-	# _include_export_DB_fields	: ClassVar[Optional[TypeExcludeDict]] = None
-	# _include_export_src_fields	: ClassVar[Optional[TypeExcludeDict]] = None
+	# _exclude_export_DB_fields	 = None
+	# _exclude_export_src_fields = None
+	# _include_export_DB_fields	 = None
+	# _include_export_src_fields = None
 
 	class Config:
 		arbitrary_types_allowed = True
@@ -85,7 +88,8 @@ class WGAccountInfo(JSONExportable):
 		return values
 
 
-class WGTankStatAll(BaseModel):
+@call_clsinit
+class WGTankStatAll(JSONExportable):
 	battles			: int = Field(..., alias='b')
 	wins 			: int = Field(default=-1, alias='w')
 	losses			: int = Field(default=-1, alias='l')
@@ -104,6 +108,7 @@ class WGTankStatAll(BaseModel):
 	survived_battles: int = Field(default=-1, alias='sb')
 	dropped_capture_points: int = Field(default=-1, alias='dp')
 
+
 	class Config:		
 		allow_mutation 			= True
 		validate_assignment 	= True
@@ -115,6 +120,7 @@ class WGTankStatAll(BaseModel):
 		return None
 
 
+@call_clsinit
 class WGTankStat(JSONExportable, JSONImportable):
 	id					: ObjectId  	= Field(alias='_id')
 	region				: Region | None = Field(default=None, alias='r')
@@ -131,7 +137,7 @@ class WGTankStat(JSONExportable, JSONImportable):
 	frags				: int  | None
 	in_garage 			: bool | None
 
-	_exclude_export_DB_fields	: ClassVar[Optional[TypeExcludeDict]] = { 	'max_frags': True, 
+	_exclude_export_DB_fields : ClassVar[Optional[TypeExcludeDict]] = { 	'max_frags': True, 
 																			'frags' : True, 
 																			'max_xp': True, 
 																			'in_garage': True, 
@@ -271,6 +277,7 @@ class WGTankStat(JSONExportable, JSONImportable):
 		return f'account_id={self.account_id}:{self.region} tank_id={self.tank_id} last_battle_time={self.last_battle_time}'
 
 
+@call_clsinit
 class WGApiWoTBlitz(JSONExportable):
 	status	: str					   = Field(default="ok", alias='s')
 	meta	: dict[str, Any] 	| None = Field(default=None, alias='m')
@@ -306,24 +313,29 @@ class WGApiWoTBlitz(JSONExportable):
 		return self.status == 'ok'
 	
 
+@call_clsinit
 class WGApiWoTBlitzAccountInfo(WGApiWoTBlitz):	
 	data	: dict[str, WGAccountInfo | None ] | None = Field(default=None, alias='d')
 
+
 	class Config:		
 		allow_mutation 			= True
 		validate_assignment 	= True
 		allow_population_by_field_name = True
 
 
+@call_clsinit
 class WGApiWoTBlitzTankStats(WGApiWoTBlitz):	
 	data	: dict[str, list[WGTankStat] | None ] | None = Field(default=None, alias='d')
-
+	
+	
 	class Config:		
 		allow_mutation 			= True
 		validate_assignment 	= True
 		allow_population_by_field_name = True
 
 
+@call_clsinit
 class WGPlayerAchievements(JSONExportable):
 	"""Placeholder class for data.achievements that are not collected"""
 	class Config:		
@@ -333,6 +345,7 @@ class WGPlayerAchievements(JSONExportable):
 		extra 					= Extra.allow
 
 
+@call_clsinit
 class WGPlayerAchievementsMaxSeries(JSONExportable):
 	id 			: ObjectId | None	= Field(default=None, alias='_id')
 	jointVictory: int 				= Field(default=0, alias='jv')
@@ -341,13 +354,14 @@ class WGPlayerAchievementsMaxSeries(JSONExportable):
 	release 	: str 		| None	= Field(default=None, alias='u')
 	added		: int 				= Field(default=epoch_now(), alias='t')
 
-	_include_export_DB_fields	: ClassVar[Optional[TypeExcludeDict]] = { 	'id' 		: True, 
-																			'jointVictory': True, 
-																			'account_id': True, 
-																			'region'	: True, 
-																			'release'	: True,
-																			'added'		: True
-																		}
+
+	_include_export_DB_fields	= { 'id' 		: True, 
+									'jointVictory': True, 
+									'account_id': True, 
+									'region'	: True, 
+									'release'	: True,
+									'added'		: True
+									}
 
 	_exclude_defaults = False
 
@@ -440,11 +454,13 @@ class WGPlayerAchievementsMaxSeries(JSONExportable):
 		return None
 
 
+@call_clsinit
 class WGPlayerAchievementsMain(JSONExportable):
 	achievements 	: WGPlayerAchievements | None = Field(default=None, alias='a')
 	max_series		: WGPlayerAchievementsMaxSeries | None = Field(default=None, alias='m')
 	account_id 		: int | None 				= Field(default=None)
 	updated			: int | None 				= Field(default=None)
+
 
 	class Config:		
 		allow_mutation 			= True
@@ -455,8 +471,10 @@ class WGPlayerAchievementsMain(JSONExportable):
 WGPlayerAchievementsMaxSeries.register_transformation(WGPlayerAchievementsMain, WGPlayerAchievementsMaxSeries.transform_WGPlayerAchievementsMain)
 
 
+@call_clsinit
 class WGApiWoTBlitzPlayerAchievements(WGApiWoTBlitz):	
 	data	: dict[str, WGPlayerAchievementsMain] | None = Field(default=None, alias='d')
+
 
 	class Config:		
 		allow_mutation 			= True
@@ -472,7 +490,6 @@ class WGApiWoTBlitzPlayerAchievements(WGApiWoTBlitz):
 			res : dict[str, WGPlayerAchievementsMain]
 			res = { key:value for key, value in v.items() if value is not None }
 			return res
-
 
 
 	def get_max_series(self) -> list[WGPlayerAchievementsMaxSeries]:
@@ -516,11 +533,12 @@ class WGApiWoTBlitzPlayerAchievements(WGApiWoTBlitz):
 		return None
 
 
+@call_clsinit
 class WGApiTankopedia(WGApiWoTBlitz):
 	data 	: dict[str, WGTank] 	= Field(default=dict(), alias='d')
 	# userStr	: dict[str, str] | None = Field(default=None, alias='s')
 
-	_exclude_export_DB_fields : ClassVar[Optional[TypeExcludeDict]] = {	'userStr': True }
+	_exclude_export_DB_fields = {	'userStr': True }
 
 	class Config:		
 		allow_mutation 					= True
@@ -546,9 +564,11 @@ class WGApiTankopedia(WGApiWoTBlitz):
 		return wgtank
 
 
+@call_clsinit
 class WoTBlitzTankString(JSONExportable):
 	code: str = Field(default=..., alias='_id')
 	name: str = Field(default=..., alias='n')
+
 
 	class Config:		
 		allow_mutation 			= True
