@@ -1,5 +1,6 @@
 from .wg 			import WGApi as WGApi
-from .wotinspector 	import WoTinspector as WoTinspector
+from .wotinspector 	import WoTinspector as WoTinspector, WoTInspectorAPIReplays, \
+							WoTInspectorReplaysData
 from .replay 		import WoTBlitzReplayJSON as WoTBlitzReplayJSON,\
 	 						WoTBlitzReplayData as WoTBlitzReplayData, \
 							WoTBlitzReplaySummary as WoTBlitzReplaySummary, \
