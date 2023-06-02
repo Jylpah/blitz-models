@@ -7,8 +7,7 @@ from pydantic import root_validator, validator, Field, Extra
 
 from pyutils import CSVExportable, TXTExportable,  JSONExportable, \
 					CSVImportable, TXTImportable, JSONImportable, \
-					Idx, BackendIndexType, BackendIndex, \
-					call_clsinit
+					Idx, BackendIndexType, BackendIndex
 from pyutils.exportable import	DESCENDING, ASCENDING, TEXT
 
 logger = logging.getLogger()
@@ -105,7 +104,7 @@ class EnumNation(IntEnum):
 
 
 
-@call_clsinit
+
 class WGTank(JSONExportable, JSONImportable):
 	#id 			: int 						= Field(default=0, alias = '_id')
 	tank_id 	: int 						= Field(default=..., alias = '_id')
@@ -213,7 +212,7 @@ class WGTank(JSONExportable, JSONImportable):
 
 
 	
-@call_clsinit
+
 class Tank(JSONExportable, JSONImportable, \
 			CSVExportable, CSVImportable, TXTExportable):
 	tank_id 	: int						= Field(default=..., alias='_id')

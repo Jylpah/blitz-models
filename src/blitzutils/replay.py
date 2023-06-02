@@ -6,7 +6,7 @@ import logging
 from bson.objectid import ObjectId
 from pydantic import BaseModel, Extra, root_validator, validator, Field, HttpUrl
 
-from pyutils import JSONExportable, JSONImportable, Idx, BackendIndexType, call_clsinit
+from pyutils import JSONExportable, JSONImportable, Idx, BackendIndexType
 from pyutils.exportable import	DESCENDING, ASCENDING, TEXT
 
 from .tank 		import EnumVehicleTypeInt
@@ -75,7 +75,7 @@ class WoTBlitzMaps(StrEnum):
 #
 ###########################################
 
-@call_clsinit
+
 class WoTBlitzReplayAchievement(JSONExportable):
 	t: int
 	v: int
@@ -87,7 +87,7 @@ class WoTBlitzReplayAchievement(JSONExportable):
 #
 ###########################################
 
-@call_clsinit
+
 class WoTBlitzReplayDetail(JSONExportable):
 	achievements : list[WoTBlitzReplayAchievement] | None = Field(default=None, alias='a')
 	base_capture_points	: int | None = Field(default=None, alias='bc')
@@ -145,7 +145,7 @@ class WoTBlitzReplayDetail(JSONExportable):
 #
 ###########################################
 
-@call_clsinit
+
 class WoTBlitzReplaySummary(JSONExportable):
 	_TimestampFormat : str = "%Y-%m-%d %H:%M:%S"
 
@@ -220,7 +220,7 @@ class WoTBlitzReplaySummary(JSONExportable):
 #
 ###########################################
 
-@call_clsinit
+
 class WoTBlitzReplayData(JSONExportable, JSONImportable):
 	id 			: str | None		= Field(default=None, alias='_id')
 	view_url	: HttpUrl | None	= Field(default=None, alias='v')
@@ -309,7 +309,7 @@ class WoTBlitzReplayData(JSONExportable, JSONImportable):
 #
 ###########################################
 
-@call_clsinit
+
 class WoTBlitzReplayJSON(JSONExportable, JSONImportable):
 	id 		: str | None 		= Field(default=None, alias='_id')
 	status	: str				= Field(default="ok", alias='s')
