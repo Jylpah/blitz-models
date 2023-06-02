@@ -4,7 +4,7 @@ from pydantic import validator, Field, HttpUrl
 
 from pyutils import CSVExportable, TXTExportable,  JSONExportable, \
 					CSVImportable, TXTImportable, JSONImportable, Importable, \
-					Idx, BackendIndexType, BackendIndex, call_clsinit
+					Idx, BackendIndexType, BackendIndex
 from pyutils.exportable import DESCENDING, ASCENDING
 
 ###########################################
@@ -13,7 +13,7 @@ from pyutils.exportable import DESCENDING, ASCENDING
 #
 ###########################################
 
-@call_clsinit
+
 class WGBlitzRelease(JSONExportable, JSONImportable, CSVExportable, \
 					CSVImportable, TXTExportable):
 	release : str					= Field(default=..., alias='_id')
