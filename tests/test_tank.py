@@ -133,8 +133,7 @@ def test_5_EnumVehicleType_conversion() -> None:
 
 
 def test_6_EnumVehicleTier_create(enum_vehicle_tier) -> None:
-    for ndx in range(len(enum_vehicle_tier)):
-        tier_str: str = enum_vehicle_tier[ndx]
+    for ndx, tier_str in enumerate(enum_vehicle_tier):
         tier_int: int = ndx + 1
 
         assert (
@@ -145,9 +144,14 @@ def test_6_EnumVehicleTier_create(enum_vehicle_tier) -> None:
         assert EnumVehicleTier(tier_int) == tier_int, f"EnumVehicleTier.N != N for {tier_int}"
 
 
+def test_7_EnumNation_create(enum_nation: list[str]) -> None:
+    for nation in enum_nation:
+        assert EnumNation[nation].name == nation, f"Failed to create EnumNation for {nation}"
+
+
 @pytest.mark.asyncio
 @TANKS_JSON_FILES
-async def test_7_Tank_import(datafiles: Path) -> None:
+async def test_8_Tank_import(datafiles: Path) -> None:
     tanks_json = TanksJsonList()
     for tanks_json_fn in datafiles.iterdir():
         async with aiofiles.open(tanks_json_fn) as file:
@@ -189,7 +193,7 @@ async def test_7_Tank_import(datafiles: Path) -> None:
 
 @pytest.mark.asyncio
 @TANKS_JSON_FILES
-async def test_8_WGApiTankopedia(datafiles: Path) -> None:
+async def test_9_WGApiTankopedia(datafiles: Path) -> None:
     tankopedia = WGApiTankopedia()
     tanks_json = TanksJsonList()
     for tanks_json_fn in datafiles.iterdir():
