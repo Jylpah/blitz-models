@@ -97,6 +97,8 @@ class WGBlitzRelease(JSONExportable, JSONImportable,
         return self.dict(exclude_unset=False, by_alias=False)
 
     def next(self, **kwargs) -> Self:
+        """Get next Blitz release version according to standard release cycle
+        There are few exceptions however so this is not accurate"""
         rel: list[int] = self._release_number(self.release)
         major: int = rel[0]
         minor: int = rel[1]
