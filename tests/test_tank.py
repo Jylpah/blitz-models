@@ -4,10 +4,18 @@ from os.path import dirname, realpath, join as pjoin, basename
 from pathlib import Path
 import aiofiles
 from pydantic import BaseModel
+import logging
+
+logger = logging.getLogger()
+error = logger.error
+message = logger.warning
+verbose = logger.info
+debug = logger.debug
 
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / "src"))
 
-from blitzutils import WGTank, EnumNation, EnumVehicleTier, EnumVehicleTypeInt, EnumVehicleTypeStr, WGApiTankopedia
+from blitzutils import WGTank, EnumNation, EnumVehicleTier, EnumVehicleTypeInt, EnumVehicleTypeStr
+from blitzutils import WGApiTankopedia
 
 
 ########################################################
@@ -47,6 +55,11 @@ def enum_vehicle_tier() -> list[str]:
 @pytest.fixture
 def enum_nation() -> list[str]:
     return ["ussr", "germany", "usa", "china", "france", "uk", "japan", "other", "european"]
+
+
+@pytest.fixture
+def tankopedia_tanks() -> int:
+    return 592  # number of tanks in the 01_WGTanks.json
 
 
 FIXTURE_DIR = Path(dirname(realpath(__file__)))
@@ -164,38 +177,12 @@ async def test_8_Tank_import(datafiles: Path) -> None:
         assert len(tanks_json) > 0, f"could not parse any Tank from file: {basename(tanks_json_fn)}"
 
 
-# @pytest.mark.asyncio
-# @TANKS_JSON_FILES
-# async def test_8_Tank_WGTank_transformation(datafiles: Path) -> None:
-#     tanks_json = TanksJsonList()
-#     for tanks_json_fn in datafiles.iterdir():
-#         async with aiofiles.open(tanks_json_fn) as file:
-#             try:
-#                 tanks_json = TanksJsonList.parse_raw(await file.read())
-#             except Exception as err:
-#                 assert False, f"Parsing test file List[Tank] failed: {basename(tanks_json_fn)}"
-#     for tank in tanks_json:
-#         if (wgtank := WGTank.transform(tank)) is None:
-#             assert False, f"could transform Tank to WGTank: tank_id={tank.tank_id} {tank}"
-#         assert (
-#             wgtank.tank_id == tank.tank_id
-#         ), f"tank_id does not match after WGTank.transform(Tank): tank_id={tank.tank_id} {tank}"
-#         assert (
-#             wgtank.name == tank.name
-#         ), f"name does not match after WGTank.transform(Tank): tank_id={tank.tank_id} {tank}"
-#         assert (
-#             wgtank.type is not None and tank.type is not None
-#         ), f"could not transform tank type: tank_id={tank.tank_id} {tank}"
-#         assert (
-#             wgtank.type.name == tank.type.name
-#         ), f"tank type does not match after WGTank.transform(Tank): tank_id={tank.tank_id} {tank}"
-
-
 @pytest.mark.asyncio
 @TANKS_JSON_FILES
-async def test_9_WGApiTankopedia(datafiles: Path) -> None:
+async def test_9_WGApiTankopedia(datafiles: Path, tmp_path: Path, tankopedia_tanks: int) -> None:
     tankopedia = WGApiTankopedia()
     tanks_json = TanksJsonList()
+    debug("should have %d tanks", tankopedia_tanks)
     for tanks_json_fn in datafiles.iterdir():
         async with aiofiles.open(tanks_json_fn) as file:
             try:
@@ -204,6 +191,27 @@ async def test_9_WGApiTankopedia(datafiles: Path) -> None:
                 assert False, f"Parsing test file List[Tank] failed: {basename(tanks_json_fn)}"
     for tank in tanks_json:
         tankopedia.add(tank)
-
+    debug("read %d tanks", len(tankopedia.data))
     assert tankopedia.meta is not None, f"Failed to update meta"
     assert tankopedia.meta["count"] == len(tanks_json), f"failed to update meta.count"
+    assert len(tanks_json) == len(tankopedia.data), f"could not add all the tanks to tankopedia"
+    assert (
+        len(tankopedia.data) == tankopedia_tanks
+    ), f"could not import all the tanks: got {tankopedia.data}, should be {tankopedia_tanks}"
+
+    # test tankopedia export import
+    tankopedia_file: str = f"{tmp_path.resolve()}/tankopedia.json"
+    try:
+        await tankopedia.save_json(tankopedia_file)
+    except Exception as err:
+        assert False, f"could not export WGAPiTankopedia: {err}"
+
+    tankopedia_imported: WGApiTankopedia
+    imported: bool = False
+    async for tp_imported in WGApiTankopedia.import_json(tankopedia_file):
+        tankopedia_imported = tp_imported
+        imported = True
+        debug("imported tankopedia has %d tanks", len(tankopedia_imported.data))
+        assert len(tankopedia.data) == len(tankopedia_imported.data), f"could not import all the tanks"
+
+    assert imported, "could not import anything"
