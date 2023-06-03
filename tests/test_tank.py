@@ -50,7 +50,7 @@ def enum_nation() -> list[str]:
 
 
 FIXTURE_DIR = Path(dirname(realpath(__file__)))
-TANKS_JSON_FILES = pytest.mark.datafiles(FIXTURE_DIR / "01_Tanks.json")
+TANKS_JSON_FILES = pytest.mark.datafiles(FIXTURE_DIR / "01_WGTanks.json")
 
 
 class TanksJsonList(BaseModel):
