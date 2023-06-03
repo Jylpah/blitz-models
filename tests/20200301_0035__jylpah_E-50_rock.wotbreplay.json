@@ -1,0 +1,889 @@
+{
+    "status": "ok",
+    "data": {
+        "view_url": "https://replays.wotinspector.com/en/view/762602554b903eef4800023b1e2df1c5",
+        "download_url": "https://replays.wotinspector.com/en/download/762602554b903eef4800023b1e2df1c5",
+        "summary": {
+            "winner_team": 1,
+            "uploaded_by": 521458531,
+            "credits_total": 45997,
+            "exp_base": 889,
+            "player_name": "jylpah",
+            "title": "E 50 @ Mayan Ruins",
+            "details": [
+                {
+                    "damage_assisted_track": 0,
+                    "base_capture_points": 0,
+                    "wp_points_earned": 40,
+                    "time_alive": 216,
+                    "chassis_id": null,
+                    "hits_received": 3,
+                    "shots_splash": 0,
+                    "gun_id": null,
+                    "hits_pen": 2,
+                    "hero_bonus_credits": 0,
+                    "hitpoints_left": 1117,
+                    "dbid": 536244449,
+                    "shots_pen": 4,
+                    "exp_for_assist": 0,
+                    "damage_received": 683,
+                    "hits_bounced": 1,
+                    "hero_bonus_exp": 0,
+                    "enemies_damaged": 3,
+                    "achievements": [
+                        {
+                            "t": 411,
+                            "v": 4
+                        },
+                        {
+                            "t": 476,
+                            "v": 8
+                        },
+                        {
+                            "t": 407,
+                            "v": 1
+                        },
+                        {
+                            "t": 403,
+                            "v": 4
+                        }
+                    ],
+                    "exp_for_damage": 369,
+                    "damage_blocked": null,
+                    "distance_travelled": 631,
+                    "hits_splash": 0,
+                    "credits": 32463,
+                    "squad_index": null,
+                    "wp_points_stolen": 40,
+                    "damage_made": 3111,
+                    "vehicle_descr": 9297,
+                    "exp_team_bonus": 442,
+                    "clan_tag": "PALM",
+                    "enemies_spotted": 1,
+                    "shots_hit": 4,
+                    "clanid": 25716,
+                    "turret_id": null,
+                    "enemies_destroyed": 1,
+                    "killed_by": 0,
+                    "base_defend_points": 0,
+                    "exp": 921,
+                    "damage_assisted": 0,
+                    "death_reason": -1,
+                    "shots_made": 4
+                },
+                {
+                    "damage_assisted_track": 57,
+                    "base_capture_points": 0,
+                    "wp_points_earned": 195,
+                    "time_alive": 216,
+                    "chassis_id": null,
+                    "hits_received": 3,
+                    "shots_splash": 0,
+                    "gun_id": null,
+                    "hits_pen": 2,
+                    "hero_bonus_credits": 0,
+                    "hitpoints_left": 658,
+                    "dbid": 521458531,
+                    "shots_pen": 4,
+                    "exp_for_assist": 28,
+                    "damage_received": 1042,
+                    "hits_bounced": 1,
+                    "hero_bonus_exp": 0,
+                    "enemies_damaged": 2,
+                    "achievements": [
+                        {
+                            "t": 407,
+                            "v": 2
+                        },
+                        {
+                            "t": 451,
+                            "v": 15
+                        },
+                        {
+                            "t": 409,
+                            "v": 1
+                        },
+                        {
+                            "t": 476,
+                            "v": 40
+                        },
+                        {
+                            "t": 411,
+                            "v": 3
+                        },
+                        {
+                            "t": 403,
+                            "v": 6
+                        }
+                    ],
+                    "exp_for_damage": 243,
+                    "damage_blocked": null,
+                    "distance_travelled": 1301,
+                    "hits_splash": 0,
+                    "credits": 22940,
+                    "squad_index": null,
+                    "wp_points_stolen": 30,
+                    "damage_made": 1459,
+                    "vehicle_descr": 10257,
+                    "exp_team_bonus": 442,
+                    "clan_tag": "AFK",
+                    "enemies_spotted": 1,
+                    "shots_hit": 6,
+                    "clanid": 8606,
+                    "turret_id": null,
+                    "enemies_destroyed": 1,
+                    "killed_by": 0,
+                    "base_defend_points": 0,
+                    "exp": 889,
+                    "damage_assisted": 0,
+                    "death_reason": -1,
+                    "shots_made": 6
+                },
+                {
+                    "damage_assisted_track": 0,
+                    "base_capture_points": 0,
+                    "wp_points_earned": 0,
+                    "time_alive": 109,
+                    "chassis_id": null,
+                    "hits_received": 3,
+                    "shots_splash": 0,
+                    "gun_id": null,
+                    "hits_pen": 3,
+                    "hero_bonus_credits": 0,
+                    "hitpoints_left": 0,
+                    "dbid": 553337462,
+                    "shots_pen": 3,
+                    "exp_for_assist": 0,
+                    "damage_received": 1700,
+                    "hits_bounced": 0,
+                    "hero_bonus_exp": 0,
+                    "enemies_damaged": 3,
+                    "achievements": [
+                        {
+                            "t": 411,
+                            "v": 1
+                        },
+                        {
+                            "t": 403,
+                            "v": 14
+                        },
+                        {
+                            "t": 409,
+                            "v": 0
+                        }
+                    ],
+                    "exp_for_damage": 126,
+                    "damage_blocked": null,
+                    "distance_travelled": 625,
+                    "hits_splash": 0,
+                    "credits": 20454,
+                    "squad_index": 1,
+                    "wp_points_stolen": 0,
+                    "damage_made": 2043,
+                    "vehicle_descr": 19217,
+                    "exp_team_bonus": 65,
+                    "clan_tag": "TRK_",
+                    "enemies_spotted": 0,
+                    "shots_hit": 4,
+                    "clanid": 23392,
+                    "turret_id": null,
+                    "enemies_destroyed": 0,
+                    "killed_by": 540398640,
+                    "base_defend_points": 0,
+                    "exp": 215,
+                    "damage_assisted": 0,
+                    "death_reason": 0,
+                    "shots_made": 4
+                },
+                {
+                    "damage_assisted_track": 991,
+                    "base_capture_points": 0,
+                    "wp_points_earned": 0,
+                    "time_alive": 119,
+                    "chassis_id": null,
+                    "hits_received": 4,
+                    "shots_splash": 0,
+                    "gun_id": null,
+                    "hits_pen": 4,
+                    "hero_bonus_credits": 0,
+                    "hitpoints_left": 0,
+                    "dbid": 542555590,
+                    "shots_pen": 3,
+                    "exp_for_assist": 33,
+                    "damage_received": 1850,
+                    "hits_bounced": 0,
+                    "hero_bonus_exp": 0,
+                    "enemies_damaged": 2,
+                    "achievements": [
+                        {
+                            "t": 411,
+                            "v": 9
+                        },
+                        {
+                            "t": 407,
+                            "v": 0
+                        },
+                        {
+                            "t": 403,
+                            "v": 9
+                        },
+                        {
+                            "t": 409,
+                            "v": 0
+                        }
+                    ],
+                    "exp_for_damage": 98,
+                    "damage_blocked": null,
+                    "distance_travelled": 813,
+                    "hits_splash": 0,
+                    "credits": 20608,
+                    "squad_index": null,
+                    "wp_points_stolen": 0,
+                    "damage_made": 1371,
+                    "vehicle_descr": 14609,
+                    "exp_team_bonus": 65,
+                    "clan_tag": null,
+                    "enemies_spotted": 1,
+                    "shots_hit": 3,
+                    "clanid": null,
+                    "turret_id": null,
+                    "enemies_destroyed": 0,
+                    "killed_by": 540398640,
+                    "base_defend_points": 0,
+                    "exp": 221,
+                    "damage_assisted": 0,
+                    "death_reason": 0,
+                    "shots_made": 3
+                },
+                {
+                    "damage_assisted_track": 374,
+                    "base_capture_points": 0,
+                    "wp_points_earned": 176,
+                    "time_alive": 84,
+                    "chassis_id": null,
+                    "hits_received": 3,
+                    "shots_splash": 0,
+                    "gun_id": null,
+                    "hits_pen": 3,
+                    "hero_bonus_credits": 0,
+                    "hitpoints_left": 0,
+                    "dbid": 553307208,
+                    "shots_pen": 1,
+                    "exp_for_assist": 12,
+                    "damage_received": 1700,
+                    "hits_bounced": 0,
+                    "hero_bonus_exp": 0,
+                    "enemies_damaged": 2,
+                    "achievements": [
+                        {
+                            "t": 411,
+                            "v": 0
+                        },
+                        {
+                            "t": 407,
+                            "v": 0
+                        },
+                        {
+                            "t": 403,
+                            "v": 6
+                        }
+                    ],
+                    "exp_for_damage": 52,
+                    "damage_blocked": null,
+                    "distance_travelled": 562,
+                    "hits_splash": 0,
+                    "credits": 12265,
+                    "squad_index": null,
+                    "wp_points_stolen": 0,
+                    "damage_made": 596,
+                    "vehicle_descr": 20001,
+                    "exp_team_bonus": 68,
+                    "clan_tag": "_SGL_",
+                    "enemies_spotted": 3,
+                    "shots_hit": 2,
+                    "clanid": 96645,
+                    "turret_id": null,
+                    "enemies_destroyed": 0,
+                    "killed_by": 540398640,
+                    "base_defend_points": 0,
+                    "exp": 197,
+                    "damage_assisted": 0,
+                    "death_reason": 0,
+                    "shots_made": 2
+                },
+                {
+                    "damage_assisted_track": 0,
+                    "base_capture_points": 0,
+                    "wp_points_earned": 0,
+                    "time_alive": 132,
+                    "chassis_id": null,
+                    "hits_received": 9,
+                    "shots_splash": 0,
+                    "gun_id": null,
+                    "hits_pen": 5,
+                    "hero_bonus_credits": 0,
+                    "hitpoints_left": 0,
+                    "dbid": 555565161,
+                    "shots_pen": 3,
+                    "exp_for_assist": 0,
+                    "damage_received": 1800,
+                    "hits_bounced": 4,
+                    "hero_bonus_exp": 0,
+                    "enemies_damaged": 3,
+                    "achievements": [
+                        {
+                            "t": 407,
+                            "v": 0
+                        },
+                        {
+                            "t": 403,
+                            "v": 5
+                        }
+                    ],
+                    "exp_for_damage": 113,
+                    "damage_blocked": null,
+                    "distance_travelled": 527,
+                    "hits_splash": 0,
+                    "credits": 20252,
+                    "squad_index": null,
+                    "wp_points_stolen": 0,
+                    "damage_made": 1150,
+                    "vehicle_descr": 4145,
+                    "exp_team_bonus": 442,
+                    "clan_tag": "EXYUG",
+                    "enemies_spotted": 2,
+                    "shots_hit": 5,
+                    "clanid": 35750,
+                    "turret_id": null,
+                    "enemies_destroyed": 0,
+                    "killed_by": 527662815,
+                    "base_defend_points": 0,
+                    "exp": 647,
+                    "damage_assisted": 0,
+                    "death_reason": 0,
+                    "shots_made": 5
+                },
+                {
+                    "damage_assisted_track": 0,
+                    "base_capture_points": 0,
+                    "wp_points_earned": 0,
+                    "time_alive": 122,
+                    "chassis_id": null,
+                    "hits_received": 5,
+                    "shots_splash": 0,
+                    "gun_id": null,
+                    "hits_pen": 4,
+                    "hero_bonus_credits": 0,
+                    "hitpoints_left": 0,
+                    "dbid": 527132229,
+                    "shots_pen": 0,
+                    "exp_for_assist": 0,
+                    "damage_received": 2015,
+                    "hits_bounced": 1,
+                    "hero_bonus_exp": 0,
+                    "enemies_damaged": 0,
+                    "achievements": [
+                        {
+                            "t": 403,
+                            "v": 1
+                        }
+                    ],
+                    "exp_for_damage": 0,
+                    "damage_blocked": null,
+                    "distance_travelled": 483,
+                    "hits_splash": 0,
+                    "credits": 5600,
+                    "squad_index": null,
+                    "wp_points_stolen": 0,
+                    "damage_made": 0,
+                    "vehicle_descr": 385,
+                    "exp_team_bonus": 65,
+                    "clan_tag": null,
+                    "enemies_spotted": 0,
+                    "shots_hit": 2,
+                    "clanid": null,
+                    "turret_id": null,
+                    "enemies_destroyed": 0,
+                    "killed_by": 536244449,
+                    "base_defend_points": 0,
+                    "exp": 85,
+                    "damage_assisted": 0,
+                    "death_reason": 0,
+                    "shots_made": 3
+                },
+                {
+                    "damage_assisted_track": 349,
+                    "base_capture_points": 0,
+                    "wp_points_earned": 190,
+                    "time_alive": 216,
+                    "chassis_id": null,
+                    "hits_received": 1,
+                    "shots_splash": 0,
+                    "gun_id": null,
+                    "hits_pen": 1,
+                    "hero_bonus_credits": 0,
+                    "hitpoints_left": 1192,
+                    "dbid": 540398640,
+                    "shots_pen": 9,
+                    "exp_for_assist": 18,
+                    "damage_received": 983,
+                    "hits_bounced": 0,
+                    "hero_bonus_exp": 0,
+                    "enemies_damaged": 5,
+                    "achievements": [
+                        {
+                            "t": 442,
+                            "v": 2
+                        },
+                        {
+                            "t": 467,
+                            "v": 186
+                        },
+                        {
+                            "t": 605,
+                            "v": 30
+                        },
+                        {
+                            "t": 401,
+                            "v": 86
+                        },
+                        {
+                            "t": 402,
+                            "v": 38
+                        },
+                        {
+                            "t": 403,
+                            "v": 35
+                        },
+                        {
+                            "t": 474,
+                            "v": 6
+                        },
+                        {
+                            "t": 407,
+                            "v": 1
+                        },
+                        {
+                            "t": 409,
+                            "v": 4
+                        },
+                        {
+                            "t": 411,
+                            "v": 30
+                        },
+                        {
+                            "t": 412,
+                            "v": 30
+                        },
+                        {
+                            "t": 413,
+                            "v": 10
+                        }
+                    ],
+                    "exp_for_damage": 607,
+                    "damage_blocked": null,
+                    "distance_travelled": 1036,
+                    "hits_splash": 0,
+                    "credits": 37889,
+                    "squad_index": 1,
+                    "wp_points_stolen": 190,
+                    "damage_made": 3256,
+                    "vehicle_descr": 7169,
+                    "exp_team_bonus": 442,
+                    "clan_tag": "-V8T-",
+                    "enemies_spotted": 2,
+                    "shots_hit": 9,
+                    "clanid": 75527,
+                    "turret_id": null,
+                    "enemies_destroyed": 5,
+                    "killed_by": 0,
+                    "base_defend_points": 0,
+                    "exp": 1208,
+                    "damage_assisted": 0,
+                    "death_reason": -1,
+                    "shots_made": 9
+                },
+                {
+                    "damage_assisted_track": 0,
+                    "base_capture_points": 0,
+                    "wp_points_earned": 0,
+                    "time_alive": 216,
+                    "chassis_id": null,
+                    "hits_received": 6,
+                    "shots_splash": 0,
+                    "gun_id": null,
+                    "hits_pen": 3,
+                    "hero_bonus_credits": 0,
+                    "hitpoints_left": 142,
+                    "dbid": 538217393,
+                    "shots_pen": 3,
+                    "exp_for_assist": 0,
+                    "damage_received": 1708,
+                    "hits_bounced": 3,
+                    "hero_bonus_exp": 0,
+                    "enemies_damaged": 3,
+                    "achievements": [
+                        {
+                            "t": 461,
+                            "v": 19
+                        },
+                        {
+                            "t": 411,
+                            "v": 3
+                        },
+                        {
+                            "t": 407,
+                            "v": 1
+                        },
+                        {
+                            "t": 403,
+                            "v": 3
+                        }
+                    ],
+                    "exp_for_damage": 234,
+                    "damage_blocked": null,
+                    "distance_travelled": 1287,
+                    "hits_splash": 0,
+                    "credits": 27272,
+                    "squad_index": null,
+                    "wp_points_stolen": 0,
+                    "damage_made": 2109,
+                    "vehicle_descr": 13889,
+                    "exp_team_bonus": 442,
+                    "clan_tag": "DUK",
+                    "enemies_spotted": 0,
+                    "shots_hit": 3,
+                    "clanid": 16366,
+                    "turret_id": null,
+                    "enemies_destroyed": 0,
+                    "killed_by": 0,
+                    "base_defend_points": 0,
+                    "exp": 779,
+                    "damage_assisted": 0,
+                    "death_reason": -1,
+                    "shots_made": 5
+                },
+                {
+                    "damage_assisted_track": 0,
+                    "base_capture_points": 0,
+                    "wp_points_earned": 0,
+                    "time_alive": 211,
+                    "chassis_id": null,
+                    "hits_received": 4,
+                    "shots_splash": 0,
+                    "gun_id": null,
+                    "hits_pen": 4,
+                    "hero_bonus_credits": 0,
+                    "hitpoints_left": -3,
+                    "dbid": 550522102,
+                    "shots_pen": 4,
+                    "exp_for_assist": 0,
+                    "damage_received": 1730,
+                    "hits_bounced": 0,
+                    "hero_bonus_exp": 0,
+                    "enemies_damaged": 2,
+                    "achievements": [
+                        {
+                            "t": 411,
+                            "v": 1
+                        },
+                        {
+                            "t": 403,
+                            "v": 9
+                        }
+                    ],
+                    "exp_for_damage": 77,
+                    "damage_blocked": null,
+                    "distance_travelled": 823,
+                    "hits_splash": 0,
+                    "credits": 11447,
+                    "squad_index": null,
+                    "wp_points_stolen": 0,
+                    "damage_made": 819,
+                    "vehicle_descr": 11521,
+                    "exp_team_bonus": 65,
+                    "clan_tag": null,
+                    "enemies_spotted": 0,
+                    "shots_hit": 6,
+                    "clanid": null,
+                    "turret_id": null,
+                    "enemies_destroyed": 0,
+                    "killed_by": 521458531,
+                    "base_defend_points": 0,
+                    "exp": 170,
+                    "damage_assisted": 0,
+                    "death_reason": 0,
+                    "shots_made": 6
+                },
+                {
+                    "damage_assisted_track": 0,
+                    "base_capture_points": 0,
+                    "wp_points_earned": 0,
+                    "time_alive": 216,
+                    "chassis_id": null,
+                    "hits_received": 2,
+                    "shots_splash": 0,
+                    "gun_id": null,
+                    "hits_pen": 1,
+                    "hero_bonus_credits": 0,
+                    "hitpoints_left": 1616,
+                    "dbid": 531630672,
+                    "shots_pen": 4,
+                    "exp_for_assist": 0,
+                    "damage_received": 434,
+                    "hits_bounced": 1,
+                    "hero_bonus_exp": 0,
+                    "enemies_damaged": 3,
+                    "achievements": [
+                        {
+                            "t": 407,
+                            "v": 2
+                        },
+                        {
+                            "t": 408,
+                            "v": 2
+                        },
+                        {
+                            "t": 409,
+                            "v": 0
+                        },
+                        {
+                            "t": 411,
+                            "v": 2
+                        },
+                        {
+                            "t": 467,
+                            "v": 3
+                        },
+                        {
+                            "t": 601,
+                            "v": 11
+                        },
+                        {
+                            "t": 403,
+                            "v": 11
+                        },
+                        {
+                            "t": 404,
+                            "v": 11
+                        }
+                    ],
+                    "exp_for_damage": 196,
+                    "damage_blocked": null,
+                    "distance_travelled": 1043,
+                    "hits_splash": 0,
+                    "credits": 23317,
+                    "squad_index": 1,
+                    "wp_points_stolen": 0,
+                    "damage_made": 1720,
+                    "vehicle_descr": 7169,
+                    "exp_team_bonus": 442,
+                    "clan_tag": "-V8T-",
+                    "enemies_spotted": 0,
+                    "shots_hit": 6,
+                    "clanid": 75527,
+                    "turret_id": null,
+                    "enemies_destroyed": 0,
+                    "killed_by": 0,
+                    "base_defend_points": 0,
+                    "exp": 756,
+                    "damage_assisted": 0,
+                    "death_reason": -1,
+                    "shots_made": 6
+                },
+                {
+                    "damage_assisted_track": 0,
+                    "base_capture_points": 0,
+                    "wp_points_earned": 0,
+                    "time_alive": 140,
+                    "chassis_id": null,
+                    "hits_received": 6,
+                    "shots_splash": 0,
+                    "gun_id": null,
+                    "hits_pen": 4,
+                    "hero_bonus_credits": 0,
+                    "hitpoints_left": 0,
+                    "dbid": 561248293,
+                    "shots_pen": 1,
+                    "exp_for_assist": 0,
+                    "damage_received": 1910,
+                    "hits_bounced": 2,
+                    "hero_bonus_exp": 0,
+                    "enemies_damaged": 1,
+                    "achievements": [
+                        {
+                            "t": 411,
+                            "v": 1
+                        },
+                        {
+                            "t": 403,
+                            "v": 1
+                        }
+                    ],
+                    "exp_for_damage": 71,
+                    "damage_blocked": null,
+                    "distance_travelled": 654,
+                    "hits_splash": 0,
+                    "credits": 12959,
+                    "squad_index": 1,
+                    "wp_points_stolen": 0,
+                    "damage_made": 983,
+                    "vehicle_descr": 9297,
+                    "exp_team_bonus": 65,
+                    "clan_tag": "S_V_P",
+                    "enemies_spotted": 0,
+                    "shots_hit": 2,
+                    "clanid": 70989,
+                    "turret_id": null,
+                    "enemies_destroyed": 0,
+                    "killed_by": 540398640,
+                    "base_defend_points": 0,
+                    "exp": 164,
+                    "damage_assisted": 0,
+                    "death_reason": 0,
+                    "shots_made": 3
+                },
+                {
+                    "damage_assisted_track": 0,
+                    "base_capture_points": 0,
+                    "wp_points_earned": 0,
+                    "time_alive": 216,
+                    "chassis_id": null,
+                    "hits_received": 4,
+                    "shots_splash": 0,
+                    "gun_id": null,
+                    "hits_pen": 3,
+                    "hero_bonus_credits": 0,
+                    "hitpoints_left": 1315,
+                    "dbid": 505267390,
+                    "shots_pen": 0,
+                    "exp_for_assist": 65,
+                    "damage_received": 385,
+                    "hits_bounced": 1,
+                    "hero_bonus_exp": 0,
+                    "enemies_damaged": 0,
+                    "achievements": [
+                        {
+                            "t": 411,
+                            "v": 0
+                        },
+                        {
+                            "t": 407,
+                            "v": 1
+                        },
+                        {
+                            "t": 403,
+                            "v": 0
+                        }
+                    ],
+                    "exp_for_damage": 0,
+                    "damage_blocked": null,
+                    "distance_travelled": 493,
+                    "hits_splash": 0,
+                    "credits": 14584,
+                    "squad_index": null,
+                    "wp_points_stolen": 0,
+                    "damage_made": 0,
+                    "vehicle_descr": 8737,
+                    "exp_team_bonus": 442,
+                    "clan_tag": "BRFR",
+                    "enemies_spotted": 1,
+                    "shots_hit": 0,
+                    "clanid": 97150,
+                    "turret_id": null,
+                    "enemies_destroyed": 0,
+                    "killed_by": 0,
+                    "base_defend_points": 0,
+                    "exp": 597,
+                    "damage_assisted": 1241,
+                    "death_reason": -1,
+                    "shots_made": 1
+                },
+                {
+                    "damage_assisted_track": 0,
+                    "base_capture_points": 0,
+                    "wp_points_earned": 0,
+                    "time_alive": 151,
+                    "chassis_id": null,
+                    "hits_received": 8,
+                    "shots_splash": 0,
+                    "gun_id": null,
+                    "hits_pen": 5,
+                    "hero_bonus_credits": 0,
+                    "hitpoints_left": 0,
+                    "dbid": 527662815,
+                    "shots_pen": 5,
+                    "exp_for_assist": 27,
+                    "damage_received": 1900,
+                    "hits_bounced": 3,
+                    "hero_bonus_exp": 0,
+                    "enemies_damaged": 3,
+                    "achievements": [
+                        {
+                            "t": 403,
+                            "v": 32
+                        }
+                    ],
+                    "exp_for_damage": 127,
+                    "damage_blocked": null,
+                    "distance_travelled": 693,
+                    "hits_splash": 0,
+                    "credits": 18806,
+                    "squad_index": null,
+                    "wp_points_stolen": 0,
+                    "damage_made": 1223,
+                    "vehicle_descr": 13825,
+                    "exp_team_bonus": 65,
+                    "clan_tag": "DAVES",
+                    "enemies_spotted": 3,
+                    "shots_hit": 9,
+                    "clanid": 79729,
+                    "turret_id": null,
+                    "enemies_destroyed": 1,
+                    "killed_by": 540398640,
+                    "base_defend_points": 0,
+                    "exp": 275,
+                    "damage_assisted": 683,
+                    "death_reason": 0,
+                    "shots_made": 9
+                }
+            ],
+            "vehicle": "E 50",
+            "enemies": [
+                553307208,
+                542555590,
+                527662815,
+                553337462,
+                527132229,
+                550522102,
+                561248293
+            ],
+            "description": null,
+            "battle_duration": 231.98636,
+            "arena_unique_id": 3158357323736858,
+            "vehicle_tier": 9,
+            "battle_start_time": "2020-02-29 22:35:09",
+            "mastery_badge": 1,
+            "protagonist": 521458531,
+            "battle_type": 1,
+            "exp_total": 1333,
+            "allies": [
+                521458531,
+                555565161,
+                536244449,
+                540398640,
+                531630672,
+                538217393,
+                505267390
+            ],
+            "vehicle_type": 1,
+            "battle_start_timestamp": 1583015709.0,
+            "credits_base": 22940,
+            "protagonist_team": 1,
+            "map_name": "Mayan Ruins",
+            "room_type": 1,
+            "battle_result": 1
+        }
+    },
+    "error": {}
+}
