@@ -288,22 +288,23 @@ class WoTBlitzReplayData(JSONExportable, JSONImportable):
     @root_validator
     def store_id(cls, values: dict[str, Any]) -> dict[str, Any]:
         try:
-            debug("validating: WoTBlitzReplayData()")
-            id: str
+            # debug("validating: WoTBlitzReplayData()")
+            _id: str
             if values["id"] is not None:
-                debug("data.id found")
-                id = values["id"]
+                # debug("data.id found")
+                _id = values["id"]
             elif values["view_url"] is not None:
-                id = values["view_url"].split("/")[-1:][0]
+                _id = values["view_url"].split("/")[-1:][0]
             elif values["download_url"] is not None:
-                id = values["download_url"].split("/")[-1:][0]
+                _id = values["download_url"].split("/")[-1:][0]
             else:
-                debug("could not modify id")
+                # debug("could not modify id")
                 return values  # could not modify 'id'
                 # raise ValueError('Replay ID is missing')
-            values["id"] = id
-            values["view_url"] = f"{cls._ViewUrlBase}{id}"
-            values["download_url"] = f"{cls._DLurlBase}{id}"
+            # debug("setting id=%s", _id)
+            values["id"] = _id
+            values["view_url"] = f"{cls._ViewUrlBase}{_id}"
+            values["download_url"] = f"{cls._DLurlBase}{_id}"
             return values
         except Exception as err:
             raise ValueError(f"Error reading replay ID: {err}")
@@ -323,7 +324,7 @@ class WoTBlitzReplayJSON(JSONExportable, JSONImportable):
     data    : WoTBlitzReplayData= Field(default=..., alias="d")
     error   : dict              = Field(default={}, alias="e")
 
-    _URL_REPLAY_JSON: str = "https://api.wotinspector.com/replay/upload?details=full&key="
+    # _URL_REPLAY_JSON: str = "https://api.wotinspector.com/replay/upload?details=full&key="
 
     _exclude_export_src_fields = {"id": True, "data": {"id": True}}
     _exclude_export_DB_fields = {
@@ -353,6 +354,10 @@ class WoTBlitzReplayJSON(JSONExportable, JSONImportable):
         """return backend indexes"""
         return {"id": self.index}
 
+    @property
+    def is_ok(self) -> bool:
+        return self.status == "ok" and len(self.error) == 0
+
     def get_id(self) -> str | None:
         try:
             if self.id is not None:
@@ -363,12 +368,22 @@ class WoTBlitzReplayJSON(JSONExportable, JSONImportable):
             error(f"Could not read replay id: {err}")
         return None
 
-    def store_id(self) -> bool:
-        self.id = self.get_id()
-        return self.id is not None
+    @root_validator(pre=False)
+    def store_id(cls, values: dict[str, Any]) -> dict[str, Any]:
+        debug("validating: WoTBlitzReplayJSON()")
+        if "id" in values and values["id"] is not None:
+            # debug("id=%s", values["id"])
+            pass
+        elif values["data"].id is not None:
+            # debug("data.id=%s", values["data"].id)
+            values["id"] = values["data"].id
+        else:
+            debug("no 'id' field found")
+        # debug("set id=%s", values["id"])
+        return values
 
-    def get_url_json(self) -> str:
-        return f"{self._URL_REPLAY_JSON}{self.id}"
+    # def get_url_json(self) -> str:
+    #     return f"{self._URL_REPLAY_JSON}{self.id}"
 
     def get_enemies(self, player: int | None = None) -> list[int]:
         if player is None or (player in self.data.summary.allies):
