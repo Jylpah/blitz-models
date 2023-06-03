@@ -86,7 +86,7 @@ class WoTBlitzMaps(StrEnum):
 ###########################################
 
 
-class WoTBlitzReplayAchievement(JSONExportable):
+class WoTBlitzReplayAchievement(JSONExportable, JSONImportable):
     t: int
     v: int
 
@@ -98,7 +98,7 @@ class WoTBlitzReplayAchievement(JSONExportable):
 ###########################################
 
 
-class WoTBlitzReplayDetail(JSONExportable):
+class WoTBlitzReplayDetail(JSONExportable, JSONImportable):
     # fmt: off
     achievements : list[WoTBlitzReplayAchievement] | None = Field(default=None, alias='a')
     base_capture_points	: int | None = Field(default=None, alias='bc')
@@ -157,7 +157,7 @@ class WoTBlitzReplayDetail(JSONExportable):
 ###########################################
 
 
-class WoTBlitzReplaySummary(JSONExportable):
+class WoTBlitzReplaySummary(JSONExportable, JSONImportable):
     _TimestampFormat: str = "%Y-%m-%d %H:%M:%S"
     # fmt: off
     winner_team     : EnumWinnerTeam | None     = Field(default=..., alias="wt")
