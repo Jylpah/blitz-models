@@ -34,7 +34,7 @@ B = TypeVar("B", bound="BaseModel")
 ###########################################
 
 
-class WGApiError(JSONExportable):
+class WGApiError(JSONExportable, JSONImportable):
     code: int | None
     message: str | None
     field: str | None
@@ -56,7 +56,7 @@ class WGApiError(JSONExportable):
 ###########################################
 
 
-class WGAccountInfo(JSONExportable):
+class WGAccountInfo(JSONExportable, JSONImportable):
     account_id: int = Field(alias="id")
     region: Region | None = Field(default=None, alias="r")
     created_at: int = Field(default=0, alias="c")
@@ -85,7 +85,7 @@ class WGAccountInfo(JSONExportable):
         return values
 
 
-class WGTankStatAll(JSONExportable):
+class WGTankStatAll(JSONExportable, JSONImportable):
     battles: int = Field(..., alias="b")
     wins: int = Field(default=-1, alias="w")
     losses: int = Field(default=-1, alias="l")
@@ -262,7 +262,7 @@ class WGTankStat(JSONExportable, JSONImportable):
         return f"account_id={self.account_id}:{self.region} tank_id={self.tank_id} last_battle_time={self.last_battle_time}"
 
 
-class WGApiWoTBlitz(JSONExportable):
+class WGApiWoTBlitz(JSONExportable, JSONImportable):
     status: str = Field(default="ok", alias="s")
     meta: dict[str, Any] | None = Field(default=None, alias="m")
     error: WGApiError | None = Field(default=None, alias="e")
@@ -311,7 +311,7 @@ class WGApiWoTBlitzTankStats(WGApiWoTBlitz):
         allow_population_by_field_name = True
 
 
-class WGPlayerAchievements(JSONExportable):
+class WGPlayerAchievements(JSONExportable, JSONImportable):
     """Placeholder class for data.achievements that are not collected"""
 
     class Config:
@@ -416,7 +416,7 @@ class WGPlayerAchievementsMaxSeries(JSONExportable, JSONImportable):
         return None
 
 
-class WGPlayerAchievementsMain(JSONExportable):
+class WGPlayerAchievementsMain(JSONExportable, JSONImportable):
     achievements: WGPlayerAchievements | None = Field(default=None, alias="a")
     max_series: WGPlayerAchievementsMaxSeries | None = Field(default=None, alias="m")
     account_id: int | None = Field(default=None)
@@ -519,7 +519,7 @@ class WGApiTankopedia(WGApiWoTBlitz):
         return wgtank
 
 
-class WoTBlitzTankString(JSONExportable):
+class WoTBlitzTankString(JSONExportable, JSONImportable):
     code: str = Field(default=..., alias="_id")
     name: str = Field(default=..., alias="n")
 
