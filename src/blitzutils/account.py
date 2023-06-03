@@ -124,9 +124,9 @@ class Account(JSONExportable, JSONImportable,
         """Provide CSV headers as list"""
         return list(self.dict(exclude_unset=False, by_alias=False).keys())
 
-    def csv_row(self) -> dict[str, str | int | float | bool]:
+    def _csv_row(self) -> dict[str, str | int | float | bool | None]:
         """Provide instance data as dict for csv.DictWriter"""
-        res: dict[str, str | int | float | bool] = self.dict(exclude_unset=False, by_alias=False)
+        res: dict[str, str | int | float | bool | None ] = self.dict(exclude_unset=False, by_alias=False)
         if self.region is not None:
             res["region"] = self.region.value
         else:

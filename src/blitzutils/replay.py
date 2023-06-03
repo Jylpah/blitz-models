@@ -245,7 +245,6 @@ class WoTBlitzReplayData(JSONExportable, JSONImportable):
         allow_mutation = True
         validate_assignment = True
         allow_population_by_field_name = True
-        # json_encoders = { ObjectId: str }
 
     _exclude_export_DB_fields = {"view_url": True, "download_url": True, "summary": {"battle_start_time"}}
 

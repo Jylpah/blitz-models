@@ -51,7 +51,7 @@ class WGBlitzRelease(JSONExportable, JSONImportable,
         indexes: list[list[BackendIndex]] = list()
         indexes.append([("name", ASCENDING), ("launch_date", DESCENDING)])
         return indexes
-
+    
     @validator("release")
     def validate_release(cls, v: str) -> str:
         """Blitz release is format X.Y[.Z]"""
@@ -93,9 +93,8 @@ class WGBlitzRelease(JSONExportable, JSONImportable,
     def csv_headers(self) -> list[str]:
         return list(self.dict(exclude_unset=False, by_alias=False).keys())
 
-    def csv_row(self) -> dict[str, str | int | float | bool]:
-        res: dict[str, Any] = self.dict(exclude_unset=False, by_alias=False)
-        return self.clear_None(res)
+    def _csv_row(self) -> dict[str, str | int | float | bool | None ]:
+        return self.dict(exclude_unset=False, by_alias=False)
 
     def next(self, **kwargs) -> Self:
         rel: list[int] = self._release_number(self.release)
