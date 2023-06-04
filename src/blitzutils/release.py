@@ -1,6 +1,13 @@
 from datetime import datetime, date
 from typing import Any, TypeVar, Self
 from pydantic import validator, Field, HttpUrl
+import logging
+
+logger = logging.getLogger()
+error = logger.error
+message = logger.warning
+verbose = logger.info
+debug = logger.debug
 
 from pyutils import (
     CSVExportable,
@@ -25,7 +32,7 @@ from pyutils.exportable import DESCENDING, ASCENDING
 # fmt: off
 class WGBlitzRelease(JSONExportable, JSONImportable, 
                      CSVExportable, CSVImportable,
-                     TXTExportable):
+                     TXTExportable, Importable):
     release     : str               = Field(default=..., alias="_id")
     launch_date : datetime | None   = Field(default=None)
     # _export_DB_by_alias			: bool = False
