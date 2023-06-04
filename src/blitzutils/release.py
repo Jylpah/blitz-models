@@ -15,7 +15,6 @@ from pyutils import (
     JSONExportable,
     CSVImportable,
     TXTImportable,
-    JSONImportable,
     Importable,
     Idx,
     BackendIndexType,
@@ -30,7 +29,7 @@ from pyutils.exportable import DESCENDING, ASCENDING
 ###########################################
 
 # fmt: off
-class WGBlitzRelease(JSONExportable, JSONImportable, 
+class WGBlitzRelease(JSONExportable,
                      CSVExportable, CSVImportable,
                      TXTExportable, Importable):
     release     : str               = Field(default=..., alias="_id")

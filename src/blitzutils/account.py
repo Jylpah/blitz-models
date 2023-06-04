@@ -9,7 +9,6 @@ from pyutils import (
     JSONExportable,
     CSVImportable,
     TXTImportable,
-    JSONImportable,
     Importable,
     TypeExcludeDict,
     Idx,
@@ -43,7 +42,7 @@ def lateinit_region() -> Region:
 
 
 # fmt: off
-class Account(JSONExportable, JSONImportable, 
+class Account(JSONExportable, 
               CSVExportable, CSVImportable, 
               TXTExportable, TXTImportable, 
               Importable):

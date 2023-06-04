@@ -11,7 +11,6 @@ from pyutils import (
     JSONExportable,
     CSVImportable,
     TXTImportable,
-    JSONImportable,
     Idx,
     BackendIndexType,
     BackendIndex,
@@ -113,7 +112,7 @@ class EnumNation(IntEnum):
             return f"{self.name}".capitalize()
 
 
-class WGTank(JSONExportable, JSONImportable, CSVExportable, CSVImportable):
+class WGTank(JSONExportable, CSVExportable, CSVImportable):
     # fmt: off
     tank_id 	: int 						= Field(default=..., alias = '_id')
     name   		: str | None				= Field(default=None)
