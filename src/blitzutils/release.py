@@ -1,6 +1,13 @@
 from datetime import datetime, date
 from typing import Any, TypeVar, Self
 from pydantic import validator, Field, HttpUrl
+import logging
+
+logger = logging.getLogger()
+error = logger.error
+message = logger.warning
+verbose = logger.info
+debug = logger.debug
 
 from pyutils import (
     CSVExportable,
@@ -25,7 +32,7 @@ from pyutils.exportable import DESCENDING, ASCENDING
 # fmt: off
 class WGBlitzRelease(JSONExportable, JSONImportable, 
                      CSVExportable, CSVImportable,
-                     TXTExportable):
+                     TXTExportable, Importable):
     release     : str               = Field(default=..., alias="_id")
     launch_date : datetime | None   = Field(default=None)
     # _export_DB_by_alias			: bool = False
@@ -94,7 +101,12 @@ class WGBlitzRelease(JSONExportable, JSONImportable,
         return list(self.dict(exclude_unset=False, by_alias=False).keys())
 
     def _csv_row(self) -> dict[str, str | int | float | bool | None ]:
-        return self.dict(exclude_unset=False, by_alias=False)
+        if self.launch_date is not None:
+            return { 'release': self.release, 
+                    'launch_date': self.launch_date.date().isoformat()
+                    }        
+        raise ValueError("error exporting object as CSV")
+        
 
     def next(self, **kwargs) -> Self:
         """Get next Blitz release version according to standard release cycle

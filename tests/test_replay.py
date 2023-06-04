@@ -13,13 +13,8 @@ debug = logger.debug
 
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / "src"))
 
-from blitzutils import WGTank, EnumNation, EnumVehicleTier, EnumVehicleTypeInt, EnumVehicleTypeStr, WoTBlitzMaps
 from blitzutils import (
     WoTBlitzReplayJSON,
-    WoTBlitzReplayData,
-    WoTBlitzReplayAchievement,
-    WoTBlitzReplaySummary,
-    WoTBlitzReplayDetail,
 )
 
 
