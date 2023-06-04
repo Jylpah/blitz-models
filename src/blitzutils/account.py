@@ -119,19 +119,14 @@ class Account(JSONExportable, JSONImportable,
         except Exception as err:
             raise ValueError(f"Could not create Account() with id={text}: {err}")
 
-    # CSVExportable()
-    def csv_headers(self) -> list[str]:
-        """Provide CSV headers as list"""
-        return list(self.dict(exclude_unset=False, by_alias=False).keys())
-
-    def _csv_row(self) -> dict[str, str | int | float | bool | None]:
-        """Provide instance data as dict for csv.DictWriter"""
-        res: dict[str, str | int | float | bool | None ] = self.dict(exclude_unset=False, by_alias=False)
-        if self.region is not None:
-            res["region"] = self.region.value
-        else:
-            raise ValueError(f"Account {self.id} does not have region defined")
-        return res
+    # def _csv_row(self) -> dict[str, str | int | float | bool | None]:
+    #     """Provide instance data as dict for csv.DictWriter"""
+    #     res: dict[str, str | int | float | bool | None ] = self.dict(exclude_unset=False, by_alias=False)
+    #     if self.region is not None:
+    #         res["region"] = self.region.value
+    #     else:
+    #         raise ValueError(f"Account {self.id} does not have region defined")
+    #     return res
 
     @classmethod
     def from_str(cls, account: str) -> Self | None:
