@@ -94,7 +94,12 @@ class WGBlitzRelease(JSONExportable, JSONImportable,
         return list(self.dict(exclude_unset=False, by_alias=False).keys())
 
     def _csv_row(self) -> dict[str, str | int | float | bool | None ]:
-        return self.dict(exclude_unset=False, by_alias=False)
+        if self.launch_date is not None:
+            return { 'release': self.release, 
+                    'launch_date': self.launch_date.date().isoformat()
+                    }        
+        raise ValueError("error exporting object as CSV")
+        
 
     def next(self, **kwargs) -> Self:
         """Get next Blitz release version according to standard release cycle
