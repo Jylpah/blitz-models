@@ -13,7 +13,6 @@ from pyutils import (
     CSVExportable,
     TXTExportable,
     JSONExportable,
-    CSVImportable,
     TXTImportable,
     Importable,
     Idx,
@@ -28,13 +27,26 @@ from pyutils.exportable import DESCENDING, ASCENDING
 #
 ###########################################
 
+
+def datetime2isodate(dt: datetime) -> str:
+    return dt.date().isoformat()
+
+
+def isodate2datetime(d: str) -> datetime:
+    return datetime.combine(date.fromisoformat(d), datetime.min.time())
+
+
 # fmt: off
 class WGBlitzRelease(JSONExportable,
-                     CSVExportable, CSVImportable,
+                     CSVExportable, 
                      TXTExportable, Importable):
     release     : str               = Field(default=..., alias="_id")
     launch_date : datetime | None   = Field(default=None)
     # _export_DB_by_alias			: bool = False
+
+    _csv_custom_writers = {  "launch_date": datetime2isodate }
+    _csv_custom_readers = {  "launch_date": isodate2datetime }
+    
 
     # fmt: on
     class Config:
@@ -95,11 +107,6 @@ class WGBlitzRelease(JSONExportable,
             return f"{self.release}\t{self.launch_date.date()}"
         return self.release
 
-    def _csv_row(self) -> dict[str, str | int | float | bool | None ]:
-        row : dict[str, str | int | float | bool | None ] = super()._csv_row()
-        if self.launch_date is not None:
-            row['launch_date'] = self.launch_date.date().isoformat()
-        return row
 
     def next(self, **kwargs) -> Self:
         """Get next Blitz release version according to standard release cycle

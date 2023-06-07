@@ -7,7 +7,6 @@ from pyutils import (
     CSVExportable,
     TXTExportable,
     JSONExportable,
-    CSVImportable,
     TXTImportable,
     Importable,
     TypeExcludeDict,
@@ -43,7 +42,7 @@ def lateinit_region() -> Region:
 
 # fmt: off
 class Account(JSONExportable, 
-              CSVExportable, CSVImportable, 
+              CSVExportable, 
               TXTExportable, TXTImportable, 
               Importable):
     id              : int       = Field(alias="_id")
@@ -92,13 +91,12 @@ class Account(JSONExportable,
     def read_account_id(cls, values: TypeAccountDict) -> TypeAccountDict:
         _id = values.get("id")
         region = values.get("region")
-        if region is None:
-            if isinstance(_id, int):
-                values["region"] = Region.from_id(_id)
-            elif isinstance(_id, str):
-                i, r = _id.split(":")
-                values["id"] = int(i)
-                values["region"] = Region(r)
+        if isinstance(_id, int):
+            values["region"] = Region.from_id(_id)
+        elif isinstance(_id, str):
+            i, r = _id.split(":")
+            values["id"] = int(i)
+            values["region"] = Region(r)
         return values
 
     # TXTExportable()
@@ -114,27 +112,9 @@ class Account(JSONExportable,
     def from_txt(cls, text: str, **kwargs) -> Self:
         """export data as single row of text"""
         try:
-            return cls(id=int(text), **kwargs)
+            return cls(id=text, **kwargs)
         except Exception as err:
             raise ValueError(f"Could not create Account() with id={text}: {err}")
-
-    # def _csv_row(self) -> dict[str, str | int | float | bool | None]:
-    #     """Provide instance data as dict for csv.DictWriter"""
-    #     res: dict[str, str | int | float | bool | None ] = self.dict(exclude_unset=False, by_alias=False)
-    #     if self.region is not None:
-    #         res["region"] = self.region.value
-    #     else:
-    #         raise ValueError(f"Account {self.id} does not have region defined")
-    #     return res
-
-    @classmethod
-    def from_str(cls, account: str) -> Self | None:
-        obj: dict[str, Any] = dict()
-        a = account.split(":")
-        obj["id"] = int(a[0])
-        if len(a) > 1:
-            obj["region"] = a[1]
-        return cls.parse_obj(obj)
 
     def __str__(self) -> str:
         fields: list[str] = [f for f in self.__fields__.keys() if f != "id"]
