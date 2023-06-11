@@ -1,4 +1,3 @@
-from .wg import WGApi as WGApi
 from .wotinspector import WoTinspector as WoTinspector, WoTInspectorAPIReplays, WoTInspectorReplaysData
 from .replay import (
     WoTBlitzReplayJSON as WoTBlitzReplayJSON,
@@ -32,10 +31,10 @@ from .wg_api import (
     WGTankStat as WGTankStat,
     WGTankStatAll as WGTankStatAll,
     WoTBlitzTankString as WoTBlitzTankString,
+    WGApi as WGApi,
 )
 
 __all__ = [
-    "wg",
     "wg_api",
     "wotinspector",
     "release",
