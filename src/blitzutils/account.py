@@ -90,13 +90,23 @@ class Account(JSONExportable,
     @root_validator(pre=True)
     def read_account_id(cls, values: TypeAccountDict) -> TypeAccountDict:
         _id = values.get("id")
-        region = values.get("region")
+        _region = values.get("region")
+        region : Region
+        account_id : int
         if isinstance(_id, int):
-            values["region"] = Region.from_id(_id)
+            account_id = _id
+            region = Region.from_id(_id)
         elif isinstance(_id, str):
-            i, r = _id.split(":")
-            values["id"] = int(i)
-            values["region"] = Region(r)
+            acc_id : list[str] = _id.split(":")
+            account_id = int(acc_id[0])
+            if len(acc_id) == 2:
+                region = Region(acc_id[1])
+            else:
+                region = Region.from_id(account_id)
+        else:
+            raise ValueError(f"could not validate id from {_id}")
+        values["id"] = account_id
+        values["region"] = region
         return values
 
     # TXTExportable()
