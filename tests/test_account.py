@@ -35,12 +35,13 @@ from blitzutils import Account
 
 FIXTURE_DIR = Path(dirname(realpath(__file__)))
 
-ACCOUNTS_FILE = pytest.mark.datafiles(FIXTURE_DIR / "03_Accounts.csv")
+ACCOUNTS_CSV = pytest.mark.datafiles(FIXTURE_DIR / "03_Accounts.csv")
+ACCOUNTS_TXT = pytest.mark.datafiles(FIXTURE_DIR / "03_Accounts1.txt", FIXTURE_DIR / "03_Accounts2.txt")
 
 
 @pytest.fixture
 def accounts_count() -> int:
-    return 500  # accounts in the CSV file
+    return 500  # accounts in the CSV and TXT files
 
 
 ########################################################
@@ -51,7 +52,7 @@ def accounts_count() -> int:
 
 
 @pytest.mark.asyncio
-@ACCOUNTS_FILE
+@ACCOUNTS_CSV
 async def test_1_import_export_accounts(datafiles: Path, tmp_path: Path, accounts_count: int) -> None:
     for accounts_file in datafiles.iterdir():
         accounts: list[Account] = list()
@@ -101,3 +102,20 @@ async def test_1_import_export_accounts(datafiles: Path, tmp_path: Path, account
             ), f"imported accounts in wrong order: {imported_accounts[ndx]} != {account}"
 
         assert len(set(imported_accounts)) == accounts_count, "some accounts imported as duplicate"
+
+
+@pytest.mark.asyncio
+@ACCOUNTS_TXT
+async def test_2_import_export_accounts_txt(datafiles: Path, tmp_path: Path, accounts_count: int) -> None:
+    for accounts_file in datafiles.iterdir():
+        accounts: set[Account] = set()
+
+        accounts_filename: str = str(accounts_file.resolve())
+        debug("replay: %s", basename(accounts_filename))
+        async for account in Account.import_txt(accounts_filename):
+            debug("imported Account() from TXT: %s", str(account))
+            accounts.add(account)
+
+        assert (
+            len(accounts) == accounts_count
+        ), f"could not import all the accounts: {len(accounts)} != {accounts_count}"
