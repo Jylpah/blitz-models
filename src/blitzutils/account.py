@@ -93,7 +93,9 @@ class Account(JSONExportable,
         _region = values.get("region")
         region : Region
         account_id : int
-        if isinstance(_id, int):
+        if _id is not None and _region is not None:
+            return values       #  shortcut
+        elif isinstance(_id, int):
             account_id = _id
             region = Region.from_id(_id)
         elif isinstance(_id, str):
