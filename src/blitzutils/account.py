@@ -89,7 +89,7 @@ class Account(JSONExportable,
 
     @root_validator(pre=True)
     def read_account_id(cls, values: TypeAccountDict) -> TypeAccountDict:
-        if "id" in values:
+        if "id" in values:          # since pre=True, has to check both field name and alias 
             _id = values.get("id")
         elif "_id" in values:
             _id = values.get("_id")
