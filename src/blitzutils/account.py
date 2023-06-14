@@ -89,8 +89,16 @@ class Account(JSONExportable,
 
     @root_validator(pre=True)
     def read_account_id(cls, values: TypeAccountDict) -> TypeAccountDict:
-        _id = values.get("id")
-        _region = values.get("region")
+        if "id" in values:          # since pre=True, has to check both field name and alias 
+            _id = values.get("id")
+        elif "_id" in values:
+            _id = values.get("_id")
+        else:
+            raise ValueError("No id or _id defined")
+        if "region" in values:
+            _region = values.get("region")
+        else:
+            _region = values.get("r")
         region : Region
         account_id : int
         if _id is not None and _region is not None:
