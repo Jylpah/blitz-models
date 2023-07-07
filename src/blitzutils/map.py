@@ -39,8 +39,8 @@ class Map(JSONExportable):
     id: int = Field(default=-1, alias="id")
     mode: MapMode = Field(default=MapMode.normal, alias="m")
 
-    _re_partial_name: Pattern = compile(" - ")
-    _re_partial_key: Pattern = compile('_\D{2}$')  # fmt: skip
+    _re_partial_name: Pattern = compile(r" - ")
+    _re_partial_key: Pattern = compile(r'_\D{2}$')  # fmt: skip
 
     @root_validator(pre=False)
     def _map_mode(cls, values: dict[str, Any]) -> dict[str, Any]:
