@@ -8,6 +8,7 @@ from pydantic import BaseModel, Extra, root_validator, validator, Field
 from aiohttp import ClientTimeout
 from urllib.parse import quote
 from collections import defaultdict
+from sortedcollections import SortedDict  # type: ignore
 
 from pyutils import JSONExportable, TypeExcludeDict, Idx, BackendIndexType, BackendIndex, ThrottledClientSession
 from pyutils.utils import epoch_now, get_url_JSON_model
@@ -497,7 +498,7 @@ class WGApiWoTBlitzPlayerAchievements(WGApiWoTBlitz):
 
 
 class WGApiTankopedia(WGApiWoTBlitz):
-    data: dict[str, WGTank] = Field(default=dict(), alias="d")
+    data: SortedDict[str, WGTank] = Field(default=SortedDict(int), alias="d")
     # userStr	: dict[str, str] | None = Field(default=None, alias='s')
 
     _exclude_export_DB_fields = {"userStr": True}
