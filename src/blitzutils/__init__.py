@@ -17,6 +17,11 @@ from .tank import (
     EnumVehicleTypeStr as EnumVehicleTypeStr,
     WGTank as WGTank,
 )
+from .map import (
+    Map as Map,
+    Maps as Maps,
+    MapMode as MapMode,
+)
 from .wg_api import (
     WGAccountInfo as WGAccountInfo,
     WGApiError as WGApiError,
@@ -35,10 +40,11 @@ from .wg_api import (
 )
 
 __all__ = [
-    "wg_api",
-    "wotinspector",
+    "account",
+    "map",
     "release",
     "region",
-    "account",
     "tank",
+    "wg_api",
+    "wotinspector",
 ]

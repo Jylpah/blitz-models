@@ -1,6 +1,6 @@
 [project]
 name = "blitz-utils"
-version = "0.2.7"
+version = "0.2.8"
 authors = [{ name = "Jylpah", email = "jylpah@gmail.com" }]
 description = "Python utils for Wargaming's World of Tanks Blitz game "
 readme = "README.md"
@@ -65,6 +65,7 @@ include = '\.pyi?$'
 
 [tool.pyright]
 reportGeneralTypeIssues = false
+reportInvalidStringEscapeSequence = false
 
 
 [tool.pytest.ini_options]
