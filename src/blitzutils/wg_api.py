@@ -527,8 +527,8 @@ class WGApiTankopedia(WGApiWoTBlitz):
         return wgtank
 
     @validator("data", pre=False)
-    def validate_data(cls, value) -> SortedDict[str, WGTank]:
-        if type(value) is not SortedDict:
+    def _validate_data(cls, value) -> SortedDict[str, WGTank]:
+        if not isinstance(value, SortedDict):
             return SortedDict(int, **value)
 
 
