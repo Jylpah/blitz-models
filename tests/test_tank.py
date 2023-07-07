@@ -4,6 +4,7 @@ from os.path import dirname, realpath, join as pjoin, basename
 from pathlib import Path
 import aiofiles
 from pydantic import BaseModel
+from random import shuffle
 import logging
 
 logger = logging.getLogger()
@@ -259,3 +260,41 @@ async def test_10_WGApiTankopedia(tmp_path: Path, datafiles: Path, tankopedia_ta
         assert len(tankopedia.data) == len(tankopedia_imported.data), f"could not import all the tanks"
 
     assert imported, "could not import anything"
+
+
+@pytest.mark.asyncio
+@TANKOPEDIA_FILES
+async def test_11_WGApiTankopedia_sorted(tmp_path: Path, datafiles: Path, tankopedia_tanks: int) -> None:
+    tankopedia = WGApiTankopedia()
+
+    debug("should have %d tanks", tankopedia_tanks)
+    for tankopedia_fn in datafiles.iterdir():
+        async with aiofiles.open(tankopedia_fn) as file:
+            try:
+                tankopedia = WGApiTankopedia.parse_raw(await file.read())
+            except Exception as err:
+                assert False, f"Parsing test file WGApiTankopedia() failed: {basename(tankopedia_fn)}"
+
+    debug("read %d tanks", len(tankopedia.data))
+    tanks: list[WGTank] = list()
+    for tank in tankopedia.data.values():
+        tanks.append(tank)
+
+    shuffle(tanks)
+
+    tankopedia_shuffled = WGApiTankopedia()
+    for tank in tanks:
+        tankopedia_shuffled.add(tank)
+
+    assert len(tankopedia) == len(tankopedia_shuffled), f"tankopedias has different number of tanks"
+    tanks = list()
+    for tank in tankopedia.data.values():
+        tanks.append(tank)
+
+    tanks2: list[WGTank] = list()
+    for tank in tankopedia_shuffled.data.values():
+        tanks2.append(tank)
+
+    assert (
+        tanks == tanks2
+    ), f"tankopedia does not keep tanks sorted: {type(tankopedia.data)}, {type(tankopedia_shuffled.data)}"
