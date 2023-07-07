@@ -69,68 +69,76 @@ def accounts_per_region() -> int:
 @pytest.mark.asyncio
 @ACCOUNTS
 async def test_1_api_account_info(datafiles: Path) -> None:
-    wg: WGApi = WGApi()
-    for account_fn in datafiles.iterdir():
-        accounts: list[Account] = list()
-        async for account in Account.import_file(str(account_fn.resolve())):
-            accounts.append(account)
+    async with WGApi() as wg:
+        for account_fn in datafiles.iterdir():
+            accounts: list[Account] = list()
+            async for account in Account.import_file(str(account_fn.resolve())):
+                accounts.append(account)
 
-        region: Region = accounts[0].region
+            region: Region = accounts[0].region
 
-        account_ids: list[int] = list()
-        for account in accounts:
-            account_ids.append(account.id)
+            account_ids: list[int] = list()
+            for account in accounts:
+                account_ids.append(account.id)
 
-        account_infos = await wg.get_account_info(account_ids=account_ids, region=region)
-        assert account_infos is not None, f"could no retrieve account infos for {region}"
-        assert len(account_infos) > 0, f"could no retrieve any account infos for {region}"
-        assert type(account_infos[0]) is WGAccountInfo, "incorrect type returned"
-    await wg.close()
+            account_infos = await wg.get_account_info(account_ids=account_ids, region=region)
+            assert account_infos is not None, f"could no retrieve account infos for {region}"
+            assert len(account_infos) > 0, f"could no retrieve any account infos for {region}"
+            assert type(account_infos[0]) is WGAccountInfo, "incorrect type returned"
 
 
 @pytest.mark.asyncio
 @ACCOUNTS
 async def test_2_api_tank_stats(datafiles: Path) -> None:
-    wg: WGApi = WGApi()
-    for account_fn in datafiles.iterdir():
-        accounts: list[Account] = list()
-        async for account in Account.import_file(str(account_fn.resolve())):
-            accounts.append(account)
+    async with WGApi() as wg:
+        for account_fn in datafiles.iterdir():
+            accounts: list[Account] = list()
+            async for account in Account.import_file(str(account_fn.resolve())):
+                accounts.append(account)
 
-        region: Region = accounts[0].region
+            region: Region = accounts[0].region
 
-        account_ids: list[int] = list()
-        stats_ok: bool = False
-        for account in accounts[:10]:
-            tank_stats = await wg.get_tank_stats(account_id=account.id, region=region)
-            if tank_stats is None:
-                debug(f"account_id={account} ({region}) did not return tank stats")
-                continue
-            stats_ok = True
-            assert len(tank_stats) > 0, f"no tanks stats found for account_id={account}"
-            assert type(tank_stats[0]) is WGTankStat, "incorrect type returned"
+            account_ids: list[int] = list()
+            stats_ok: bool = False
+            for account in accounts[:10]:
+                tank_stats = await wg.get_tank_stats(account_id=account.id, region=region)
+                if tank_stats is None:
+                    debug(f"account_id={account} ({region}) did not return tank stats")
+                    continue
+                stats_ok = True
+                assert len(tank_stats) > 0, f"no tanks stats found for account_id={account}"
+                assert type(tank_stats[0]) is WGTankStat, "incorrect type returned"
 
-        assert stats_ok, f"Could not find any stats for {region} region"
-    await wg.close()
+            assert stats_ok, f"Could not find any stats for {region} region"
 
 
 @pytest.mark.asyncio
 @ACCOUNTS
 async def test_3_api_player_achievements(datafiles: Path) -> None:
-    wg: WGApi = WGApi()
-    for account_fn in datafiles.iterdir():
-        accounts: list[Account] = list()
-        async for account in Account.import_file(str(account_fn.resolve())):
-            accounts.append(account)
+    async with WGApi() as wg:
+        for account_fn in datafiles.iterdir():
+            accounts: list[Account] = list()
+            async for account in Account.import_file(str(account_fn.resolve())):
+                accounts.append(account)
 
-        region: Region = accounts[0].region
+            region: Region = accounts[0].region
 
-        account_ids: list[int] = list()
-        for account in accounts:
-            account_ids.append(account.id)
+            account_ids: list[int] = list()
+            for account in accounts:
+                account_ids.append(account.id)
 
-        pams = await wg.get_player_achievements(account_ids=account_ids, region=region)
-        assert pams is not None, f"could no retrieve account infos for {region}"
-        assert len(pams) > 0, f"could no retrieve any account infos for {region}"
-        assert type(pams[0]) is WGPlayerAchievementsMaxSeries, "incorrect type returned"
-    await wg.close()
+            pams = await wg.get_player_achievements(account_ids=account_ids, region=region)
+            assert pams is not None, f"could no retrieve account infos for {region}"
+            assert len(pams) > 0, f"could no retrieve any account infos for {region}"
+            assert type(pams[0]) is WGPlayerAchievementsMaxSeries, "incorrect type returned"
+
+
+@pytest.mark.asyncio
+@ACCOUNTS
+async def test_4_api_tankopedia(datafiles: Path) -> None:
+    async with WGApi() as wg:
+        for region in Region.API_regions():
+            assert (
+                tankopedia := await wg.get_tankopedia(region=region)
+            ) is not None, f"could not fetch tankopedia for {region} server"
+            assert len(tankopedia) > 0, "API returned empty tankopedia"
