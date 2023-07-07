@@ -610,6 +610,17 @@ class WGApi:
             )
         debug("WG aiohttp session initiated")
 
+    async def __aenter__(self) -> Self:
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> None:
+        await self.close()
+
     async def close(self) -> None:
         """Close aiohttp sessions"""
         for server in self.session.keys():
