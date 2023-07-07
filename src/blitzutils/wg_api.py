@@ -1,4 +1,5 @@
-from typing import Any, Optional, ClassVar, TypeVar, Sequence, Tuple
+from typing import Any, Optional, ClassVar, TypeVar, Sequence, Tuple, Self, Type
+from types import TracebackType
 import logging
 from sys import path
 import pyarrow  # type: ignore
@@ -874,6 +875,47 @@ class WGApi:
             else:
                 resp.set_regions(region)
                 return resp.get_max_series()
+        except Exception as err:
+            error(f"Failed to fetch player achievements: {err}")
+        return None
+
+    ###########################################
+    #
+    # get_tankopedia()
+    #
+    ###########################################
+
+    def get_tankopedia_url(
+        self, region: Region, fields: list[str] = ["tank_id", "name", "tier", "type", "nation", "is_premium"]
+    ) -> str | None:
+        URL_WG_TANKOPEDIA: str = "encyclopedia/vehicles/"
+        try:
+            debug(f"starting, region={region}")
+            server: str | None = self.get_server_url(region)
+            if server is None:
+                raise ValueError(f"No API server for region {region}")
+
+            field_str: str = ""
+            if len(fields) > 0:
+                field_str = "fields=" + quote(",".join(fields))
+            if region == Region.ru:
+                return f"{server}{URL_WG_TANKOPEDIA}?application_id={self.ru_app_id}&{field_str}"
+            else:
+                return f"{server}{URL_WG_TANKOPEDIA}?application_id={self.app_id}&{field_str}"
+        except Exception as err:
+            debug(f"Failed to form url: {err}")
+        return None
+
+    async def get_tankopedia(
+        self, region: Region, fields: list[str] = ["tank_id", "name", "tier", "type", "nation", "is_premium"]
+    ) -> WGApiTankopedia | None:
+        try:
+            url: str | None
+            if (url := self.get_tankopedia_url(region=region, fields=fields)) is None:
+                raise ValueError(f"No player achievements available")
+            debug(f"URL: {url}")
+            return await get_url_JSON_model(self.session[region.value], url, resp_model=WGApiTankopedia)
+
         except Exception as err:
             error(f"Failed to fetch player achievements: {err}")
         return None
