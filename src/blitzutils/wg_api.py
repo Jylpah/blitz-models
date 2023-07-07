@@ -507,6 +507,9 @@ class WGApiTankopedia(WGApiWoTBlitz):
         validate_assignment = True
         allow_population_by_field_name = True
 
+    def __len__(self) -> int:
+        return len(self.data)
+
     def update_count(self) -> None:
         if self.meta is None:
             self.meta = dict()
