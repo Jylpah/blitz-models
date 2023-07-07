@@ -526,6 +526,11 @@ class WGApiTankopedia(WGApiWoTBlitz):
         self.update_count()
         return wgtank
 
+    @validator("data", pre=False)
+    def validate_data(cls, value) -> SortedDict[str, WGTank]:
+        if type(value) is not SortedDict:
+            return SortedDict(int, **value)
+
 
 class WoTBlitzTankString(JSONExportable):
     code: str = Field(default=..., alias="_id")
