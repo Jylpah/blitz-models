@@ -526,6 +526,11 @@ class WGApiTankopedia(WGApiWoTBlitz):
         self.update_count()
         return wgtank
 
+    def update(self, new: "WGApiTankopedia") -> None:
+        """update tankopedia with another one"""
+        self.data.update(new.data)
+        self.update_count()
+
     @validator("data", pre=False)
     def _validate_data(cls, value) -> SortedDict[str, WGTank]:
         if not isinstance(value, SortedDict):
