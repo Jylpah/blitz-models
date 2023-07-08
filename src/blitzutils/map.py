@@ -108,10 +108,14 @@ class Maps(JSONExportable):
     def __len__(self) -> int:
         return len(self.__root__)
 
-    def add(self, map: str | Map, key: str | None):
+    def add(self, map: str | Map, key: str | None = None):
         if isinstance(map, str):
             if isinstance(key, str):
                 map = Map(key=key, name=map)
             else:
                 raise ValueError("map name and key given, but key is not a string")
         self.__root__[map.key] = map
+
+    def update(self, new: "Maps") -> None:
+        """update Maps with another Maps instance"""
+        self.__root__.update(new.__root__)
