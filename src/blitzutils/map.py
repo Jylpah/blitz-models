@@ -34,16 +34,20 @@ class MapMode(IntEnum):
 
 
 class Map(JSONExportable):
-    key: str = Field(default=..., alias="k")
+    key: str = Field(default=..., alias="_id")
     name: str = Field(default=..., alias="n")
-    id: int = Field(default=-1, alias="id")
+    id: int = Field(default=-1)
     mode: MapMode = Field(default=MapMode.normal, alias="m")
 
-    _re_partial_name: Pattern = compile(r" - ")
-    _re_partial_key: Pattern = compile(r'_\D{2}$')  # fmt: skip
+    _exclude_unset = False
+    _exclude_defaults = False
+
+    # _re_partial_name: Pattern = compile(r" - ")
+    _re_partial_key: Pattern = compile(r'_\d{2}$')  # fmt: skip
 
     @root_validator(pre=False)
     def _map_mode(cls, values: dict[str, Any]) -> dict[str, Any]:
+        """Set map's type/mode"""
         key: str = values["key"]
         if cls._re_partial_key.search(key):
             values["mode"] = MapMode.partial
@@ -66,6 +70,14 @@ class Map(JSONExportable):
 class Maps(JSONExportable):
     __root__: dict[str, Map] = dict()
 
+    _exclude_unset = False
+    _exclude_defaults = False
+
+    class Config:
+        allow_mutation = True
+        validate_assignment = True
+        allow_population_by_field_name = True
+
     @root_validator(pre=True)
     def _import_dict(cls, values: dict[str, Any]) -> dict[str, Map]:
         res: dict[str, Map] = dict()
@@ -78,7 +90,7 @@ class Maps(JSONExportable):
                 debug(f"could not parse Map() from: {value}")
             try:
                 res[key] = Map(key=key, name=value)
-                message(f"new Map(key={key}, name={value})")
+                debug(f"new Map(key={key}, name={value})")
             except Exception as err:
                 error(f"could not validate key={key}, map={value}")
             values["__root__"] = res
