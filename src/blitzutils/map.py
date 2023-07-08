@@ -1,9 +1,10 @@
 import logging
 import json
 from warnings import warn
-from typing import Any, Optional
+from typing import Any, Optional, Self
 from enum import IntEnum, StrEnum
 from pydantic import root_validator, validator, Field, Extra, ValidationError
+from aiofiles import open
 from pyutils.jsonexportable import Idx
 from sortedcollections import SortedDict  # type: ignore
 from re import Pattern, compile, match
@@ -68,7 +69,7 @@ class Map(JSONExportable):
 
 
 class Maps(JSONExportable):
-    __root__: dict[str, Map] = dict()
+    __root__: SortedDict[str, Map] = SortedDict()
 
     _exclude_unset = False
     _exclude_defaults = False
@@ -78,23 +79,65 @@ class Maps(JSONExportable):
         validate_assignment = True
         allow_population_by_field_name = True
 
-    @root_validator(pre=True)
-    def _import_dict(cls, values: dict[str, Any]) -> dict[str, Map]:
-        res: dict[str, Map] = dict()
-        maps = values["__root__"]
-        for key, value in maps.items():
+    # @root_validator(pre=True)
+    # def _import_dict(cls, values: dict[str, Any]) -> dict[str, Map]:
+    #     res: dict[str, Map] = dict()
+    #     maps = values["__root__"]
+    #     for key, value in maps.items():
+    #         try:
+    #             res[key] = Map.parse_obj(value)
+    #             continue
+    #         except ValidationError:
+    #             debug(f"could not parse Map() from: {value}")
+    #         try:
+    #             res[key] = Map(key=key, name=value)
+    #             debug(f"new Map(key={key}, name={value})")
+    #         except Exception as err:
+    #             error(f"could not validate key={key}, map={value}")
+    #         values["__root__"] = res
+    #     return values
+
+    # @validator("__root__", pre=True)
+    # def _import_data(cls, value: dict[str, Any]) -> SortedDict[str, Map]:
+    #     res: SortedDict[str, Map] = SortedDict()
+    #     for key, val in value.items():
+    #         try:
+    #             res[key] = Map.parse_obj(val)
+    #             continue
+    #         except ValidationError:
+    #             debug(f"could not parse Map() from: {val}")
+    #         try:
+    #             res[key] = Map(key=key, name=val)
+    #             debug(f"new Map(key={key}, name={val})")
+    #         except Exception as err:
+    #             error(f"could not validate key={key}, map={val}: {err}")
+    #     return res
+
+    @validator("__root__", pre=False)
+    def _ensure_sorteddict(cls, value) -> SortedDict[str, Map]:
+        if not isinstance(value, SortedDict):
+            return SortedDict(**value)
+
+    @classmethod
+    async def open_json(cls, filename: str) -> Self | None:
+        """Open replay JSON file and return class instance"""
+        if (res := await super().open_json(filename)) is None:
+            warn("legacy JSON format is depreciated", category=DeprecationWarning)
             try:
-                res[key] = Map.parse_obj(value)
-                continue
-            except ValidationError:
-                debug(f"could not parse Map() from: {value}")
-            try:
-                res[key] = Map(key=key, name=value)
-                debug(f"new Map(key={key}, name={value})")
+                res = cls()
+                async with open(filename, "r", encoding="utf8") as f:
+                    objs: dict[str, Any] = json.loads(await f.read())
+                    for key, obj in objs.items():
+                        try:
+                            res.add(Map(key=key, name=obj))
+                            debug(f"new Map(key={key}, name={obj})")
+                        except Exception as err:
+                            debug(f"could not validate key={key}, map={obj}: {err}")
+                return res
             except Exception as err:
-                error(f"could not validate key={key}, map={value}")
-            values["__root__"] = res
-        return values
+                debug(f"Error reading: {err}")
+            return None
+        return res
 
     def __iter__(self):
         return iter(self.__root__)
