@@ -142,7 +142,7 @@ class Maps(JSONExportable):
         return res
 
     def __iter__(self):
-        return iter(self.__root__)
+        return iter(self.__root__.values())
 
     def __getitem__(self, key) -> Map:
         return self.__root__[key]
