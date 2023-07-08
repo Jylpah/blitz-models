@@ -1,6 +1,6 @@
 [project]
 name = "blitz-utils"
-version = "0.2.12"
+version = "0.2.13"
 authors = [{ name = "Jylpah", email = "jylpah@gmail.com" }]
 description = "Python utils for Wargaming's World of Tanks Blitz game "
 readme = "README.md"
@@ -23,6 +23,7 @@ dependencies = [
     "pyarrow>=11.0.0",
     "pydantic>=1.10.7, == 1.*",
     "pymongo>=4.3.3",
+    "sortedcollections>=2.1.0",
     "pyutils @ git+https://github.com/Jylpah/pyutils.git",
 ]
 
