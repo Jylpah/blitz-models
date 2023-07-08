@@ -516,6 +516,10 @@ class WGApiTankopedia(WGApiWoTBlitz):
             key = str(key)
         return self.data[key]
 
+    def __iter__(self):
+        """Iterate tanks in WGApiTankopedia()"""
+        return iter(self.data.values())
+
     def update_count(self) -> None:
         if self.meta is None:
             self.meta = dict()
