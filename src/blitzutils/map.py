@@ -131,11 +131,13 @@ class Maps(JSONExportable):
                         try:
                             res.add(Map(key=key, name=obj))
                             debug(f"new Map(key={key}, name={obj})")
-                        except Exception as err:
+                        except ValidationError as err:
                             debug(f"could not validate key={key}, map={obj}: {err}")
                 return res
+            except OSError as err:
+                debug(f"Error reading file: {filename}: {err}")
             except Exception as err:
-                debug(f"Error reading: {err}")
+                debug(f"Error parsing file: {filename}: {err}")
             return None
         return res
 

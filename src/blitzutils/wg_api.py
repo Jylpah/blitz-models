@@ -511,6 +511,11 @@ class WGApiTankopedia(WGApiWoTBlitz):
     def __len__(self) -> int:
         return len(self.data)
 
+    def __getitem__(self, key: str | int) -> WGTank:
+        if isinstance(key, int):
+            key = str(key)
+        return self.data[key]
+
     def update_count(self) -> None:
         if self.meta is None:
             self.meta = dict()
