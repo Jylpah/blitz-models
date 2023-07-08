@@ -34,16 +34,20 @@ class MapMode(IntEnum):
 
 
 class Map(JSONExportable):
-    key: str = Field(default=..., alias="k")
+    key: str = Field(default=..., alias="_id")
     name: str = Field(default=..., alias="n")
-    id: int = Field(default=-1, alias="id")
+    id: int = Field(default=-1)
     mode: MapMode = Field(default=MapMode.normal, alias="m")
 
-    _re_partial_name: Pattern = compile(r" - ")
-    _re_partial_key: Pattern = compile(r'_\D{2}$')  # fmt: skip
+    _exclude_unset = False
+    _exclude_defaults = False
+
+    # _re_partial_name: Pattern = compile(r" - ")
+    _re_partial_key: Pattern = compile(r'_\d{2}$')  # fmt: skip
 
     @root_validator(pre=False)
     def _map_mode(cls, values: dict[str, Any]) -> dict[str, Any]:
+        """Set map's type/mode"""
         key: str = values["key"]
         if cls._re_partial_key.search(key):
             values["mode"] = MapMode.partial
