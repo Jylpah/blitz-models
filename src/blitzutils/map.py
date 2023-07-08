@@ -70,6 +70,14 @@ class Map(JSONExportable):
 class Maps(JSONExportable):
     __root__: dict[str, Map] = dict()
 
+    _exclude_unset = False
+    _exclude_defaults = False
+
+    class Config:
+        allow_mutation = True
+        validate_assignment = True
+        allow_population_by_field_name = True
+
     @root_validator(pre=True)
     def _import_dict(cls, values: dict[str, Any]) -> dict[str, Map]:
         res: dict[str, Map] = dict()
@@ -82,7 +90,7 @@ class Maps(JSONExportable):
                 debug(f"could not parse Map() from: {value}")
             try:
                 res[key] = Map(key=key, name=value)
-                message(f"new Map(key={key}, name={value})")
+                debug(f"new Map(key={key}, name={value})")
             except Exception as err:
                 error(f"could not validate key={key}, map={value}")
             values["__root__"] = res
