@@ -148,6 +148,10 @@ class Maps(JSONExportable):
         return self.__root__[key]
 
     def __setitem__(self, key: str, map: Map) -> None:
+        if not isinstance(map, Map):
+            raise TypeError(f"map is not type 'Map()', but {type(map)}")
+        if not isinstance(key, str):
+            raise TypeError(f"key is not type 'str', but {type(key)}")
         self.__root__[key] = map
 
     def __len__(self) -> int:

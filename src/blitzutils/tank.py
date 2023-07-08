@@ -111,7 +111,7 @@ class EnumNation(IntEnum):
             return f"{self.name}".capitalize()
 
 
-class WGTank(JSONExportable, CSVExportable):
+class WGTank(JSONExportable, CSVExportable, TXTExportable):
     # fmt: off
     tank_id 	: int 						= Field(default=..., alias = '_id')
     name   		: str | None				= Field(default=None)
@@ -157,3 +157,10 @@ class WGTank(JSONExportable, CSVExportable):
             return EnumNation[v].value
         else:
             return v
+
+    def txt_row(self, format: str = "") -> str:
+        """export data as single row of text"""
+        if format == "rich":
+            return f"({self.tank_id}) {self.name} tier {self.tier} {self.type} {self.nation}"
+        else:
+            return f"({self.tank_id}) {self.name}"
