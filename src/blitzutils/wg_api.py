@@ -536,7 +536,7 @@ class WGApiTankopedia(WGApiWoTBlitz):
         self.update_count()
         return wgtank
 
-    def update(self, new: "WGApiTankopedia") -> Tuple[int, int]:
+    def update(self, new: "WGApiTankopedia") -> Tuple[set[int], set[int]]:
         """update tankopedia with another one"""
         new_ids: set[int] = {tank.tank_id for tank in new}
         old_ids: set[int] = {tank.tank_id for tank in self}
@@ -546,7 +546,7 @@ class WGApiTankopedia(WGApiWoTBlitz):
 
         self.data.update({new[tank_id] for tank_id in added | updated})
         self.update_count()
-        return len(added), len(updated)
+        return added, updated
 
     @validator("data", pre=False)
     def _validate_data(cls, value) -> SortedDict[str, WGTank]:
