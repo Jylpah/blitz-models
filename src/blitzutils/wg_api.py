@@ -9,7 +9,8 @@ from aiohttp import ClientTimeout
 from urllib.parse import quote
 from collections import defaultdict
 from sortedcollections import SortedDict  # type: ignore
-
+from argparse import ArgumentParser
+from configparser import ConfigParser
 from pyutils import JSONExportable, TypeExcludeDict, Idx, BackendIndexType, BackendIndex, ThrottledClientSession
 from pyutils.utils import epoch_now, get_url_JSON_model
 from pyutils.exportable import DESCENDING, ASCENDING, TEXT
@@ -953,3 +954,71 @@ class WGApi:
         except Exception as err:
             error(f"Failed to fetch player achievements: {err}")
         return None
+
+
+def add_args_wg(parser: ArgumentParser, config: Optional[ConfigParser] = None) -> bool:
+    """Helper to add argparse for WG API"""
+    try:
+        debug("starting")
+        WG_RATE_LIMIT: float = 10
+        WG_WORKERS: int = 10
+        WG_APP_ID: str = WGApi.DEFAULT_WG_APP_ID
+        WG_DEFAULT_REGION: str = Region.eu.name
+        # Lesta / RU
+        LESTA_RATE_LIMIT: float = 10
+        LESTA_WORKERS: int = 10
+        LESTA_APP_ID: str = WGApi.DEFAULT_LESTA_APP_ID
+        # NULL_RESPONSES 	: int 	= 20
+
+        if config is not None and "WG" in config.sections():
+            configWG = config["WG"]
+            WG_RATE_LIMIT = configWG.getfloat("rate_limit", WG_RATE_LIMIT)
+            WG_WORKERS = configWG.getint("api_workers", WG_WORKERS)
+            WG_APP_ID = configWG.get("app_id", WG_APP_ID)
+            WG_DEFAULT_REGION = configWG.get("default_region", WG_DEFAULT_REGION)
+
+        if config is not None and "LESTA" in config.sections():
+            configRU = config["LESTA"]
+            LESTA_RATE_LIMIT = configRU.getfloat("rate_limit", LESTA_RATE_LIMIT)
+            LESTA_WORKERS = configRU.getint("api_workers", LESTA_WORKERS)
+            LESTA_APP_ID = configRU.get("app_id", LESTA_APP_ID)
+
+        parser.add_argument(
+            "--wg-workers",
+            dest="wg_workers",
+            type=int,
+            default=WG_WORKERS,
+            metavar="WORKERS",
+            help="number of async workers",
+        )
+        parser.add_argument("--wg-app-id", type=str, default=WG_APP_ID, metavar="APP_ID", help="Set WG APP ID")
+        parser.add_argument(
+            "--wg-rate-limit",
+            type=float,
+            default=WG_RATE_LIMIT,
+            metavar="RATE_LIMIT",
+            help="rate limit for WG API per server",
+        )
+        parser.add_argument(
+            "--wg-region",
+            type=str,
+            nargs=1,
+            choices=[r.value for r in Region.API_regions()],
+            default=WG_DEFAULT_REGION,
+            help=f"default API region (default: {WG_DEFAULT_REGION}",
+        )
+
+        parser.add_argument(
+            "--ru-app-id", type=str, default=LESTA_APP_ID, metavar="APP_ID", help="Set Lesta (RU) APP ID"
+        )
+        parser.add_argument(
+            "--ru-rate-limit",
+            type=float,
+            default=LESTA_RATE_LIMIT,
+            metavar="RATE_LIMIT",
+            help="Rate limit for Lesta (RU) API",
+        )
+        return True
+    except Exception as err:
+        error(f"{err}")
+    return False
