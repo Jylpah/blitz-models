@@ -536,10 +536,17 @@ class WGApiTankopedia(WGApiWoTBlitz):
         self.update_count()
         return wgtank
 
-    def update(self, new: "WGApiTankopedia") -> None:
+    def update(self, new: "WGApiTankopedia") -> Tuple[int, int]:
         """update tankopedia with another one"""
-        self.data.update(new.data)
+        new_ids: set[int] = {tank.tank_id for tank in new}
+        old_ids: set[int] = {tank.tank_id for tank in self}
+        added: set[int] = new_ids - old_ids
+        updated: set[int] = new_ids & old_ids
+        updated = {tank_id for tank_id in updated if new[tank_id] != self.data[tank_id]}
+
+        self.data.update({new[tank_id] for tank_id in added | updated})
         self.update_count()
+        return len(added), len(updated)
 
     @validator("data", pre=False)
     def _validate_data(cls, value) -> SortedDict[str, WGTank]:
@@ -1005,7 +1012,7 @@ def add_args_wg(parser: ArgumentParser, config: Optional[ConfigParser] = None) -
             nargs=1,
             choices=[r.value for r in Region.API_regions()],
             default=WG_DEFAULT_REGION,
-            help=f"default API region (default: {WG_DEFAULT_REGION}",
+            help=f"default API region (default: {WG_DEFAULT_REGION})",
         )
 
         parser.add_argument(
