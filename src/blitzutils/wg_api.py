@@ -1005,7 +1005,7 @@ def add_args_wg(parser: ArgumentParser, config: Optional[ConfigParser] = None) -
             nargs=1,
             choices=[r.value for r in Region.API_regions()],
             default=WG_DEFAULT_REGION,
-            help=f"default API region (default: {WG_DEFAULT_REGION}",
+            help=f"default API region (default: {WG_DEFAULT_REGION})",
         )
 
         parser.add_argument(
