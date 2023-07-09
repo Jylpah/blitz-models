@@ -1,6 +1,6 @@
 [project]
 name = "blitz-utils"
-version = "0.2.18"
+version = "0.2.19"
 authors = [{ name = "Jylpah", email = "jylpah@gmail.com" }]
 description = "Python utils for Wargaming's World of Tanks Blitz game "
 readme = "README.md"
@@ -60,7 +60,7 @@ allow-direct-references = true
 plugins = ["pydantic.mypy"]
 
 [tool.black]
-# line-length = 100
+# line-length = 88
 include = '\.pyi?$'
 
 
