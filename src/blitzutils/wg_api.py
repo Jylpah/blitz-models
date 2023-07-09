@@ -546,7 +546,7 @@ class WGApiTankopedia(WGApiWoTBlitz):
 
         self.data.update({new[tank_id] for tank_id in added | updated})
         self.update_count()
-        return added, updated
+        return (added, updated)
 
     @validator("data", pre=False)
     def _validate_data(cls, value) -> SortedDict[str, WGTank]:
