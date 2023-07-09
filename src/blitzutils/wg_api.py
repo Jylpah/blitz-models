@@ -11,7 +11,14 @@ from collections import defaultdict
 from sortedcollections import SortedDict  # type: ignore
 from argparse import ArgumentParser
 from configparser import ConfigParser
-from pyutils import JSONExportable, TypeExcludeDict, Idx, BackendIndexType, BackendIndex, ThrottledClientSession
+from pyutils import (
+    JSONExportable,
+    TypeExcludeDict,
+    Idx,
+    BackendIndexType,
+    BackendIndex,
+    ThrottledClientSession,
+)
 from pyutils.utils import epoch_now, get_url_JSON_model
 from pyutils.exportable import DESCENDING, ASCENDING, TEXT
 
@@ -226,8 +233,14 @@ class WGTankStat(JSONExportable):
         )
 
     @classmethod
-    def mk_id(cls, account_id: int, last_battle_time: int, tank_id: int = 0) -> ObjectId:
-        return ObjectId(hex(account_id)[2:].zfill(10) + hex(tank_id)[2:].zfill(6) + hex(last_battle_time)[2:].zfill(8))
+    def mk_id(
+        cls, account_id: int, last_battle_time: int, tank_id: int = 0
+    ) -> ObjectId:
+        return ObjectId(
+            hex(account_id)[2:].zfill(10)
+            + hex(tank_id)[2:].zfill(6)
+            + hex(last_battle_time)[2:].zfill(8)
+        )
 
     @validator("last_battle_time", pre=True)
     def validate_lbt(cls, v: int) -> int:
@@ -246,7 +259,11 @@ class WGTankStat(JSONExportable):
                 if "a" in values:
                     values["_id"] = cls.mk_id(values["a"], values["lb"], values["t"])
                 else:
-                    values["id"] = cls.mk_id(values["account_id"], values["last_battle_time"], values["tank_id"])
+                    values["id"] = cls.mk_id(
+                        values["account_id"],
+                        values["last_battle_time"],
+                        values["tank_id"],
+                    )
             return values
         except Exception as err:
             raise ValueError(f"Could not store _id: {err}")
@@ -265,7 +282,9 @@ class WGTankStat(JSONExportable):
         return None
 
     def __str__(self) -> str:
-        return f"account_id={self.account_id}:{self.region} tank_id={self.tank_id} last_battle_time={self.last_battle_time}"
+        return f"account_id={self.account_id}:{self.region} \
+                    tank_id={self.tank_id} \
+                    last_battle_time={self.last_battle_time}"
 
 
 class WGApiWoTBlitz(JSONExportable):
@@ -365,14 +384,25 @@ class WGPlayerAchievementsMaxSeries(JSONExportable):
     @property
     def indexes(self) -> dict[str, Idx]:
         """return backend indexes"""
-        return {"account_id": self.account_id, "region": str(self.region), "added": self.added}
+        return {
+            "account_id": self.account_id,
+            "region": str(self.region),
+            "added": self.added,
+        }
 
     @classmethod
     def backend_indexes(cls) -> list[list[tuple[str, BackendIndexType]]]:
         indexes: list[list[BackendIndex]] = list()
-        indexes.append([("region", ASCENDING), ("account_id", ASCENDING), ("added", DESCENDING)])
         indexes.append(
-            [("release", DESCENDING), ("region", ASCENDING), ("account_id", ASCENDING), ("added", DESCENDING)]
+            [("region", ASCENDING), ("account_id", ASCENDING), ("added", DESCENDING)]
+        )
+        indexes.append(
+            [
+                ("release", DESCENDING),
+                ("region", ASCENDING),
+                ("account_id", ASCENDING),
+                ("added", DESCENDING),
+            ]
         )
         return indexes
 
@@ -381,7 +411,11 @@ class WGPlayerAchievementsMaxSeries(JSONExportable):
         r: int = 0
         if region is not None:
             r = list(Region).index(region)
-        return ObjectId(hex(account_id)[2:].zfill(10) + hex(r)[2:].zfill(6) + hex(added)[2:].zfill(8))
+        return ObjectId(
+            hex(account_id)[2:].zfill(10)
+            + hex(r)[2:].zfill(6)
+            + hex(added)[2:].zfill(8)
+        )
 
     @root_validator
     def set_region_id(cls, values: dict[str, Any]) -> dict[str, Any]:
@@ -435,7 +469,8 @@ class WGPlayerAchievementsMain(JSONExportable):
 
 
 WGPlayerAchievementsMaxSeries.register_transformation(
-    WGPlayerAchievementsMain, WGPlayerAchievementsMaxSeries.transform_WGPlayerAchievementsMain
+    WGPlayerAchievementsMain,
+    WGPlayerAchievementsMaxSeries.transform_WGPlayerAchievementsMain,
 )
 
 
@@ -542,9 +577,9 @@ class WGApiTankopedia(WGApiWoTBlitz):
         old_ids: set[int] = {tank.tank_id for tank in self}
         added: set[int] = new_ids - old_ids
         updated: set[int] = new_ids & old_ids
-        updated = {tank_id for tank_id in updated if new[tank_id] != self.data[tank_id]}
+        updated = {tank_id for tank_id in updated if new[tank_id] != self[tank_id]}
 
-        self.data.update({new[tank_id] for tank_id in added | updated})
+        self.data.update({(str(tank_id), new[tank_id]) for tank_id in added | updated})
         self.update_count()
         return (added, updated)
 
@@ -710,7 +745,11 @@ class WGApi:
     ###########################################
 
     def get_tank_stats_url(
-        self, account_id: int, region: Region, tank_ids: list[int] = [], fields: list[str] = []
+        self,
+        account_id: int,
+        region: Region,
+        tank_ids: list[int] = [],
+        fields: list[str] = [],
     ) -> Tuple[str, Region] | None:
         assert type(account_id) is int, "account_id must be int"
         assert type(tank_ids) is list, "tank_ids must be a list"
@@ -724,7 +763,9 @@ class WGApi:
             if account_region is None:
                 raise ValueError("Could not determine region for account_id")
             if account_region != region:
-                raise ValueError(f"account_id {account_id} does not match region {region.name}")
+                raise ValueError(
+                    f"account_id {account_id} does not match region {region.name}"
+                )
 
             server: str | None = self.get_server_url(account_region)
             if server is None:
@@ -752,7 +793,11 @@ class WGApi:
         return None
 
     async def get_tank_stats_full(
-        self, account_id: int, region: Region, tank_ids: list[int] = [], fields: list[str] = []
+        self,
+        account_id: int,
+        region: Region,
+        tank_ids: list[int] = [],
+        fields: list[str] = [],
     ) -> WGApiWoTBlitzTankStats | None:
         try:
             server_url: Tuple[str, Region] | None = self.get_tank_stats_url(
@@ -763,21 +808,29 @@ class WGApi:
             url: str = server_url[0]
             region = server_url[1]
 
-            return await get_url_JSON_model(self.session[region.value], url, resp_model=WGApiWoTBlitzTankStats)
+            return await get_url_JSON_model(
+                self.session[region.value], url, resp_model=WGApiWoTBlitzTankStats
+            )
 
         except Exception as err:
             error(f"Failed to fetch tank stats for account_id: {account_id}: {err}")
         return None
 
     async def get_tank_stats(
-        self, account_id: int, region: Region, tank_ids: list[int] = [], fields: list[str] = []
+        self,
+        account_id: int,
+        region: Region,
+        tank_ids: list[int] = [],
+        fields: list[str] = [],
     ) -> list[WGTankStat] | None:
         try:
             resp: WGApiWoTBlitzTankStats | None = await self.get_tank_stats_full(
                 account_id=account_id, region=region, tank_ids=tank_ids, fields=fields
             )
             if resp is None or resp.data is None:
-                verbose(f"could not fetch tank stats for account_id={account_id}:{region}")
+                verbose(
+                    f"could not fetch tank stats for account_id={account_id}:{region}"
+                )
                 return None
             else:
                 return list(resp.data.values())[0]
@@ -795,7 +848,13 @@ class WGApi:
         self,
         account_ids: Sequence[int],
         region: Region,
-        fields: list[str] = ["account_id", "created_at", "updated_at", "last_battle_time", "nickname"],
+        fields: list[str] = [
+            "account_id",
+            "created_at",
+            "updated_at",
+            "last_battle_time",
+            "nickname",
+        ],
     ) -> str | None:
         """get URL for /wotb/account/info/"""
         URL_WG_ACCOUNT_INFO: str = "account/info/"
@@ -814,9 +873,7 @@ class WGApi:
             if region == Region.ru:
                 return f"{server}{URL_WG_ACCOUNT_INFO}?application_id={self.ru_app_id}&account_id={account_str}{field_str}"
             else:
-                return (
-                    f"{server}{URL_WG_ACCOUNT_INFO}?application_id={self.app_id}&account_id={account_str}{field_str}"
-                )
+                return f"{server}{URL_WG_ACCOUNT_INFO}?application_id={self.app_id}&account_id={account_str}{field_str}"
         except Exception as err:
             debug(f"Failed to form url: {err}")
         return None
@@ -825,15 +882,27 @@ class WGApi:
         self,
         account_ids: Sequence[int],
         region: Region,
-        fields: list[str] = ["account_id", "created_at", "updated_at", "last_battle_time", "nickname"],
+        fields: list[str] = [
+            "account_id",
+            "created_at",
+            "updated_at",
+            "last_battle_time",
+            "nickname",
+        ],
     ) -> WGApiWoTBlitzAccountInfo | None:
         """get WG API response for account/info"""
         try:
             url: str | None
-            if (url := self.get_account_info_url(account_ids=account_ids, region=region, fields=fields)) is None:
+            if (
+                url := self.get_account_info_url(
+                    account_ids=account_ids, region=region, fields=fields
+                )
+            ) is None:
                 raise ValueError(f"No account info available")
             debug(f"URL: {url}")
-            return await get_url_JSON_model(self.session[region.value], url, resp_model=WGApiWoTBlitzAccountInfo)
+            return await get_url_JSON_model(
+                self.session[region.value], url, resp_model=WGApiWoTBlitzAccountInfo
+            )
 
         except Exception as err:
             error(f"Failed to fetch account info: {err}")
@@ -843,11 +912,19 @@ class WGApi:
         self,
         account_ids: Sequence[int],
         region: Region,
-        fields: list[str] = ["account_id", "created_at", "updated_at", "last_battle_time", "nickname"],
+        fields: list[str] = [
+            "account_id",
+            "created_at",
+            "updated_at",
+            "last_battle_time",
+            "nickname",
+        ],
     ) -> list[WGAccountInfo] | None:
         try:
             resp: WGApiWoTBlitzAccountInfo | None
-            resp = await self.get_account_info_full(account_ids=account_ids, region=region, fields=fields)
+            resp = await self.get_account_info_full(
+                account_ids=account_ids, region=region, fields=fields
+            )
             if resp is None or resp.data is None:
                 error("No stats found")
                 return None
@@ -893,12 +970,16 @@ class WGApi:
         try:
             url: str | None
             if (
-                url := self.get_player_achievements_url(account_ids=account_ids, region=region, fields=fields)
+                url := self.get_player_achievements_url(
+                    account_ids=account_ids, region=region, fields=fields
+                )
             ) is None:
                 raise ValueError(f"No player achievements available")
             debug(f"URL: {url}")
             return await get_url_JSON_model(
-                self.session[region.value], url, resp_model=WGApiWoTBlitzPlayerAchievements
+                self.session[region.value],
+                url,
+                resp_model=WGApiWoTBlitzPlayerAchievements,
             )
 
         except Exception as err:
@@ -910,7 +991,9 @@ class WGApi:
     ) -> list[WGPlayerAchievementsMaxSeries] | None:
         try:
             resp: WGApiWoTBlitzPlayerAchievements | None
-            resp = await self.get_player_achievements_full(account_ids=account_ids, region=region, fields=fields)
+            resp = await self.get_player_achievements_full(
+                account_ids=account_ids, region=region, fields=fields
+            )
             if resp is None or resp.data is None:
                 error("No stats found")
                 return None
@@ -928,7 +1011,9 @@ class WGApi:
     ###########################################
 
     def get_tankopedia_url(
-        self, region: Region, fields: list[str] = ["tank_id", "name", "tier", "type", "nation", "is_premium"]
+        self,
+        region: Region,
+        fields: list[str] = ["tank_id", "name", "tier", "type", "nation", "is_premium"],
     ) -> str | None:
         URL_WG_TANKOPEDIA: str = "encyclopedia/vehicles/"
         try:
@@ -949,14 +1034,18 @@ class WGApi:
         return None
 
     async def get_tankopedia(
-        self, region: Region, fields: list[str] = ["tank_id", "name", "tier", "type", "nation", "is_premium"]
+        self,
+        region: Region,
+        fields: list[str] = ["tank_id", "name", "tier", "type", "nation", "is_premium"],
     ) -> WGApiTankopedia | None:
         try:
             url: str | None
             if (url := self.get_tankopedia_url(region=region, fields=fields)) is None:
                 raise ValueError(f"No player achievements available")
             debug(f"URL: {url}")
-            return await get_url_JSON_model(self.session[region.value], url, resp_model=WGApiTankopedia)
+            return await get_url_JSON_model(
+                self.session[region.value], url, resp_model=WGApiTankopedia
+            )
 
         except Exception as err:
             error(f"Failed to fetch player achievements: {err}")
@@ -998,7 +1087,13 @@ def add_args_wg(parser: ArgumentParser, config: Optional[ConfigParser] = None) -
             metavar="WORKERS",
             help="number of async workers",
         )
-        parser.add_argument("--wg-app-id", type=str, default=WG_APP_ID, metavar="APP_ID", help="Set WG APP ID")
+        parser.add_argument(
+            "--wg-app-id",
+            type=str,
+            default=WG_APP_ID,
+            metavar="APP_ID",
+            help="Set WG APP ID",
+        )
         parser.add_argument(
             "--wg-rate-limit",
             type=float,
@@ -1016,7 +1111,11 @@ def add_args_wg(parser: ArgumentParser, config: Optional[ConfigParser] = None) -
         )
 
         parser.add_argument(
-            "--ru-app-id", type=str, default=LESTA_APP_ID, metavar="APP_ID", help="Set Lesta (RU) APP ID"
+            "--ru-app-id",
+            type=str,
+            default=LESTA_APP_ID,
+            metavar="APP_ID",
+            help="Set Lesta (RU) APP ID",
         )
         parser.add_argument(
             "--ru-rate-limit",
