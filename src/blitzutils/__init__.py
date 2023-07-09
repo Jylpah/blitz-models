@@ -37,6 +37,7 @@ from .wg_api import (
     WGTankStatAll as WGTankStatAll,
     WoTBlitzTankString as WoTBlitzTankString,
     WGApi as WGApi,
+    add_args_wg as add_args_wg,
 )
 
 __all__ = [
