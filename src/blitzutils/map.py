@@ -1,7 +1,7 @@
 import logging
 import json
 from warnings import warn
-from typing import Any, Optional, Self
+from typing import Any, Optional, Self, Tuple
 from enum import IntEnum, StrEnum
 from pydantic import root_validator, validator, Field, Extra, ValidationError
 from aiofiles import open
@@ -165,6 +165,15 @@ class Maps(JSONExportable):
                 raise ValueError("map name and key given, but key is not a string")
         self.__root__[map.key] = map
 
-    def update(self, new: "Maps") -> None:
+    def update(self, new: "Maps") -> Tuple[set[str], set[str]]:
         """update Maps with another Maps instance"""
-        self.__root__.update(new.__root__)
+        # self.__root__.update(new.__root__)
+
+        new_keys: set[str] = {map.key for map in new}
+        old_keys: set[str] = {map.key for map in self}
+        added: set[str] = new_keys - old_keys
+        updated: set[str] = new_keys & old_keys
+        updated = {key for key in updated if new[key] != self[key]}
+
+        self.__root__.update({(key, new[key]) for key in added | updated})
+        return (added, updated)
