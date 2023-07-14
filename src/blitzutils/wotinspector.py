@@ -74,14 +74,18 @@ class WoTinspector:
     URL_REPLAY_VIEW: str = URL_WI + "/en/view/"
     API_REPLAY_LIST: str = "https://api.wotinspector.com/replay/list"
     URL_REPLAY_UL: str = "https://api.wotinspector.com/replay/upload?"
-    URL_REPLAY_INFO: str = "https://api.wotinspector.com/replay/upload?details=full&key="
+    URL_REPLAY_INFO: str = (
+        "https://api.wotinspector.com/replay/upload?details=full&key="
+    )
     URL_TANK_DB: str = "https://wotinspector.com/static/armorinspector/tank_db_blitz.js"
 
     MAX_RETRIES: int = 3
     REPLAY_N = 1
     DEFAULT_RATE_LIMIT = 20 / 3600  # 20 requests / hour
 
-    def __init__(self, rate_limit: float = DEFAULT_RATE_LIMIT, auth_token: Optional[str] = None):
+    def __init__(
+        self, rate_limit: float = DEFAULT_RATE_LIMIT, auth_token: Optional[str] = None
+    ):
         headers: Optional[dict[str, str]] = None
         if auth_token is not None:
             headers = dict()
@@ -89,7 +93,12 @@ class WoTinspector:
 
         self.session = ThrottledClientSession(
             rate_limit=rate_limit,
-            filters=[self.API_REPLAY_LIST, self.URL_REPLAY_INFO, self.URL_REPLAY_DL, self.URL_REPLAY_LIST],
+            filters=[
+                self.API_REPLAY_LIST,
+                self.URL_REPLAY_INFO,
+                self.URL_REPLAY_DL,
+                self.URL_REPLAY_LIST,
+            ],
             re_filter=False,
             limit_filtered=True,
             headers=headers,
@@ -107,7 +116,9 @@ class WoTinspector:
         try:
             replay: WoTBlitzReplayJSON | None
             replay = await get_url_JSON_model(
-                self.session, self.get_url_replay_JSON(replay_id), resp_model=WoTBlitzReplayJSON
+                self.session,
+                self.get_url_replay_JSON(replay_id),
+                resp_model=WoTBlitzReplayJSON,
             )
             if replay is None:
                 return None
@@ -152,9 +163,13 @@ class WoTinspector:
 
         replay: WoTBlitzReplayJSON | None = None
         for retry in range(self.MAX_RETRIES):
-            debug(f"Thread {id}: Posting: {title} Try #: {retry + 1}/{self.MAX_RETRIES}")
+            debug(
+                f"Thread {id}: Posting: {title} Try #: {retry + 1}/{self.MAX_RETRIES}"
+            )
             try:
-                async with self.session.post(url, headers=headers, data=payload) as resp:
+                async with self.session.post(
+                    url, headers=headers, data=payload
+                ) as resp:
                     debug(f"{N}: HTTP response: {resp.status}")
                     if resp.status == 200:
                         debug(f"{N}: HTTP POST 200 = Success. Reading response data")
@@ -186,7 +201,9 @@ class WoTinspector:
             url: str = self.get_url_replay_list(page=page)
             resp: WoTInspectorAPIReplays | None
             if (
-                resp := await get_url_JSON_model(self.session, url=url, resp_model=WoTInspectorAPIReplays)
+                resp := await get_url_JSON_model(
+                    self.session, url=url, resp_model=WoTInspectorAPIReplays
+                )
             ) is not None:
                 for replay in resp.data.replays:
                     ids.append(replay.id)
