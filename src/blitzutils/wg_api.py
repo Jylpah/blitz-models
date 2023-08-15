@@ -304,7 +304,7 @@ class WGApiWoTBlitz(JSONExportable):
     @validator("error")
     def if_error(cls, v: WGApiError | None) -> WGApiError | None:
         if v is not None:
-            error(v.str())
+            debug(v.str())
         return v
 
     def status_error(self) -> None:
