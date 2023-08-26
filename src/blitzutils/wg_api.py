@@ -442,13 +442,16 @@ class WGPlayerAchievementsMaxSeries(JSONExportable):
             if in_obj.max_series is None:
                 raise ValueError(f"in_obj doesn't have 'max_series' set: {in_obj}")
             ms = in_obj.max_series
+
             if in_obj.account_id is None:
                 raise ValueError(f"in_obj doesn't have 'account_id' set: {in_obj}")
+            ms.account_id = in_obj.account_id
+
             if in_obj.updated is None:
                 ms.added = epoch_now()
             else:
                 ms.added = in_obj.updated
-            ms.account_id = in_obj.account_id
+
             return ms
 
         except Exception as err:
