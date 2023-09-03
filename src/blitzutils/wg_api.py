@@ -153,6 +153,32 @@ class WGTankStat(JSONExportable):
     _exclude_export_src_fields: ClassVar[Optional[TypeExcludeDict]] = {"id": True}
     # _include_export_DB_fields	: ClassVar[Optional[TypeExcludeDict]] = None
     # _include_export_src_fields	: ClassVar[Optional[TypeExcludeDict]] = None
+    # Example WGTankStat()
+    _example = """{
+                    "r": "eu",
+                    "s": {
+                        "b": 92,
+                        "w": 55,
+                        "l": 37,
+                        "sp": 110,
+                        "h": 606,
+                        "k": 83,
+                        "cp": 6,
+                        "dd": 113782,
+                        "dr": 75358,
+                        "mk": 4,
+                        "sh": 700,
+                        "ws": 35,
+                        "sb": 36,
+                        "dp": 42
+                    },
+                    "lb": 1621494665,
+                    "a": 521458531,
+                    "t": 2625,
+                    "m": 3,
+                    "l": 14401,
+                    "u": "7.9"
+                    }"""
 
     class Config:
         arbitrary_types_allowed = True
@@ -364,6 +390,14 @@ class WGPlayerAchievementsMaxSeries(JSONExportable):
     }
 
     _exclude_defaults = False
+
+    _example = """{
+                "jv": 5825,
+                "a": 521458531,
+                "r": "eu",
+                "u": "10.2",
+                "t": 1692296001
+                }"""
 
     class Config:
         allow_mutation = True

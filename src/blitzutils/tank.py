@@ -121,6 +121,15 @@ class WGTank(JSONExportable, CSVExportable, TXTExportable):
     is_premium 	: bool 						= Field(default=False)
     # fmt: on
 
+    _example = """{
+                    "_id": 2849,
+                    "name": "T34",
+                    "nation": 2,
+                    "type": 2,
+                    "tier": 8,
+                    "is_premium": true
+                }"""
+
     class Config:
         allow_mutation = True
         validate_assignment = True
