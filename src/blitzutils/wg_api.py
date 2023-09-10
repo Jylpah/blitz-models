@@ -28,7 +28,7 @@ from pathlib import Path
 path.insert(0, str(Path(__file__).parent.parent.resolve()))
 
 from blitzutils.region import Region
-from blitzutils.tank import WGTank
+from blitzutils.tank import WGTank, EnumNation, EnumVehicleTypeStr, EnumVehicleTier
 
 TYPE_CHECKING = True
 logger = logging.getLogger()
@@ -624,6 +624,48 @@ class WGApiTankopedia(WGApiWoTBlitz):
     def _validate_data(cls, value) -> SortedDict[str, WGTank]:
         if not isinstance(value, SortedDict):
             return SortedDict(int, **value)
+
+
+class WGApiTankString(JSONExportable):
+    id: int
+    name: str
+    nation: EnumNation
+    type: EnumVehicleTypeStr = Field(alias="type_slug")
+    tier: EnumVehicleTier = Field(alias="level")
+    user_string: str
+    image_url: str
+    preview_image_url: str
+    is_premium: bool
+    is_collectible: bool
+
+    _url: str = ".wotblitz.com/en/api/tankopedia/vehicle/"
+
+    class Config:
+        allow_mutation = True
+        validate_assignment = True
+        allow_population_by_field_name = True
+
+    @classmethod
+    def url(cls, user_string: str, region: Region = Region.eu) -> str:
+        """Get URL as string for a 'user_string'"""
+        return f"https://{region}{cls._url}{user_string}/"
+
+    def as_WGTank(self) -> WGTank | None:
+        try:
+            return WGTank(
+                tank_id=self.id,
+                name=self.user_string,
+                nation=self.nation,
+                type=self.type,
+                tier=self.tier,
+                is_premium=self.is_premium,
+            )
+        except Exception as err:
+            debug(f"could not transform WGApiTankString to WGTank: {self.name}")
+        return None
+
+
+WGTank.register_transformation(WGApiTankString, WGApiTankString.as_WGTank)
 
 
 class WoTBlitzTankString(JSONExportable):
