@@ -645,6 +645,12 @@ class WGApiTankString(JSONExportable):
         validate_assignment = True
         allow_population_by_field_name = True
 
+    @validator("nation", pre=True)
+    def validate_nation(cls, value) -> int:
+        if isinstance(value, str):
+            return EnumNation(value).value  # type: ignore
+        return value
+
     @classmethod
     def url(cls, user_string: str, region: Region = Region.eu) -> str:
         """Get URL as string for a 'user_string'"""
