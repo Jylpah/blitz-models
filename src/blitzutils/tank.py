@@ -104,6 +104,14 @@ class EnumNation(IntEnum):
     european	= 8
     # fmt: on
 
+    @classmethod
+    def _missing_(cls, value):
+        try:
+            return cls[value]
+        except Exception as err:
+            error(err)
+        return None
+
     def __str__(self) -> str:
         if self.value in [0, 2, 5]:
             return f"{self.name}".upper()
