@@ -818,6 +818,7 @@ class WGApi:
 
     @classmethod
     def get_server_url(cls, region: Region = Region.eu) -> str | None:
+        assert isinstance(region, Region), "region must be type of Region"
         try:
             return cls.URL_SERVER[region.value]
         except Exception as err:
@@ -840,7 +841,6 @@ class WGApi:
         assert type(account_id) is int, "account_id must be int"
         assert type(tank_ids) is list, "tank_ids must be a list"
         assert type(fields) is list, "fields must be a list"
-        assert type(region) is Region, "region must be type of Region"
         try:
             URL_WG_TANK_STATS: str = "tanks/stats/"
 
@@ -885,6 +885,7 @@ class WGApi:
         tank_ids: list[int] = [],
         fields: list[str] = [],
     ) -> WGApiWoTBlitzTankStats | None:
+        assert isinstance(region, Region), "region must be type of Region"
         try:
             server_url: Tuple[str, Region] | None = self.get_tank_stats_url(
                 account_id=account_id, region=region, tank_ids=tank_ids, fields=fields
@@ -977,6 +978,7 @@ class WGApi:
         ],
     ) -> WGApiWoTBlitzAccountInfo | None:
         """get WG API response for account/info"""
+        assert isinstance(region, Region), "region must be type of Region"
         try:
             url: str | None
             if (
@@ -1059,6 +1061,7 @@ class WGApi:
         region: Region,
         fields: list[str] = list(),
     ) -> WGApiWoTBlitzPlayerAchievements | None:
+        assert isinstance(region, Region), "region must be type of Region"
         try:
             url: str | None
             if (
@@ -1113,6 +1116,7 @@ class WGApi:
         URL_WG_TANKOPEDIA: str = "encyclopedia/vehicles/"
         if region is None:
             region = self.default_region
+        assert isinstance(region, Region), "region must be type of Region"
         try:
             debug(f"starting, region={region}")
             server: str | None = self.get_server_url(region)
@@ -1165,6 +1169,7 @@ class WGApi:
         debug("starting")
         if region is None:
             region = self.default_region
+        assert isinstance(region, Region), "region must be type of Region"
         try:
             url: str = WGApiTankString.url(user_string=user_string, region=region)
             debug(f"URL: {url}")
