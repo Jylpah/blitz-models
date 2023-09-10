@@ -1144,6 +1144,29 @@ class WGApi:
             error(f"Failed to fetch player achievements: {err}")
         return None
 
+    ###########################################
+    #
+    # get_tank_str()
+    #
+    ###########################################
+
+    async def get_tank_str(
+        self,
+        user_string: str,
+        region: Region = Region.eu,
+    ) -> WGApiTankString | None:
+        """Return WGApiTankString() for 'user_string'"""
+        debug("starting")
+        try:
+            url: str = WGApiTankString.url(user_string=user_string, region=region)
+            debug(f"URL: {url}")
+            return await get_url_JSON_model(
+                self.session[region.value], url, resp_model=WGApiTankString
+            )
+        except Exception as err:
+            error(f"Failed to fetch tank info for {user_string}: {err}")
+        return None
+
 
 def add_args_wg(parser: ArgumentParser, config: Optional[ConfigParser] = None) -> bool:
     """Helper to add argparse for WG API"""
