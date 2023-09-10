@@ -74,4 +74,5 @@ minversion = "7.0"
 addopts = "-v --cov=src"
 filterwarnings = [
     'ignore:Inheritance class ThrottledClientSession from ClientSession is discouraged:DeprecationWarning',
+    'ignore:legacy JSON format is depreciated:DeprecationWarning',
 ]
