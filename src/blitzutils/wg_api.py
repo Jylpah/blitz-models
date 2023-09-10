@@ -810,7 +810,6 @@ class WGApi:
 
     @classmethod
     def get_server_url(cls, region: Region = Region.eu) -> str | None:
-        assert region is not None, "region must not be None"
         try:
             return cls.URL_SERVER[region.value]
         except Exception as err:
@@ -826,7 +825,7 @@ class WGApi:
     def get_tank_stats_url(
         self,
         account_id: int,
-        region: Region = Region.eu,
+        region: Region,
         tank_ids: list[int] = [],
         fields: list[str] = [],
     ) -> Tuple[str, Region] | None:
@@ -874,7 +873,7 @@ class WGApi:
     async def get_tank_stats_full(
         self,
         account_id: int,
-        region: Region = Region.eu,
+        region: Region,
         tank_ids: list[int] = [],
         fields: list[str] = [],
     ) -> WGApiWoTBlitzTankStats | None:
@@ -898,7 +897,7 @@ class WGApi:
     async def get_tank_stats(
         self,
         account_id: int,
-        region: Region = Region.eu,
+        region: Region,
         tank_ids: list[int] = [],
         fields: list[str] = [],
     ) -> list[WGTankStat] | None:
@@ -926,7 +925,7 @@ class WGApi:
     def get_account_info_url(
         self,
         account_ids: Sequence[int],
-        region: Region = Region.eu,
+        region: Region,
         fields: list[str] = [
             "account_id",
             "created_at",
@@ -960,7 +959,7 @@ class WGApi:
     async def get_account_info_full(
         self,
         account_ids: Sequence[int],
-        region: Region = Region.eu,
+        region: Region,
         fields: list[str] = [
             "account_id",
             "created_at",
@@ -990,7 +989,7 @@ class WGApi:
     async def get_account_info(
         self,
         account_ids: Sequence[int],
-        region: Region = Region.eu,
+        region: Region,
         fields: list[str] = [
             "account_id",
             "created_at",
@@ -1022,7 +1021,7 @@ class WGApi:
     def get_player_achievements_url(
         self,
         account_ids: Sequence[int],
-        region: Region = Region.eu,
+        region: Region,
         fields: list[str] = list(),
     ) -> str | None:
         URL_WG_PLAYER_ACHIEVEMENTS: str = "account/achievements/"
@@ -1049,7 +1048,7 @@ class WGApi:
     async def get_player_achievements_full(
         self,
         account_ids: list[int],
-        region: Region = Region.eu,
+        region: Region,
         fields: list[str] = list(),
     ) -> WGApiWoTBlitzPlayerAchievements | None:
         try:
@@ -1074,7 +1073,7 @@ class WGApi:
     async def get_player_achievements(
         self,
         account_ids: list[int],
-        region: Region = Region.eu,
+        region: Region,
         fields: list[str] = list(),
     ) -> list[WGPlayerAchievementsMaxSeries] | None:
         try:
