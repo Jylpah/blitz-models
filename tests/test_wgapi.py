@@ -227,14 +227,16 @@ async def test_4_api_tankopedia(
             assert len(tankopedia) > 0, "API returned empty tankopedia"
 
         assert (
-            tankopedia := await wg.get_tankopedia(region=Region.eu)
-        ) is not None, "could not fetch tankopedia from WG API (eu server)"
+            tankopedia := await wg.get_tankopedia()
+        ) is not None, (
+            "could not fetch tankopedia from WG API from (default server = eu)"
+        )
         for tank_id in tanks_remove:
             tankopedia.pop(tank_id)
 
         assert (
-            tankopedia_new := await wg.get_tankopedia(region=Region.eu)
-        ) is not None, "could not fetch tankopedia from WG API (eu server)"
+            tankopedia_new := await wg.get_tankopedia()
+        ) is not None, "could not fetch tankopedia from WG API (default server = eu)"
 
         for wgtank in tanks_updated:
             tankopedia_new.add(wgtank)
