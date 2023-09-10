@@ -733,6 +733,7 @@ class WGApi:
         # maps_fn 		: str = 'maps.json',
         rate_limit: float = 10,
         ru_rate_limit: float = -1,
+        default_region: Region = Region.eu,
     ):
         assert app_id is not None, "WG App ID must not be None"
         assert rate_limit is not None, "rate_limit must not be None"
@@ -740,6 +741,7 @@ class WGApi:
         self.app_id: str = app_id
         self.ru_app_id: str = ru_app_id
         self.session: dict[str, ThrottledClientSession] = dict()
+        self.default_region: Region = default_region
 
         if ru_rate_limit < 0:
             ru_rate_limit = rate_limit
@@ -1105,10 +1107,12 @@ class WGApi:
 
     def get_tankopedia_url(
         self,
-        region: Region = Region.eu,
+        region: Region | None = None,
         fields: list[str] = ["tank_id", "name", "tier", "type", "nation", "is_premium"],
     ) -> str | None:
         URL_WG_TANKOPEDIA: str = "encyclopedia/vehicles/"
+        if region is None:
+            region = self.default_region
         try:
             debug(f"starting, region={region}")
             server: str | None = self.get_server_url(region)
@@ -1128,11 +1132,13 @@ class WGApi:
 
     async def get_tankopedia(
         self,
-        region: Region = Region.eu,
+        region: Region | None = None,
         fields: list[str] = ["tank_id", "name", "tier", "type", "nation", "is_premium"],
     ) -> WGApiTankopedia | None:
         try:
             url: str | None
+            if region is None:
+                region = self.default_region
             if (url := self.get_tankopedia_url(region=region, fields=fields)) is None:
                 raise ValueError(f"No player achievements available")
             debug(f"URL: {url}")
@@ -1153,10 +1159,12 @@ class WGApi:
     async def get_tank_str(
         self,
         user_string: str,
-        region: Region = Region.eu,
+        region: Region | None = None,
     ) -> WGApiTankString | None:
         """Return WGApiTankString() for 'user_string'"""
         debug("starting")
+        if region is None:
+            region = self.default_region
         try:
             url: str = WGApiTankString.url(user_string=user_string, region=region)
             debug(f"URL: {url}")
