@@ -28,7 +28,7 @@ from pathlib import Path
 path.insert(0, str(Path(__file__).parent.parent.resolve()))
 
 from blitzutils.region import Region
-from blitzutils.tank import WGTank
+from blitzutils.tank import WGTank, EnumNation, EnumVehicleTypeStr, EnumVehicleTier
 
 TYPE_CHECKING = True
 logger = logging.getLogger()
@@ -626,6 +626,54 @@ class WGApiTankopedia(WGApiWoTBlitz):
             return SortedDict(int, **value)
 
 
+class WGApiTankString(JSONExportable):
+    id: int
+    name: str
+    nation: EnumNation
+    type: EnumVehicleTypeStr = Field(alias="type_slug")
+    tier: EnumVehicleTier = Field(alias="level")
+    user_string: str
+    image_url: str
+    preview_image_url: str
+    is_premium: bool
+    is_collectible: bool
+
+    _url: str = ".wotblitz.com/en/api/tankopedia/vehicle/"
+
+    class Config:
+        allow_mutation = True
+        validate_assignment = True
+        allow_population_by_field_name = True
+
+    @validator("nation", pre=True)
+    def validate_nation(cls, value) -> int:
+        if isinstance(value, str):
+            return EnumNation(value).value  # type: ignore
+        return value
+
+    @classmethod
+    def url(cls, user_string: str, region: Region = Region.eu) -> str:
+        """Get URL as string for a 'user_string'"""
+        return f"https://{region}{cls._url}{user_string}/"
+
+    def as_WGTank(self) -> WGTank | None:
+        try:
+            return WGTank(
+                tank_id=self.id,
+                name=self.user_string,
+                nation=self.nation,
+                type=self.type,
+                tier=self.tier,
+                is_premium=self.is_premium,
+            )
+        except Exception as err:
+            debug(f"could not transform WGApiTankString to WGTank: {self.name}")
+        return None
+
+
+WGTank.register_transformation(WGApiTankString, WGApiTankString.as_WGTank)
+
+
 class WoTBlitzTankString(JSONExportable):
     code: str = Field(default=..., alias="_id")
     name: str = Field(default=..., alias="n")
@@ -767,8 +815,7 @@ class WGApi:
             error(f"{err}")
 
     @classmethod
-    def get_server_url(cls, region: Region) -> str | None:
-        assert region is not None, "region must not be None"
+    def get_server_url(cls, region: Region = Region.eu) -> str | None:
         try:
             return cls.URL_SERVER[region.value]
         except Exception as err:
@@ -978,7 +1025,10 @@ class WGApi:
     ###########################################
 
     def get_player_achievements_url(
-        self, account_ids: Sequence[int], region: Region, fields: list[str] = list()
+        self,
+        account_ids: Sequence[int],
+        region: Region,
+        fields: list[str] = list(),
     ) -> str | None:
         URL_WG_PLAYER_ACHIEVEMENTS: str = "account/achievements/"
         try:
@@ -1002,7 +1052,10 @@ class WGApi:
         return None
 
     async def get_player_achievements_full(
-        self, account_ids: list[int], region: Region, fields: list[str] = list()
+        self,
+        account_ids: list[int],
+        region: Region,
+        fields: list[str] = list(),
     ) -> WGApiWoTBlitzPlayerAchievements | None:
         try:
             url: str | None
@@ -1024,7 +1077,10 @@ class WGApi:
         return None
 
     async def get_player_achievements(
-        self, account_ids: list[int], region: Region, fields: list[str] = list()
+        self,
+        account_ids: list[int],
+        region: Region,
+        fields: list[str] = list(),
     ) -> list[WGPlayerAchievementsMaxSeries] | None:
         try:
             resp: WGApiWoTBlitzPlayerAchievements | None
@@ -1049,7 +1105,7 @@ class WGApi:
 
     def get_tankopedia_url(
         self,
-        region: Region,
+        region: Region = Region.eu,
         fields: list[str] = ["tank_id", "name", "tier", "type", "nation", "is_premium"],
     ) -> str | None:
         URL_WG_TANKOPEDIA: str = "encyclopedia/vehicles/"
@@ -1072,7 +1128,7 @@ class WGApi:
 
     async def get_tankopedia(
         self,
-        region: Region,
+        region: Region = Region.eu,
         fields: list[str] = ["tank_id", "name", "tier", "type", "nation", "is_premium"],
     ) -> WGApiTankopedia | None:
         try:
@@ -1086,6 +1142,29 @@ class WGApi:
 
         except Exception as err:
             error(f"Failed to fetch player achievements: {err}")
+        return None
+
+    ###########################################
+    #
+    # get_tank_str()
+    #
+    ###########################################
+
+    async def get_tank_str(
+        self,
+        user_string: str,
+        region: Region = Region.eu,
+    ) -> WGApiTankString | None:
+        """Return WGApiTankString() for 'user_string'"""
+        debug("starting")
+        try:
+            url: str = WGApiTankString.url(user_string=user_string, region=region)
+            debug(f"URL: {url}")
+            return await get_url_JSON_model(
+                self.session[region.value], url, resp_model=WGApiTankString
+            )
+        except Exception as err:
+            error(f"Failed to fetch tank info for {user_string}: {err}")
         return None
 
 

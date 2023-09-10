@@ -20,6 +20,7 @@ from blitzutils import (
     WGTankStat,
     WGApiTankopedia,
     WGTank,
+    WGApiTankString,
 )
 
 
@@ -48,6 +49,11 @@ ACCOUNTS = pytest.mark.datafiles(
 )
 
 
+WGAPI_TANKSTR = pytest.mark.datafiles(
+    FIXTURE_DIR / "06_WGApiTankString.json",
+)
+
+
 @pytest.mark.asyncio
 @pytest.fixture
 @ACCOUNTS
@@ -61,6 +67,27 @@ async def accounts(datafiles: Path) -> dict[Region, list[Account]]:
         region: Region = region_accounts[0].region
         res[region] = region_accounts
     return res
+
+
+@pytest.fixture
+@WGAPI_TANKSTR
+def wgapi_tankstrs(datafiles: Path) -> list[WGApiTankString]:
+    res: list[WGApiTankString] = list()
+    for fn in datafiles.iterdir():
+        res.append(WGApiTankString.parse_file(fn))
+    return res
+
+
+@pytest.fixture
+def wgapi_tankstrs_user_strings() -> list[str]:
+    return [
+        "Oth38_50TP_Tyszkiewicza_S1",
+        "A104_M4A3E8A",
+        "M6E2V2_BP",
+        "F34_ARL_V39_BP",
+        "S17_EMIL_1952E2",
+        "GB92_FV217",
+    ]
 
 
 @pytest.fixture
@@ -227,14 +254,16 @@ async def test_4_api_tankopedia(
             assert len(tankopedia) > 0, "API returned empty tankopedia"
 
         assert (
-            tankopedia := await wg.get_tankopedia(region=Region.eu)
-        ) is not None, "could not fetch tankopedia from WG API (eu server)"
+            tankopedia := await wg.get_tankopedia()
+        ) is not None, (
+            "could not fetch tankopedia from WG API from (default server = eu)"
+        )
         for tank_id in tanks_remove:
             tankopedia.pop(tank_id)
 
         assert (
-            tankopedia_new := await wg.get_tankopedia(region=Region.eu)
-        ) is not None, "could not fetch tankopedia from WG API (eu server)"
+            tankopedia_new := await wg.get_tankopedia()
+        ) is not None, "could not fetch tankopedia from WG API (default server = eu)"
 
         for wgtank in tanks_updated:
             tankopedia_new.add(wgtank)
@@ -247,3 +276,36 @@ async def test_4_api_tankopedia(
         assert len(updated) == len(
             tanks_updated
         ), f"incorrect number of updated tanks reported {len(updated) } != {len(tanks_updated)}"
+
+
+@pytest.mark.asyncio
+@WGAPI_TANKSTR
+async def test_5_api_tankstrs(
+    datafiles: Path, wgapi_tankstrs_user_strings: list[str]
+) -> None:
+    """test for WGApiTankString()"""
+    for fn in datafiles.iterdir():
+        try:
+            tank_str: WGApiTankString = WGApiTankString.parse_file(fn)
+        except Exception as err:
+            assert (
+                False
+            ), f"failed to parse test file as WGApiTankString(): {fn.name}: {err}"
+        if (tank := WGTank.transform(tank_str)) is None:
+            assert (
+                False
+            ), f"could not transform WGApiTankString() to WGTank(): {tank_str.user_string}"
+
+    async with WGApi() as wg:
+        for user_str in wgapi_tankstrs_user_strings:
+            if (tank_str2 := await wg.get_tank_str(user_str)) is None:
+                assert False, f"could not fetch WGApiTankString() for: {user_str}"
+            assert (
+                tank := WGTank.transform(tank_str2)
+            ) is not None, (
+                f"could not transform WGApiTankString({user_str}) to WGTank()"
+            )
+            assert (
+                tank.name == tank_str2.user_string
+            ), f"incorrect tank name: {user_str}"
+            assert tank.tank_id == tank_str2.id, f"incorrect tank_id: {user_str}"

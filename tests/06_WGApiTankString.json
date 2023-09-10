@@ -1,0 +1,15 @@
+{
+    "id": 11121,
+    "name": "Oth38_50TP_Tyszkiewicza_S1",
+    "nation": "other",
+    "subnation": "",
+    "use_subnation_flag": false,
+    "type_slug": "heavyTank",
+    "level": 9,
+    "roman_level": "IX",
+    "user_string": "Regressor",
+    "image_url": "https://glossary-eu-static.gcdn.co/icons/wotb/10.2.0.276/vehicle/other-Oth38_50TP_Tyszkiewicza_S1.png",
+    "preview_image_url": "https://glossary-eu-static.gcdn.co/icons/wotb/10.2.0.276/vehicle/small/other-Oth38_50TP_Tyszkiewicza_S1.png",
+    "is_premium": true,
+    "is_collectible": true
+}

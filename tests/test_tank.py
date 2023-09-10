@@ -15,7 +15,13 @@ debug = logger.debug
 
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / "src"))
 
-from blitzutils import WGTank, EnumNation, EnumVehicleTier, EnumVehicleTypeInt, EnumVehicleTypeStr
+from blitzutils import (
+    WGTank,
+    EnumNation,
+    EnumVehicleTier,
+    EnumVehicleTypeInt,
+    EnumVehicleTypeStr,
+)
 from blitzutils import WGApiTankopedia
 
 
@@ -55,7 +61,17 @@ def enum_vehicle_tier() -> list[str]:
 
 @pytest.fixture
 def enum_nation() -> list[str]:
-    return ["ussr", "germany", "usa", "china", "france", "uk", "japan", "other", "european"]
+    return [
+        "ussr",
+        "germany",
+        "usa",
+        "china",
+        "france",
+        "uk",
+        "japan",
+        "other",
+        "european",
+    ]
 
 
 @pytest.fixture
@@ -106,7 +122,9 @@ def test_1_EnumVehicleTypeInt_create(enum_vehicle_type_names: list[str]) -> None
 
 def test_2_EnumVehicleTypeInt_complete(enum_vehicle_type_names: list[str]) -> None:
     tank_types = set(EnumVehicleTypeInt)
-    assert len(tank_types) == len(enum_vehicle_type_names), f"EnumVehicleTypeInt has wrong number of tank types"
+    assert len(tank_types) == len(
+        enum_vehicle_type_names
+    ), f"EnumVehicleTypeInt has wrong number of tank types"
     for tank_type in enum_vehicle_type_names:
         tank_types.remove(EnumVehicleTypeInt[tank_type])
     assert (
@@ -130,7 +148,9 @@ def test_3_EnumVehicleTypeStr_create(
 
 def test_4_EnumVehicleTypestr_complete(enum_vehicle_type_names: list[str]) -> None:
     tank_types = set(EnumVehicleTypeStr)
-    assert len(tank_types) == len(enum_vehicle_type_names), f"EnumVehicleTypeStr has wrong number of tank types"
+    assert len(tank_types) == len(
+        enum_vehicle_type_names
+    ), f"EnumVehicleTypeStr has wrong number of tank types"
     for tank_type in enum_vehicle_type_names:
         tank_types.remove(EnumVehicleTypeStr[tank_type])
     assert (
@@ -145,11 +165,15 @@ def test_5_EnumVehicleType_conversion() -> None:
         assert (
             tt_int.name == tt_str.name
         ), f"Conversion from EnumVehicleTypeInt to EnumVehicleTypeStr failed: {tt_int.name}"
-        assert EnumVehicleTypeInt.from_str(tt_str.value) is tt_int, f"from_str() failed for {tt_str}"
+        assert (
+            EnumVehicleTypeInt.from_str(tt_str.value) is tt_int
+        ), f"from_str() failed for {tt_str}"
         assert (
             tt_int is tt_str.as_int
         ), f"Conversion from EnumVehicleTypeStr to EnumVehicleTypeInt failed: {tt_int.name}"
-        assert EnumVehicleTypeStr.from_int(tt_int.value) is tt_str, f"from_int() failed for {tt_int}"
+        assert (
+            EnumVehicleTypeStr.from_int(tt_int.value) is tt_str
+        ), f"from_int() failed for {tt_int}"
 
 
 def test_6_EnumVehicleTier_create(enum_vehicle_tier) -> None:
@@ -159,14 +183,25 @@ def test_6_EnumVehicleTier_create(enum_vehicle_tier) -> None:
         assert (
             EnumVehicleTier(tier_int) is EnumVehicleTier[tier_str]
         ), f"Failed to create EnumVehicleTier for {tier_str}"
-        assert EnumVehicleTier.read_tier(tier_str) is EnumVehicleTier[tier_str], f"read_tier({tier_str}) failed"
-        assert EnumVehicleTier.read_tier(str(tier_int)) is EnumVehicleTier[tier_str], f"read_tier({tier_int}) failed"
-        assert EnumVehicleTier(tier_int) == tier_int, f"EnumVehicleTier.N != N for {tier_int}"
+        assert (
+            EnumVehicleTier.read_tier(tier_str) is EnumVehicleTier[tier_str]
+        ), f"read_tier({tier_str}) failed"
+        assert (
+            EnumVehicleTier.read_tier(str(tier_int)) is EnumVehicleTier[tier_str]
+        ), f"read_tier({tier_int}) failed"
+        assert (
+            EnumVehicleTier(tier_int) == tier_int
+        ), f"EnumVehicleTier.N != N for {tier_int}"
 
 
 def test_7_EnumNation_create(enum_nation: list[str]) -> None:
     for nation in enum_nation:
-        assert EnumNation[nation].name == nation, f"Failed to create EnumNation for {nation}"
+        assert (
+            EnumNation[nation].name == nation
+        ), f"Failed to create EnumNation for {nation}"
+        assert (
+            EnumNation(nation).name == nation  # type: ignore
+        ), f"Failed to create EnumNation for {nation} from string"
 
 
 @pytest.mark.asyncio
@@ -178,15 +213,23 @@ async def test_8_Tank_import(datafiles: Path) -> None:
             try:
                 tanks_json = TanksJsonList.parse_raw(await file.read())
             except Exception as err:
-                assert False, f"Parsing test file List[Tank] failed: {basename(tanks_json_fn)}"
+                assert (
+                    False
+                ), f"Parsing test file List[Tank] failed: {basename(tanks_json_fn)}"
         tanks: set[int] = set([tank.tank_id for tank in tanks_json])
-        assert len(tanks) == len(tanks_json), f"Parsing test file List[Tank] failed: {basename(tanks_json_fn)}"
-        assert len(tanks_json) > 0, f"could not parse any Tank from file: {basename(tanks_json_fn)}"
+        assert len(tanks) == len(
+            tanks_json
+        ), f"Parsing test file List[Tank] failed: {basename(tanks_json_fn)}"
+        assert (
+            len(tanks_json) > 0
+        ), f"could not parse any Tank from file: {basename(tanks_json_fn)}"
 
 
 @pytest.mark.asyncio
 @TANKS_JSON_FILES
-async def test_9_WGApiTankopedia(tmp_path: Path, datafiles: Path, tanks_json_tanks: int) -> None:
+async def test_9_WGApiTankopedia(
+    tmp_path: Path, datafiles: Path, tanks_json_tanks: int
+) -> None:
     tankopedia = WGApiTankopedia()
     tanks_json = TanksJsonList()
     debug("should have %d tanks", tanks_json_tanks)
@@ -195,13 +238,17 @@ async def test_9_WGApiTankopedia(tmp_path: Path, datafiles: Path, tanks_json_tan
             try:
                 tanks_json = TanksJsonList.parse_raw(await file.read())
             except Exception as err:
-                assert False, f"Parsing test file List[Tank] failed: {basename(tanks_json_fn)}"
+                assert (
+                    False
+                ), f"Parsing test file List[Tank] failed: {basename(tanks_json_fn)}"
     for tank in tanks_json:
         tankopedia.add(tank)
     debug("read %d tanks", len(tankopedia.data))
     assert tankopedia.meta is not None, f"Failed to update meta"
     assert tankopedia.meta["count"] == len(tanks_json), f"failed to update meta.count"
-    assert len(tanks_json) == len(tankopedia.data), f"could not add all the tanks to tankopedia"
+    assert len(tanks_json) == len(
+        tankopedia.data
+    ), f"could not add all the tanks to tankopedia"
     assert (
         len(tankopedia.data) == tanks_json_tanks
     ), f"could not import all the tanks: got {tankopedia.data}, should be {tanks_json_tanks}"
@@ -219,14 +266,18 @@ async def test_9_WGApiTankopedia(tmp_path: Path, datafiles: Path, tanks_json_tan
         tankopedia_imported = tp_imported
         imported = True
         debug("imported tankopedia has %d tanks", len(tankopedia_imported.data))
-        assert len(tankopedia.data) == len(tankopedia_imported.data), f"could not import all the tanks"
+        assert len(tankopedia.data) == len(
+            tankopedia_imported.data
+        ), f"could not import all the tanks"
 
     assert imported, "could not import anything"
 
 
 @pytest.mark.asyncio
 @TANKOPEDIA_FILES
-async def test_10_WGApiTankopedia(tmp_path: Path, datafiles: Path, tankopedia_tanks: int) -> None:
+async def test_10_WGApiTankopedia(
+    tmp_path: Path, datafiles: Path, tankopedia_tanks: int
+) -> None:
     tankopedia = WGApiTankopedia()
 
     debug("should have %d tanks", tankopedia_tanks)
@@ -235,11 +286,15 @@ async def test_10_WGApiTankopedia(tmp_path: Path, datafiles: Path, tankopedia_ta
             try:
                 tankopedia = WGApiTankopedia.parse_raw(await file.read())
             except Exception as err:
-                assert False, f"Parsing test file WGApiTankopedia() failed: {basename(tankopedia_fn)}"
+                assert (
+                    False
+                ), f"Parsing test file WGApiTankopedia() failed: {basename(tankopedia_fn)}"
 
     debug("read %d tanks", len(tankopedia.data))
     assert tankopedia.meta is not None, f"Failed to update meta"
-    assert tankopedia.meta["count"] == len(tankopedia.data), f"failed to update meta.count"
+    assert tankopedia.meta["count"] == len(
+        tankopedia.data
+    ), f"failed to update meta.count"
     assert (
         len(tankopedia.data) == tankopedia_tanks
     ), f"could not import all the tanks: got {tankopedia.data}, should be {tankopedia_tanks}"
@@ -257,14 +312,18 @@ async def test_10_WGApiTankopedia(tmp_path: Path, datafiles: Path, tankopedia_ta
         tankopedia_imported = tp_imported
         imported = True
         debug("imported tankopedia has %d tanks", len(tankopedia_imported.data))
-        assert len(tankopedia.data) == len(tankopedia_imported.data), f"could not import all the tanks"
+        assert len(tankopedia.data) == len(
+            tankopedia_imported.data
+        ), f"could not import all the tanks"
 
     assert imported, "could not import anything"
 
 
 @pytest.mark.asyncio
 @TANKOPEDIA_FILES
-async def test_11_WGApiTankopedia_sorted(tmp_path: Path, datafiles: Path, tankopedia_tanks: int) -> None:
+async def test_11_WGApiTankopedia_sorted(
+    tmp_path: Path, datafiles: Path, tankopedia_tanks: int
+) -> None:
     tankopedia = WGApiTankopedia()
 
     debug("should have %d tanks", tankopedia_tanks)
@@ -273,7 +332,9 @@ async def test_11_WGApiTankopedia_sorted(tmp_path: Path, datafiles: Path, tankop
             try:
                 tankopedia = WGApiTankopedia.parse_raw(await file.read())
             except Exception as err:
-                assert False, f"Parsing test file WGApiTankopedia() failed: {basename(tankopedia_fn)}"
+                assert (
+                    False
+                ), f"Parsing test file WGApiTankopedia() failed: {basename(tankopedia_fn)}"
 
     debug("read %d tanks", len(tankopedia.data))
     tanks: list[WGTank] = list()
@@ -286,7 +347,9 @@ async def test_11_WGApiTankopedia_sorted(tmp_path: Path, datafiles: Path, tankop
     for tank in tanks:
         tankopedia_shuffled.add(tank)
 
-    assert len(tankopedia) == len(tankopedia_shuffled), f"tankopedias has different number of tanks"
+    assert len(tankopedia) == len(
+        tankopedia_shuffled
+    ), f"tankopedias has different number of tanks"
     tanks = list()
     for tank in tankopedia.data.values():
         tanks.append(tank)

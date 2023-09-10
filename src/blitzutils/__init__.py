@@ -1,4 +1,8 @@
-from .wotinspector import WoTinspector as WoTinspector, WoTInspectorAPIReplays, WoTInspectorReplaysData
+from .wotinspector import (
+    WoTinspector as WoTinspector,
+    WoTInspectorAPIReplays,
+    WoTInspectorReplaysData,
+)
 from .replay import (
     WoTBlitzReplayJSON as WoTBlitzReplayJSON,
     WoTBlitzReplayData as WoTBlitzReplayData,
@@ -37,6 +41,7 @@ from .wg_api import (
     WGTankStatAll as WGTankStatAll,
     WoTBlitzTankString as WoTBlitzTankString,
     WGApi as WGApi,
+    WGApiTankString as WGApiTankString,
     add_args_wg as add_args_wg,
 )
 
