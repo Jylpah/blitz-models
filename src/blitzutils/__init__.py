@@ -1,7 +1,8 @@
+from .config import config_file as config_file
 from .wotinspector import (
     WoTinspector as WoTinspector,
-    WoTInspectorAPIReplays,
-    WoTInspectorReplaysData,
+    WoTInspectorAPIReplays as WoTInspectorAPIReplays,
+    WoTInspectorReplaysData as WoTInspectorReplaysData,
 )
 from .replay import (
     WoTBlitzReplayJSON as WoTBlitzReplayJSON,
@@ -47,6 +48,7 @@ from .wg_api import (
 
 __all__ = [
     "account",
+    "config",
     "map",
     "release",
     "region",
