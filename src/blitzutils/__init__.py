@@ -1,4 +1,4 @@
-from .config import config_file as config_file
+from .config import get_config_file as get_config_file
 from .wotinspector import (
     WoTinspector as WoTinspector,
     WoTInspectorAPIReplays as WoTInspectorAPIReplays,
