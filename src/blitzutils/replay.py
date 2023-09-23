@@ -9,6 +9,7 @@ from enum import IntEnum, StrEnum
 from collections import defaultdict
 import logging
 from bson.objectid import ObjectId
+from pydantic import Extra, root_validator, validator, Field, HttpUrl
 from pydantic import BaseModel, Extra, root_validator, validator, Field, HttpUrl
 
 from pyutils import JSONExportable, Idx, BackendIndexType
@@ -16,6 +17,9 @@ from pyutils.exportable import DESCENDING, ASCENDING, TEXT
 
 from .tank import EnumVehicleTypeInt
 from .release import Release
+from .wg_api import WGApiWoTBlitzTankopedia
+from .map import Maps, Map
+from .region import Region
 
 logger = logging.getLogger()
 error = logger.error
@@ -85,27 +89,6 @@ class WoTBlitzMaps(StrEnum):
 # Replays
 #
 ###########################################
-
-
-class ReplayFileMeta(JSONExportable):
-    version: str
-    title: str = Field(default="")
-    dbid: int
-    playerName: str
-    battleStartTime: int
-    playerVehicleName: str
-    mapName: str
-    arenaUniqueId: int
-    battleDuration: float
-    vehicleCompDescriptor: int
-    camouflageId: int
-    mapId: int
-    arenaBonusType: int
-
-    @property
-    def release(self) -> Release:
-        """Return version as Release()"""
-        return Release(release=".".join(self.version.split(".")[0:2]))
 
 
 class ReplayAchievement(JSONExportable):
@@ -476,3 +459,48 @@ class ReplayJSON(JSONExportable):
 
 
 ReplayData.register_transformation(ReplayJSON, ReplayData.transform_ReplayJSON)
+
+
+###########################################
+#
+# ReplayFile
+#
+###########################################
+
+
+class ReplayFileMeta(JSONExportable):
+    version: str
+    title: str = Field(default="")
+    dbid: int
+    playerName: str
+    battleStartTime: int
+    playerVehicleName: str
+    mapName: str
+    arenaUniqueId: int
+    battleDuration: float
+    vehicleCompDescriptor: int
+    camouflageId: int
+    mapId: int
+    arenaBonusType: int
+
+    @property
+    def release(self) -> Release:
+        """Return version as Release()"""
+        return Release(release=".".join(self.version.split(".")[0:2]))
+
+    def update_title(self, tankopedia: WGApiWoTBlitzTankopedia, maps: Maps) -> str:
+        """Create 'title' based on replay meta"""
+        title: str = ""
+        if (
+            tank := tankopedia.by_code(self.playerVehicleName)
+        ) is not None and tank.name is not None:
+            title = tank.name
+        else:
+            raise ValueError("could not find tank name from tankopedia")
+        try:
+            self.title = f"{title} @ {maps[self.mapName]}"
+            return self.title
+        except KeyError as err:
+            debug(f"map not found with key: {self.mapName}")
+        raise ValueError(f"could not find map for code: {self.mapName}")
+
