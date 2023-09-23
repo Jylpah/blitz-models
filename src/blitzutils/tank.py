@@ -119,7 +119,7 @@ class EnumNation(IntEnum):
             return f"{self.name}".capitalize()
 
 
-class WGTank(JSONExportable, CSVExportable, TXTExportable):
+class Tank(JSONExportable, CSVExportable, TXTExportable):
     # fmt: off
     tank_id 	: int 						= Field(default=..., alias = '_id')
     name   		: str | None				= Field(default=None)

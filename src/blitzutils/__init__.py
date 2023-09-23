@@ -2,25 +2,25 @@ from .config import get_config_file as get_config_file
 from .wotinspector import (
     WoTinspector as WoTinspector,
     WoTInspectorAPIReplays as WoTInspectorAPIReplays,
-    WoTInspectorReplaysData as WoTInspectorReplaysData,
+    WIReplaysData as WIReplaysData,
 )
 from .replay import (
-    WoTBlitzReplayJSON as WoTBlitzReplayJSON,
-    WoTBlitzReplayData as WoTBlitzReplayData,
-    WoTBlitzReplaySummary as WoTBlitzReplaySummary,
-    WoTBlitzReplayDetail as WoTBlitzReplayDetail,
-    WoTBlitzReplayAchievement as WoTBlitzReplayAchievement,
+    ReplayJSON as ReplayJSON,
+    ReplayData as ReplayData,
+    ReplaySummary as ReplaySummary,
+    ReplayDetail as ReplayDetail,
+    ReplayAchievement as ReplayAchievement,
     WoTBlitzMaps as WoTBlitzMaps,
 )
 from .region import Region as Region
-from .release import WoTBlitzRelease as WoTBlitzRelease
+from .release import Release as Release
 from .account import Account as Account
 from .tank import (
     EnumNation as EnumNation,
     EnumVehicleTier as EnumVehicleTier,
     EnumVehicleTypeInt as EnumVehicleTypeInt,
     EnumVehicleTypeStr as EnumVehicleTypeStr,
-    WGTank as WGTank,
+    Tank as Tank,
 )
 from .map import (
     Map as Map,
@@ -28,17 +28,17 @@ from .map import (
     MapMode as MapMode,
 )
 from .wg_api import (
-    WGAccountInfo as WGAccountInfo,
+    AccountInfo as AccountInfo,
     WGApiError as WGApiError,
     WGApiWoTBlitz as WGApiWoTBlitz,
-    WGApiTankopedia as WGApiTankopedia,
+    WGApiWoTBlitzTankopedia as WGApiWoTBlitzTankopedia,
     WGApiWoTBlitzAccountInfo as WGApiWoTBlitzAccountInfo,
     WGApiWoTBlitzPlayerAchievements as WGApiWoTBlitzPlayerAchievements,
     WGApiWoTBlitzTankStats as WGApiWoTBlitzTankStats,
-    WGPlayerAchievements as WGPlayerAchievements,
-    WGPlayerAchievementsMain as WGPlayerAchievementsMain,
-    WGPlayerAchievementsMaxSeries as WGPlayerAchievementsMaxSeries,
-    WGTankStat as WGTankStat,
+    PlayerAchievements as PlayerAchievements,
+    PlayerAchievementsMain as PlayerAchievementsMain,
+    PlayerAchievementsMaxSeries as PlayerAchievementsMaxSeries,
+    TankStat as TankStat,
     WGTankStatAll as WGTankStatAll,
     WoTBlitzTankString as WoTBlitzTankString,
     WGApi as WGApi,

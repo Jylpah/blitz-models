@@ -14,7 +14,7 @@ debug = logger.debug
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / "src"))
 
 from blitzutils import (
-    WoTBlitzReplayJSON,
+    ReplayJSON,
 )
 
 
@@ -67,11 +67,16 @@ async def test_1_import_export_replays(datafiles: Path, tmp_path: Path) -> None:
     for replay_file in datafiles.iterdir():
         replay_filename: str = str(replay_file.resolve())
         debug("replay: %s", basename(replay_filename))
-        replay = await WoTBlitzReplayJSON.open_json(replay_filename)
-        assert replay is not None, f"failed to import replay: {basename(replay_filename)}"
+        replay = await ReplayJSON.open_json(replay_filename)
+        assert (
+            replay is not None
+        ), f"failed to import replay: {basename(replay_filename)}"
         assert replay.is_ok, f"replay status is not OK: {basename(replay_filename)}"
 
-        debug("%s: testing get_players(), get_allies(), get_enemies()", basename(replay_filename))
+        debug(
+            "%s: testing get_players(), get_allies(), get_enemies()",
+            basename(replay_filename),
+        )
         for _ in range(5):
             player: int = choice(replay.get_players())
             enemy: int = choice(replay.get_enemies(player))
@@ -95,15 +100,21 @@ async def test_1_import_export_replays(datafiles: Path, tmp_path: Path) -> None:
         await replay.save_json(export_filename)
 
         # re-import exported replay
-        imported_replay: WoTBlitzReplayJSON | None
-        imported_replay = await WoTBlitzReplayJSON.open_json(export_filename)
-        assert imported_replay is not None, f"failed to re-import replay: {basename(replay_filename)}"
-        assert imported_replay.is_ok, f"reimported replay status is not OK: {basename(replay_filename)}"
+        imported_replay: ReplayJSON | None
+        imported_replay = await ReplayJSON.open_json(export_filename)
+        assert (
+            imported_replay is not None
+        ), f"failed to re-import replay: {basename(replay_filename)}"
+        assert (
+            imported_replay.is_ok
+        ), f"reimported replay status is not OK: {basename(replay_filename)}"
 
         # compare original and re-imported replay
         # replay.store_id()
         # imported_replay.store_id()
-        assert replay.id == imported_replay.index, f"re-imported replay's id does not match"
+        assert (
+            replay.id == imported_replay.index
+        ), f"re-imported replay's id does not match"
         assert (
             replay.data.summary.title == imported_replay.data.summary.title
         ), f"re-imported replays data.summary.title does not match"
@@ -111,5 +122,6 @@ async def test_1_import_export_replays(datafiles: Path, tmp_path: Path) -> None:
             replay.data.summary.vehicle == imported_replay.data.summary.vehicle
         ), f"re-imported replays data.summary.vehicle does not match"
         assert (
-            replay.data.summary.arena_unique_id == imported_replay.data.summary.arena_unique_id
+            replay.data.summary.arena_unique_id
+            == imported_replay.data.summary.arena_unique_id
         ), f"re-imported replays data.summary.arena_unique_id does not match"

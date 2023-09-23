@@ -16,13 +16,13 @@ debug = logger.debug
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / "src"))
 
 from blitzutils import (
-    WGTank,
+    Tank,
     EnumNation,
     EnumVehicleTier,
     EnumVehicleTypeInt,
     EnumVehicleTypeStr,
 )
-from blitzutils import WGApiTankopedia
+from blitzutils import WGApiWoTBlitzTankopedia
 
 
 ########################################################
@@ -90,7 +90,7 @@ TANKOPEDIA_FILES = pytest.mark.datafiles(FIXTURE_DIR / "01_Tankopedia.json")
 
 
 class TanksJsonList(BaseModel):
-    __root__: list[WGTank] = list()
+    __root__: list[Tank] = list()
 
     def __iter__(self):
         return iter(self.__root__)
@@ -230,7 +230,7 @@ async def test_8_Tank_import(datafiles: Path) -> None:
 async def test_9_WGApiTankopedia(
     tmp_path: Path, datafiles: Path, tanks_json_tanks: int
 ) -> None:
-    tankopedia = WGApiTankopedia()
+    tankopedia = WGApiWoTBlitzTankopedia()
     tanks_json = TanksJsonList()
     debug("should have %d tanks", tanks_json_tanks)
     for tanks_json_fn in datafiles.iterdir():
@@ -260,9 +260,9 @@ async def test_9_WGApiTankopedia(
     except Exception as err:
         assert False, f"could not export WGAPiTankopedia: {err}"
 
-    tankopedia_imported: WGApiTankopedia
+    tankopedia_imported: WGApiWoTBlitzTankopedia
     imported: bool = False
-    async for tp_imported in WGApiTankopedia.import_json(tankopedia_file):
+    async for tp_imported in WGApiWoTBlitzTankopedia.import_json(tankopedia_file):
         tankopedia_imported = tp_imported
         imported = True
         debug("imported tankopedia has %d tanks", len(tankopedia_imported.data))
@@ -278,17 +278,17 @@ async def test_9_WGApiTankopedia(
 async def test_10_WGApiTankopedia(
     tmp_path: Path, datafiles: Path, tankopedia_tanks: int
 ) -> None:
-    tankopedia = WGApiTankopedia()
+    tankopedia = WGApiWoTBlitzTankopedia()
 
     debug("should have %d tanks", tankopedia_tanks)
     for tankopedia_fn in datafiles.iterdir():
         async with aiofiles.open(tankopedia_fn) as file:
             try:
-                tankopedia = WGApiTankopedia.parse_raw(await file.read())
+                tankopedia = WGApiWoTBlitzTankopedia.parse_raw(await file.read())
             except Exception as err:
                 assert (
                     False
-                ), f"Parsing test file WGApiTankopedia() failed: {basename(tankopedia_fn)}"
+                ), f"Parsing test file WGApiWoTBlitzTankopedia() failed: {basename(tankopedia_fn)}"
 
     debug("read %d tanks", len(tankopedia.data))
     assert tankopedia.meta is not None, f"Failed to update meta"
@@ -306,9 +306,9 @@ async def test_10_WGApiTankopedia(
     except Exception as err:
         assert False, f"could not export WGAPiTankopedia: {err}"
 
-    tankopedia_imported: WGApiTankopedia
+    tankopedia_imported: WGApiWoTBlitzTankopedia
     imported: bool = False
-    async for tp_imported in WGApiTankopedia.import_json(tankopedia_file):
+    async for tp_imported in WGApiWoTBlitzTankopedia.import_json(tankopedia_file):
         tankopedia_imported = tp_imported
         imported = True
         debug("imported tankopedia has %d tanks", len(tankopedia_imported.data))
@@ -324,26 +324,26 @@ async def test_10_WGApiTankopedia(
 async def test_11_WGApiTankopedia_sorted(
     tmp_path: Path, datafiles: Path, tankopedia_tanks: int
 ) -> None:
-    tankopedia = WGApiTankopedia()
+    tankopedia = WGApiWoTBlitzTankopedia()
 
     debug("should have %d tanks", tankopedia_tanks)
     for tankopedia_fn in datafiles.iterdir():
         async with aiofiles.open(tankopedia_fn) as file:
             try:
-                tankopedia = WGApiTankopedia.parse_raw(await file.read())
+                tankopedia = WGApiWoTBlitzTankopedia.parse_raw(await file.read())
             except Exception as err:
                 assert (
                     False
-                ), f"Parsing test file WGApiTankopedia() failed: {basename(tankopedia_fn)}"
+                ), f"Parsing test file WGApiWoTBlitzTankopedia() failed: {basename(tankopedia_fn)}"
 
     debug("read %d tanks", len(tankopedia.data))
-    tanks: list[WGTank] = list()
+    tanks: list[Tank] = list()
     for tank in tankopedia.data.values():
         tanks.append(tank)
 
     shuffle(tanks)
 
-    tankopedia_shuffled = WGApiTankopedia()
+    tankopedia_shuffled = WGApiWoTBlitzTankopedia()
     for tank in tanks:
         tankopedia_shuffled.add(tank)
 
@@ -354,7 +354,7 @@ async def test_11_WGApiTankopedia_sorted(
     for tank in tankopedia.data.values():
         tanks.append(tank)
 
-    tanks2: list[WGTank] = list()
+    tanks2: list[Tank] = list()
     for tank in tankopedia_shuffled.data.values():
         tanks2.append(tank)
 

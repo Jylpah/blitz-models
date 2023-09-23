@@ -23,7 +23,7 @@ from pyutils.exportable import DESCENDING, ASCENDING
 
 ###########################################
 #
-# WoTBlitzRelease()
+# Release()
 #
 ###########################################
 
@@ -37,7 +37,7 @@ def isodate2datetime(d: str) -> datetime:
 
 
 # fmt: off
-class WoTBlitzRelease(JSONExportable,
+class Release(JSONExportable,
                      CSVExportable, 
                      TXTExportable, Importable):
     release     : str               = Field(default=..., alias="_id")
@@ -122,7 +122,7 @@ class WoTBlitzRelease(JSONExportable,
         return type(self)(release=self._release_str([major, minor]), **kwargs)
 
     def __eq__(self, __o: object) -> bool:
-        return __o is not None and isinstance(__o, WoTBlitzRelease) and self.release == __o.release
+        return __o is not None and isinstance(__o, Release) and self.release == __o.release
 
     def __hash__(self) -> int:
         return hash((self.release, self.launch_date))

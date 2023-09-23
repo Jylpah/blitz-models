@@ -14,7 +14,7 @@ from pyutils import (
 )
 
 from .region import Region
-from .wg_api import WGAccountInfo
+from .wg_api import AccountInfo
 
 logger = logging.getLogger()
 error = logger.error
@@ -143,8 +143,8 @@ class Account(JSONExportable,
         )
 
     @classmethod
-    def transform_WGAccountInfo(cls, in_obj: "WGAccountInfo") -> Optional["Account"]:
-        """Transform WGAccountInfo object to Account"""
+    def transform_WGAccountInfo(cls, in_obj: "AccountInfo") -> Optional["Account"]:
+        """Transform AccountInfo object to Account"""
         try:
             return Account(
                 id=in_obj.account_id,
@@ -158,7 +158,7 @@ class Account(JSONExportable,
             error(f"{err}")
         return None
 
-    def update(self, update: "WGAccountInfo") -> bool:
+    def update(self, update: "AccountInfo") -> bool:
         """Update Account() from WGACcountInfo i.e. from WG API"""
         updated: bool = False
         try:
@@ -179,4 +179,4 @@ class Account(JSONExportable,
         return updated
 
 
-Account.register_transformation(WGAccountInfo, Account.transform_WGAccountInfo)
+Account.register_transformation(AccountInfo, Account.transform_WGAccountInfo)

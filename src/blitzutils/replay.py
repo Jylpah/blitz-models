@@ -15,7 +15,7 @@ from pyutils import JSONExportable, Idx, BackendIndexType
 from pyutils.exportable import DESCENDING, ASCENDING, TEXT
 
 from .tank import EnumVehicleTypeInt
-from .release import WoTBlitzRelease
+from .release import Release
 
 logger = logging.getLogger()
 error = logger.error
@@ -86,7 +86,7 @@ class WoTBlitzMaps(StrEnum):
 #
 ###########################################
 
-class WoTBlitzReplayFileMeta(JSONExportable):
+class ReplayFileMeta(JSONExportable):
     version: ": "9.0.1",
     "title": "",
     "dbid": "521458531",
@@ -103,21 +103,21 @@ class WoTBlitzReplayFileMeta(JSONExportable):
 
 
 
-class WoTBlitzReplayAchievement(JSONExportable):
+class ReplayAchievement(JSONExportable):
     t: int
     v: int
 
 
 ###########################################
 #
-# WoTBlitzReplayDetail()
+# ReplayDetail()
 #
 ###########################################
 
 
-class WoTBlitzReplayDetail(JSONExportable):
+class ReplayDetail(JSONExportable):
     # fmt: off
-    achievements : list[WoTBlitzReplayAchievement] | None = Field(default=None, alias='a')
+    achievements : list[ReplayAchievement] | None = Field(default=None, alias='a')
     base_capture_points	: int | None = Field(default=None, alias='bc')
     base_defend_points	: int | None = Field(default=None, alias='bd')
     chassis_id			: int | None = Field(default=None, alias='ch')
@@ -169,12 +169,12 @@ class WoTBlitzReplayDetail(JSONExportable):
 
 ###########################################
 #
-# WoTBlitzReplaySummary()
+# ReplaySummary()
 #
 ###########################################
 
 
-class WoTBlitzReplaySummary(JSONExportable):
+class ReplaySummary(JSONExportable):
     _TimestampFormat: str = "%Y-%m-%d %H:%M:%S"
     # fmt: off
     winner_team     : EnumWinnerTeam | None     = Field(default=..., alias="wt")
@@ -202,7 +202,7 @@ class WoTBlitzReplaySummary(JSONExportable):
     allies          : list[int]                 = Field(default=..., alias="a")
     enemies         : list[int]                 = Field(default=..., alias="e")
     mastery_badge   : int | None                = Field(default=None, alias="mb")
-    details         : list[WoTBlitzReplayDetail] = Field(default=..., alias="d")
+    details         : list[ReplayDetail] = Field(default=..., alias="d")
     # fmt: on
 
     class Config:
@@ -241,17 +241,17 @@ class WoTBlitzReplaySummary(JSONExportable):
 
 ###########################################
 #
-# WoTBlitzReplayData()
+# ReplayData()
 #
 ###########################################
 
 
-class WoTBlitzReplayData(JSONExportable):
+class ReplayData(JSONExportable):
     # fmt: off
     id          : str | None            = Field(default=None, alias="_id")
     view_url    : HttpUrl | None        = Field(default=None, alias="v")
     download_url: HttpUrl | None        = Field(default=None, alias="d")
-    summary     : WoTBlitzReplaySummary = Field(default=..., alias="s")
+    summary     : ReplaySummary = Field(default=..., alias="s")
     
     _ViewUrlBase: str = "https://replays.wotinspector.com/en/view/"
     _DLurlBase  : str = "https://replays.wotinspector.com/en/download/"
@@ -299,13 +299,13 @@ class WoTBlitzReplayData(JSONExportable):
         return indexes
 
     @classmethod
-    def transform_WoTBlitzReplayJSON(cls, in_obj: "WoTBlitzReplayJSON") -> "WoTBlitzReplayData":
+    def transform_ReplayJSON(cls, in_obj: "ReplayJSON") -> "ReplayData":
         return in_obj.data
 
     @root_validator
     def store_id(cls, values: dict[str, Any]) -> dict[str, Any]:
         try:
-            # debug("validating: WoTBlitzReplayData()")
+            # debug("validating: ReplayData()")
             _id: str
             if values["id"] is not None:
                 # debug("data.id found")
@@ -329,16 +329,16 @@ class WoTBlitzReplayData(JSONExportable):
 
 ###########################################
 #
-# WoTBlitzReplayJSON()
+# ReplayJSON()
 #
 ###########################################
 
 
-class WoTBlitzReplayJSON(JSONExportable):
+class ReplayJSON(JSONExportable):
     # fmt: off
     id      : str | None        = Field(default=None, alias="_id")
     status  : str               = Field(default="ok", alias="s")
-    data    : WoTBlitzReplayData= Field(default=..., alias="d")
+    data    : ReplayData= Field(default=..., alias="d")
     error   : dict              = Field(default={}, alias="e")
 
     # _URL_REPLAY_JSON: str = "https://api.wotinspector.com/replay/upload?details=full&key="
@@ -387,7 +387,7 @@ class WoTBlitzReplayJSON(JSONExportable):
 
     @root_validator(pre=False)
     def store_id(cls, values: dict[str, Any]) -> dict[str, Any]:
-        debug("validating: WoTBlitzReplayJSON()")
+        debug("validating: ReplayJSON()")
         if "id" in values and values["id"] is not None:
             # debug("id=%s", values["id"])
             pass
@@ -466,4 +466,4 @@ class WoTBlitzReplayJSON(JSONExportable):
             raise Exception("Error reading replay")
 
 
-WoTBlitzReplayData.register_transformation(WoTBlitzReplayJSON, WoTBlitzReplayData.transform_WoTBlitzReplayJSON)
+ReplayData.register_transformation(ReplayJSON, ReplayData.transform_ReplayJSON)
