@@ -572,9 +572,10 @@ class WGApiWoTBlitzPlayerAchievements(WGApiWoTBlitz):
 
 class WGApiWoTBlitzTankopedia(WGApiWoTBlitz):
     data: SortedDict[str, Tank] = Field(default=SortedDict(int), alias="d")
+    _code: dict[str, Tank] = Field(default=dict(), alias="c")
     # userStr	: dict[str, str] | None = Field(default=None, alias='s')
 
-    _exclude_export_DB_fields = {"userStr": True}
+    _exclude_export_DB_fields = {"userStr": True, "_code": True}
 
     class Config:
         allow_mutation = True
@@ -598,15 +599,30 @@ class WGApiWoTBlitzTankopedia(WGApiWoTBlitz):
             self.meta = dict()
         self.meta["count"] = len(self.data)
 
+    def _code_add(self, tank: Tank) -> bool:
+        if tank.code is not None:
+            self._code[tank.code] = tank
+            return True
+        return False
+
     def add(self, tank: Tank) -> None:
         self.data[str(tank.tank_id)] = tank
+        self._code_add(tank)
         self.update_count()
 
     def pop(self, tank_id: int) -> Tank:
         """Raises KeyError if tank_id is not found in self.data"""
-        wgtank: Tank = self.data.pop(str(tank_id))
+        tank: Tank = self.data.pop(str(tank_id))
         self.update_count()
-        return wgtank
+        if tank.code is not None:
+            del self._code[tank.code]
+        return tank
+
+    def update_codes(self) -> None:
+        """update _code dict"""
+        self._code = dict()
+        for tank in self.data.values():
+            self._code_add(tank)
 
     def update(self, new: "WGApiWoTBlitzTankopedia") -> Tuple[set[int], set[int]]:
         """update tankopedia with another one"""
@@ -618,6 +634,7 @@ class WGApiWoTBlitzTankopedia(WGApiWoTBlitz):
 
         self.data.update({(str(tank_id), new[tank_id]) for tank_id in added | updated})
         self.update_count()
+        self.update_codes()
         return (added, updated)
 
     @validator("data", pre=False)
