@@ -13,7 +13,7 @@ debug = logger.debug
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / "src"))
 
 from pyutils import export, awrap
-from blitzutils import WGBlitzRelease
+from blitzutils import WoTBlitzRelease
 
 
 ########################################################
@@ -52,13 +52,15 @@ def releases_count() -> int:
 
 @pytest.mark.asyncio
 @REPLAY_FILES
-async def test_1_import_export_releases(datafiles: Path, tmp_path: Path, releases_count: int) -> None:
+async def test_1_import_export_releases(
+    datafiles: Path, tmp_path: Path, releases_count: int
+) -> None:
     for releases_file in datafiles.iterdir():
-        releases: list[WGBlitzRelease] = list()
+        releases: list[WoTBlitzRelease] = list()
 
         releases_filename: str = str(releases_file.resolve())
         debug("replay: %s", basename(releases_filename))
-        async for release in WGBlitzRelease.import_csv(releases_filename):
+        async for release in WoTBlitzRelease.import_csv(releases_filename):
             releases.append(release)
 
         assert (
@@ -69,8 +71,8 @@ async def test_1_import_export_releases(datafiles: Path, tmp_path: Path, release
         json_filename: str = str(tmp_path / "export_release.json")
         await export(awrap(releases), "json", json_filename)
 
-        imported_releases: list[WGBlitzRelease] = list()
-        async for release in WGBlitzRelease.import_file(json_filename):
+        imported_releases: list[WoTBlitzRelease] = list()
+        async for release in WoTBlitzRelease.import_file(json_filename):
             imported_releases.append(release)
 
         assert (
@@ -87,7 +89,7 @@ async def test_1_import_export_releases(datafiles: Path, tmp_path: Path, release
         await export(awrap(releases), "csv", csv_filename)
 
         imported_releases = list()
-        async for release in WGBlitzRelease.import_file(csv_filename):
+        async for release in WoTBlitzRelease.import_file(csv_filename):
             imported_releases.append(release)
 
         assert (
@@ -99,4 +101,6 @@ async def test_1_import_export_releases(datafiles: Path, tmp_path: Path, release
                 imported_releases[ndx] == release
             ), f"imported releases in wrong order: {imported_releases[ndx]} != {release}"
 
-        assert len(set(imported_releases)) == releases_count, "some releases imported as duplicate"
+        assert (
+            len(set(imported_releases)) == releases_count
+        ), "some releases imported as duplicate"

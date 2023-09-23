@@ -15,6 +15,7 @@ from pyutils import JSONExportable, Idx, BackendIndexType
 from pyutils.exportable import DESCENDING, ASCENDING, TEXT
 
 from .tank import EnumVehicleTypeInt
+from .release import WoTBlitzRelease
 
 logger = logging.getLogger()
 error = logger.error
@@ -84,6 +85,22 @@ class WoTBlitzMaps(StrEnum):
 # Replays
 #
 ###########################################
+
+class WoTBlitzReplayFileMeta(JSONExportable):
+    version: ": "9.0.1",
+    "title": "",
+    "dbid": "521458531",
+    "playerName": "jylpah",
+    "battleStartTime": "1655923162",
+    "playerVehicleName": "A111_T25_Pilot",
+    "mapName": "medvedkovo",
+    "arenaUniqueId": "1159292282792534487",
+    "battleDuration": 255.38281,
+    "vehicleCompDescriptor": 20769,
+    "camouflageId": 39,
+    "mapId": 7,
+    "arenaBonusType": 1
+
 
 
 class WoTBlitzReplayAchievement(JSONExportable):

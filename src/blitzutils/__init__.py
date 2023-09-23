@@ -13,7 +13,7 @@ from .replay import (
     WoTBlitzMaps as WoTBlitzMaps,
 )
 from .region import Region as Region
-from .release import WGBlitzRelease as WGBlitzRelease
+from .release import WoTBlitzRelease as WoTBlitzRelease
 from .account import Account as Account
 from .tank import (
     EnumNation as EnumNation,
