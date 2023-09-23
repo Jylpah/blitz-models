@@ -1,6 +1,8 @@
 import logging
 from typing import Optional, cast, Any
 from aiohttp import ClientResponse
+from pathlib import Path
+from aiofiles import open
 from asyncio import sleep
 from pydantic import Field, Extra
 from hashlib import md5
@@ -10,7 +12,7 @@ from base64 import b64encode
 from pyutils import ThrottledClientSession, JSONExportable
 from pyutils.utils import get_url_JSON_model
 
-from .replay import WoTBlitzReplayJSON
+from .replay import ReplayJSON
 
 # Setup logging
 logger = logging.getLogger()
@@ -22,7 +24,7 @@ debug = logger.debug
 SLEEP: float = 1
 
 
-class WoTInspectorReplaySummary(JSONExportable):
+class WIReplaySummary(JSONExportable):
     id: str = Field(default=..., alias="_id")
     player_name: str
     vehicle_descr: int
@@ -35,8 +37,8 @@ class WoTInspectorReplaySummary(JSONExportable):
         extra = Extra.allow
 
 
-class WoTInspectorReplaysData(JSONExportable):
-    replays: list[WoTInspectorReplaySummary]
+class WIReplaysData(JSONExportable):
+    replays: list[WIReplaySummary]
 
     class Config:
         allow_population_by_field_name = True
@@ -50,7 +52,7 @@ class WoTInspectorAPIReplays(JSONExportable):
     Preferred over spidering  web page listing"""
 
     status: str = Field(default="ok")
-    data: WoTInspectorReplaysData
+    data: WIReplaysData
     error: dict[str, Any]
 
     class Config:
@@ -112,13 +114,13 @@ class WoTinspector:
     def get_url_replay_JSON(self, id: str) -> str:
         return f"{self.URL_REPLAY_INFO}{id}"
 
-    async def get_replay(self, replay_id: str) -> WoTBlitzReplayJSON | None:
+    async def get_replay(self, replay_id: str) -> ReplayJSON | None:
         try:
-            replay: WoTBlitzReplayJSON | None
+            replay: ReplayJSON | None
             replay = await get_url_JSON_model(
                 self.session,
                 self.get_url_replay_JSON(replay_id),
-                resp_model=WoTBlitzReplayJSON,
+                resp_model=ReplayJSON,
             )
             if replay is None:
                 return None
@@ -129,9 +131,23 @@ class WoTinspector:
         return None
 
     async def post_replay(
-        self, data, filename="Replay", account_id=0, title="Replay", priv=False, N=None
-    ) -> WoTBlitzReplayJSON | None:
+        self,
+        filename: Path,
+        account_id: int = 0,
+        title: str = "Replay",
+        priv: bool = False,
+        N: int | None = None,
+    ) -> str | None:
+        """
+        Post a WoT Blitz replay file to replays.WoTinspector.com
+
+        Returns ID of the replay
+        """
         try:
+            data: bytes
+            async with open(filename, "rb") as replay:
+                data = await replay.read()
+
             N = N if N is not None else self.REPLAY_N
             self.REPLAY_N += 1
 
@@ -139,29 +155,20 @@ class WoTinspector:
             hash.update(data)
             replay_id = hash.hexdigest()
 
-            ##  Testing if the replay has already been posted
-            json_resp: WoTBlitzReplayJSON | None = await self.get_replay(replay_id)
-            if json_resp is not None:
-                debug(f"{N}: Already uploaded: {title}")
-                return json_resp
-
             params = {
                 "title": title,
                 "private": (1 if priv else 0),
                 "uploaded_by": account_id,
                 "details": "full",
-                "key": replay_id,
             }
 
             url = self.URL_REPLAY_UL + urlencode(params, quote_via=quote)
-            # debug('URL: ' + url)
             headers = {"Content-type": "application/x-www-form-urlencoded"}
-            payload = {"file": (filename, b64encode(data))}
+            payload = {"file": (str(filename), b64encode(data))}
         except Exception as err:
             error(f"Treahd {N}: Unexpected Exception: {err}")
             return None
 
-        replay: WoTBlitzReplayJSON | None = None
         for retry in range(self.MAX_RETRIES):
             debug(
                 f"Thread {id}: Posting: {title} Try #: {retry + 1}/{self.MAX_RETRIES}"
@@ -170,22 +177,28 @@ class WoTinspector:
                 async with self.session.post(
                     url, headers=headers, data=payload
                 ) as resp:
-                    debug(f"{N}: HTTP response: {resp.status}")
-                    if resp.status == 200:
-                        debug(f"{N}: HTTP POST 200 = Success. Reading response data")
-                        replay = WoTBlitzReplayJSON.parse_str(await resp.text())
-                        if replay is not None:
-                            debug(f"{N}: Response data read. Status OK")
-                            return replay
-                        debug(f"{N}: title : Receive invalid JSON")
+                    debug("%d: HTTP response status %d/%s", N, resp.status, resp.reason)
+                    if resp.ok:
+                        debug(
+                            "%d: HTTP response OK: %d %s. Reading response data",
+                            N,
+                            resp.status,
+                            resp.reason,
+                        )
+                        return replay_id
                     else:
-                        debug(f"{N}: Got HTTP/{resp.status}")
+                        debug(
+                            "%d: HTTPS response NOT OK: %d %s",
+                            N,
+                            resp.status,
+                            resp.reason,
+                        )
             except Exception as err:
                 debug(f"{N}: Unexpected exception {err}")
             await sleep(SLEEP)
 
         debug(f"{N}: Could not post replay: {title}")
-        return replay
+        return None
 
     async def get_replay_listing(self, page: int = 0) -> ClientResponse:
         url: str = self.get_url_replay_listing(page)
