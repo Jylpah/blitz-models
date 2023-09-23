@@ -86,21 +86,26 @@ class WoTBlitzMaps(StrEnum):
 #
 ###########################################
 
-class ReplayFileMeta(JSONExportable):
-    version: ": "9.0.1",
-    "title": "",
-    "dbid": "521458531",
-    "playerName": "jylpah",
-    "battleStartTime": "1655923162",
-    "playerVehicleName": "A111_T25_Pilot",
-    "mapName": "medvedkovo",
-    "arenaUniqueId": "1159292282792534487",
-    "battleDuration": 255.38281,
-    "vehicleCompDescriptor": 20769,
-    "camouflageId": 39,
-    "mapId": 7,
-    "arenaBonusType": 1
 
+class ReplayFileMeta(JSONExportable):
+    version: str
+    title: str = Field(default="")
+    dbid: int
+    playerName: str
+    battleStartTime: int
+    playerVehicleName: str
+    mapName: str
+    arenaUniqueId: int
+    battleDuration: float
+    vehicleCompDescriptor: int
+    camouflageId: int
+    mapId: int
+    arenaBonusType: int
+
+    @property
+    def release(self) -> Release:
+        """Return version as Release()"""
+        return Release(release=".".join(self.version.split(".")[0:2]))
 
 
 class ReplayAchievement(JSONExportable):
@@ -233,9 +238,9 @@ class ReplaySummary(JSONExportable):
 
     @root_validator(skip_on_failure=True)
     def root(cls, values: dict[str, Any]) -> dict[str, Any]:
-        values["battle_start_time"] = datetime.fromtimestamp(values["battle_start_timestamp"]).strftime(
-            cls._TimestampFormat
-        )
+        values["battle_start_time"] = datetime.fromtimestamp(
+            values["battle_start_timestamp"]
+        ).strftime(cls._TimestampFormat)
         return values
 
 
@@ -263,7 +268,11 @@ class ReplayData(JSONExportable):
         validate_assignment = True
         allow_population_by_field_name = True
 
-    _exclude_export_DB_fields = {"view_url": True, "download_url": True, "summary": {"battle_start_time"}}
+    _exclude_export_DB_fields = {
+        "view_url": True,
+        "download_url": True,
+        "summary": {"battle_start_time"},
+    }
 
     @property
     def index(self) -> Idx:
