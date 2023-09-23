@@ -8,11 +8,15 @@ from pydantic import Field, Extra
 from hashlib import md5
 from urllib.parse import urlencode, quote
 from base64 import b64encode
+from zipfile import BadZipFile, Path as ZipPath, is_zipfile, ZipFile
+from io import BytesIO
 
 from pyutils import ThrottledClientSession, JSONExportable
 from pyutils.utils import get_url_JSON_model
 
-from .replay import ReplayJSON
+from .wg_api import WGApiWoTBlitzTankopedia
+from .map import Maps
+from .replay import ReplayJSON, ReplayFileMeta, ReplayFile
 
 # Setup logging
 logger = logging.getLogger()
@@ -133,10 +137,13 @@ class WoTinspector:
     async def post_replay(
         self,
         filename: Path,
-        account_id: int = 0,
-        title: str = "Replay",
+        uploaded_by: int = 0,
+        tankopedia: WGApiWoTBlitzTankopedia | None = None,
+        maps: Maps | None = None,
+        get_json: bool = False,
+        title: str | None = None,
         priv: bool = False,
-        N: int | None = None,
+        N: int = -1,
     ) -> str | None:
         """
         Post a WoT Blitz replay file to replays.WoTinspector.com
@@ -144,29 +151,40 @@ class WoTinspector:
         Returns ID of the replay
         """
         try:
-            data: bytes
-            async with open(filename, "rb") as replay:
-                data = await replay.read()
+            replay = ReplayFile(filename)
+            await replay.open()
+            try:
+                if tankopedia is not None and maps is not None:
+                    replay.meta.update_title(tankopedia=tankopedia, maps=maps)
+                else:
+                    debug("no tankopedia and maps give to update replay title")
+            except ValueError as err:
+                pass
 
-            N = N if N is not None else self.REPLAY_N
+            if title is None:
+                title = replay.title
+            if title == "":
+                title = f"{replay.meta.playerName}"
+
+            N = N if N > 0 else self.REPLAY_N
             self.REPLAY_N += 1
-
-            hash = md5()
-            hash.update(data)
-            replay_id = hash.hexdigest()
 
             params = {
                 "title": title,
                 "private": (1 if priv else 0),
-                "uploaded_by": account_id,
-                "details": "full",
+                "uploaded_by": uploaded_by,
             }
+            if get_json:  # WI rate-limits requests with details=full
+                params["details"] = "full"
 
             url = self.URL_REPLAY_UL + urlencode(params, quote_via=quote)
             headers = {"Content-type": "application/x-www-form-urlencoded"}
-            payload = {"file": (str(filename), b64encode(data))}
+            payload = {"file": (str(filename), b64encode(replay.data))}
+        except BadZipFile as err:
+            error(f"corrupted replay file: {filename}")
+            return None
         except Exception as err:
-            error(f"Treahd {N}: Unexpected Exception: {err}")
+            error(f"Thread {N}: Unexpected Exception: {err}")
             return None
 
         for retry in range(self.MAX_RETRIES):
@@ -185,7 +203,7 @@ class WoTinspector:
                             resp.status,
                             resp.reason,
                         )
-                        return replay_id
+                        return replay.hash
                     else:
                         debug(
                             "%d: HTTPS response NOT OK: %d %s",
