@@ -15,11 +15,11 @@ sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / "src"))
 
 from blitzutils import Account, Region, WGApi
 from blitzutils import (
-    WGAccountInfo,
-    WGPlayerAchievementsMaxSeries,
-    WGTankStat,
-    WGApiTankopedia,
-    WGTank,
+    AccountInfo,
+    PlayerAchievementsMaxSeries,
+    TankStat,
+    WGApiWoTBlitzTankopedia,
+    Tank,
     WGApiTankString,
 )
 
@@ -101,7 +101,7 @@ def tanks_remove() -> list[int]:
 
 
 @pytest.fixture
-def tanks_updated() -> list[WGTank]:
+def tanks_updated() -> list[Tank]:
     objs = json.loads(
         """[
         {
@@ -146,9 +146,9 @@ def tanks_updated() -> list[WGTank]:
         }
     ]"""
     )
-    tanks: list[WGTank] = list()
+    tanks: list[Tank] = list()
     for obj in objs:
-        tanks.append(WGTank.parse_obj(obj))
+        tanks.append(Tank.parse_obj(obj))
     return tanks
 
 
@@ -183,7 +183,7 @@ async def test_1_api_account_info(datafiles: Path) -> None:
             assert (
                 len(account_infos) > 0
             ), f"could no retrieve any account infos for {region}"
-            assert type(account_infos[0]) is WGAccountInfo, "incorrect type returned"
+            assert type(account_infos[0]) is AccountInfo, "incorrect type returned"
 
 
 @pytest.mark.asyncio
@@ -210,7 +210,7 @@ async def test_2_api_tank_stats(datafiles: Path) -> None:
                 assert (
                     len(tank_stats) > 0
                 ), f"no tanks stats found for account_id={account}"
-                assert type(tank_stats[0]) is WGTankStat, "incorrect type returned"
+                assert type(tank_stats[0]) is TankStat, "incorrect type returned"
 
             assert stats_ok, f"Could not find any stats for {region} region"
 
@@ -236,16 +236,16 @@ async def test_3_api_player_achievements(datafiles: Path) -> None:
             assert pams is not None, f"could no retrieve account infos for {region}"
             assert len(pams) > 0, f"could no retrieve any account infos for {region}"
             assert (
-                type(pams[0]) is WGPlayerAchievementsMaxSeries
+                type(pams[0]) is PlayerAchievementsMaxSeries
             ), "incorrect type returned"
 
 
 @pytest.mark.asyncio
 @ACCOUNTS
 async def test_4_api_tankopedia(
-    datafiles: Path, tanks_remove: list[int], tanks_updated: list[WGTank]
+    datafiles: Path, tanks_remove: list[int], tanks_updated: list[Tank]
 ) -> None:
-    tankopedia: WGApiTankopedia | None
+    tankopedia: WGApiWoTBlitzTankopedia | None
     async with WGApi() as wg:
         for region in Region.API_regions():
             assert (
@@ -291,20 +291,18 @@ async def test_5_api_tankstrs(
             assert (
                 False
             ), f"failed to parse test file as WGApiTankString(): {fn.name}: {err}"
-        if (tank := WGTank.transform(tank_str)) is None:
+        if (tank := Tank.transform(tank_str)) is None:
             assert (
                 False
-            ), f"could not transform WGApiTankString() to WGTank(): {tank_str.user_string}"
+            ), f"could not transform WGApiTankString() to Tank(): {tank_str.user_string}"
 
     async with WGApi() as wg:
         for user_str in wgapi_tankstrs_user_strings:
             if (tank_str2 := await wg.get_tank_str(user_str)) is None:
                 assert False, f"could not fetch WGApiTankString() for: {user_str}"
             assert (
-                tank := WGTank.transform(tank_str2)
-            ) is not None, (
-                f"could not transform WGApiTankString({user_str}) to WGTank()"
-            )
+                tank := Tank.transform(tank_str2)
+            ) is not None, f"could not transform WGApiTankString({user_str}) to Tank()"
             assert (
                 tank.name == tank_str2.user_string
             ), f"incorrect tank name: {user_str}"

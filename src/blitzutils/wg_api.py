@@ -28,7 +28,7 @@ from pathlib import Path
 path.insert(0, str(Path(__file__).parent.parent.resolve()))
 
 from blitzutils.region import Region
-from blitzutils.tank import WGTank, EnumNation, EnumVehicleTypeStr, EnumVehicleTier
+from blitzutils.tank import Tank, EnumNation, EnumVehicleTypeStr, EnumVehicleTier
 
 TYPE_CHECKING = True
 logger = logging.getLogger()
@@ -64,12 +64,12 @@ class WGApiError(JSONExportable):
 
 ###########################################
 #
-# WGAccountInfo()
+# AccountInfo()
 #
 ###########################################
 
 
-class WGAccountInfo(JSONExportable):
+class AccountInfo(JSONExportable):
     account_id: int = Field(alias="id")
     region: Region | None = Field(default=None, alias="r")
     created_at: int = Field(default=0, alias="c")
@@ -127,7 +127,7 @@ class WGTankStatAll(JSONExportable):
         return None
 
 
-class WGTankStat(JSONExportable):
+class TankStat(JSONExportable):
     id: ObjectId = Field(alias="_id")
     region: Region | None = Field(default=None, alias="r")
     all: WGTankStatAll = Field(..., alias="s")
@@ -153,7 +153,7 @@ class WGTankStat(JSONExportable):
     _exclude_export_src_fields: ClassVar[Optional[TypeExcludeDict]] = {"id": True}
     # _include_export_DB_fields	: ClassVar[Optional[TypeExcludeDict]] = None
     # _include_export_src_fields	: ClassVar[Optional[TypeExcludeDict]] = None
-    # Example WGTankStat()
+    # Example TankStat()
     _example = """{
                     "r": "eu",
                     "s": {
@@ -345,7 +345,7 @@ class WGApiWoTBlitz(JSONExportable):
 
 
 class WGApiWoTBlitzAccountInfo(WGApiWoTBlitz):
-    data: dict[str, WGAccountInfo | None] | None = Field(default=None, alias="d")
+    data: dict[str, AccountInfo | None] | None = Field(default=None, alias="d")
 
     class Config:
         allow_mutation = True
@@ -354,7 +354,7 @@ class WGApiWoTBlitzAccountInfo(WGApiWoTBlitz):
 
 
 class WGApiWoTBlitzTankStats(WGApiWoTBlitz):
-    data: dict[str, list[WGTankStat] | None] | None = Field(default=None, alias="d")
+    data: dict[str, list[TankStat] | None] | None = Field(default=None, alias="d")
 
     class Config:
         allow_mutation = True
@@ -362,7 +362,7 @@ class WGApiWoTBlitzTankStats(WGApiWoTBlitz):
         allow_population_by_field_name = True
 
 
-class WGPlayerAchievements(JSONExportable):
+class PlayerAchievements(JSONExportable):
     """Placeholder class for data.achievements that are not collected"""
 
     class Config:
@@ -372,7 +372,7 @@ class WGPlayerAchievements(JSONExportable):
         extra = Extra.allow
 
 
-class WGPlayerAchievementsMaxSeries(JSONExportable):
+class PlayerAchievementsMaxSeries(JSONExportable):
     id: ObjectId | None = Field(default=None, alias="_id")
     jointVictory: int = Field(default=0, alias="jv")
     account_id: int = Field(default=0, alias="a")
@@ -468,10 +468,10 @@ class WGPlayerAchievementsMaxSeries(JSONExportable):
         return f"account_id={self.account_id}:{self.region} added={self.added}"
 
     @classmethod
-    def transform_WGPlayerAchievementsMain(
-        cls, in_obj: "WGPlayerAchievementsMain"
-    ) -> Optional["WGPlayerAchievementsMaxSeries"]:
-        """Transform WGPlayerAchievementsMain object to WGPlayerAchievementsMaxSeries"""
+    def transform_PlayerAchievementsMain(
+        cls, in_obj: "PlayerAchievementsMain"
+    ) -> Optional["PlayerAchievementsMaxSeries"]:
+        """Transform PlayerAchievementsMain object to PlayerAchievementsMaxSeries"""
         try:
             if in_obj.max_series is None:
                 raise ValueError(f"in_obj doesn't have 'max_series' set: {in_obj}")
@@ -493,9 +493,9 @@ class WGPlayerAchievementsMaxSeries(JSONExportable):
         return None
 
 
-class WGPlayerAchievementsMain(JSONExportable):
-    achievements: WGPlayerAchievements | None = Field(default=None, alias="a")
-    max_series: WGPlayerAchievementsMaxSeries | None = Field(default=None, alias="m")
+class PlayerAchievementsMain(JSONExportable):
+    achievements: PlayerAchievements | None = Field(default=None, alias="a")
+    max_series: PlayerAchievementsMaxSeries | None = Field(default=None, alias="m")
     account_id: int | None = Field(default=None)
     updated: int | None = Field(default=None)
 
@@ -505,14 +505,14 @@ class WGPlayerAchievementsMain(JSONExportable):
         allow_population_by_field_name = True
 
 
-WGPlayerAchievementsMaxSeries.register_transformation(
-    WGPlayerAchievementsMain,
-    WGPlayerAchievementsMaxSeries.transform_WGPlayerAchievementsMain,
+PlayerAchievementsMaxSeries.register_transformation(
+    PlayerAchievementsMain,
+    PlayerAchievementsMaxSeries.transform_PlayerAchievementsMain,
 )
 
 
 class WGApiWoTBlitzPlayerAchievements(WGApiWoTBlitz):
-    data: dict[str, WGPlayerAchievementsMain] | None = Field(default=None, alias="d")
+    data: dict[str, PlayerAchievementsMain] | None = Field(default=None, alias="d")
 
     class Config:
         allow_mutation = True
@@ -521,17 +521,17 @@ class WGApiWoTBlitzPlayerAchievements(WGApiWoTBlitz):
 
     @validator("data", pre=True)
     def validate_data(
-        cls, v: dict[str, WGPlayerAchievementsMain | None] | None
-    ) -> dict[str, WGPlayerAchievementsMain] | None:
+        cls, v: dict[str, PlayerAchievementsMain | None] | None
+    ) -> dict[str, PlayerAchievementsMain] | None:
         if not isinstance(v, dict):
             return None
         else:
-            res: dict[str, WGPlayerAchievementsMain]
+            res: dict[str, PlayerAchievementsMain]
             res = {key: value for key, value in v.items() if value is not None}
             return res
 
-    def get_max_series(self) -> list[WGPlayerAchievementsMaxSeries]:
-        res: list[WGPlayerAchievementsMaxSeries] = list()
+    def get_max_series(self) -> list[PlayerAchievementsMaxSeries]:
+        res: list[PlayerAchievementsMaxSeries] = list()
         try:
             if self.data is None:
                 return res
@@ -539,7 +539,7 @@ class WGApiWoTBlitzPlayerAchievements(WGApiWoTBlitz):
                 try:
                     if pam is None or pam.max_series is None:
                         continue
-                    ms: WGPlayerAchievementsMaxSeries = pam.max_series
+                    ms: PlayerAchievementsMaxSeries = pam.max_series
                     account_id = int(key)
                     ms.account_id = account_id
                     if ms.region is None:
@@ -570,27 +570,49 @@ class WGApiWoTBlitzPlayerAchievements(WGApiWoTBlitz):
         return None
 
 
-class WGApiTankopedia(WGApiWoTBlitz):
-    data: SortedDict[str, WGTank] = Field(default=SortedDict(int), alias="d")
+class WGApiWoTBlitzTankopedia(WGApiWoTBlitz):
+    data: SortedDict[str, Tank] = Field(default=SortedDict(int), alias="d")
+    codes: dict[str, Tank] = Field(default=dict(), alias="c")
     # userStr	: dict[str, str] | None = Field(default=None, alias='s')
 
-    _exclude_export_DB_fields = {"userStr": True}
+    _exclude_export_DB_fields = {"userStr": True, "codes": True}
 
     class Config:
         allow_mutation = True
         validate_assignment = True
         allow_population_by_field_name = True
 
+    @validator("data", pre=False)
+    def _validate_data(cls, value) -> SortedDict[str, Tank]:
+        if not isinstance(value, SortedDict):
+            return SortedDict(int, **value)
+
+    # @root_validator(pre=False, skip_on_failure=True)
+    # def _validate_code(cls, values: dict[str, Any]) -> dict[str, Any]:
+    #     try:
+    #         if "codes" not in values or len(values["codes"]) == 0:
+    #             codes: dict[str, Tank] = dict()
+    #             data: SortedDict[str, Tank] = values["data"]
+    #             for tank in data:
+    #                 # tank = Tank.parse_raw(_tank)
+    #                 if tank.code is not None:
+    #                     codes[tank.code] = tank
+    #             values["codes"] = codes
+    #         return values
+    #     except Exception as err:
+    #         error(f"failed to generate 'codes' dict: {err}")
+    #         raise
+
     def __len__(self) -> int:
         return len(self.data)
 
-    def __getitem__(self, key: str | int) -> WGTank:
+    def __getitem__(self, key: str | int) -> Tank:
         if isinstance(key, int):
             key = str(key)
         return self.data[key]
 
     def __iter__(self):
-        """Iterate tanks in WGApiTankopedia()"""
+        """Iterate tanks in WGApiWoTBlitzTankopedia()"""
         return iter(self.data.values())
 
     def update_count(self) -> None:
@@ -598,17 +620,44 @@ class WGApiTankopedia(WGApiWoTBlitz):
             self.meta = dict()
         self.meta["count"] = len(self.data)
 
-    def add(self, tank: WGTank) -> None:
+    def _code_add(self, tank: Tank) -> bool:
+        if tank.code is not None:
+            self.codes[tank.code] = tank
+            return True
+        return False
+
+    def add(self, tank: Tank) -> None:
         self.data[str(tank.tank_id)] = tank
+        self._code_add(tank)
         self.update_count()
 
-    def pop(self, tank_id: int) -> WGTank:
+    def pop(self, tank_id: int) -> Tank:
         """Raises KeyError if tank_id is not found in self.data"""
-        wgtank: WGTank = self.data.pop(str(tank_id))
+        tank: Tank = self.data.pop(str(tank_id))
         self.update_count()
-        return wgtank
+        if tank.code is not None:
+            try:
+                del self.codes[tank.code]
+            except:
+                debug(f"could not remove code for tank_id={tank.tank_id}")
+                pass
+        return tank
 
-    def update(self, new: "WGApiTankopedia") -> Tuple[set[int], set[int]]:
+    def by_code(self, code: str) -> Tank | None:
+        """Return tank by short code"""
+        try:
+            return self.codes[code]
+        except KeyError as err:
+            debug(f"no tank with short code: {code}")
+        return None
+
+    def update_codes(self) -> None:
+        """update _code dict"""
+        self.codes = dict()
+        for tank in self.data.values():
+            self._code_add(tank)
+
+    def update(self, new: "WGApiWoTBlitzTankopedia") -> Tuple[set[int], set[int]]:
         """update tankopedia with another one"""
         new_ids: set[int] = {tank.tank_id for tank in new}
         old_ids: set[int] = {tank.tank_id for tank in self}
@@ -618,12 +667,8 @@ class WGApiTankopedia(WGApiWoTBlitz):
 
         self.data.update({(str(tank_id), new[tank_id]) for tank_id in added | updated})
         self.update_count()
+        self.update_codes()
         return (added, updated)
-
-    @validator("data", pre=False)
-    def _validate_data(cls, value) -> SortedDict[str, WGTank]:
-        if not isinstance(value, SortedDict):
-            return SortedDict(int, **value)
 
 
 class WGApiTankString(JSONExportable):
@@ -656,9 +701,9 @@ class WGApiTankString(JSONExportable):
         """Get URL as string for a 'user_string'"""
         return f"https://{region}{cls._url}{user_string}/"
 
-    def as_WGTank(self) -> WGTank | None:
+    def as_WGTank(self) -> Tank | None:
         try:
-            return WGTank(
+            return Tank(
                 tank_id=self.id,
                 name=self.user_string,
                 nation=self.nation,
@@ -667,11 +712,11 @@ class WGApiTankString(JSONExportable):
                 is_premium=self.is_premium,
             )
         except Exception as err:
-            debug(f"could not transform WGApiTankString to WGTank: {self.name}")
+            debug(f"could not transform WGApiTankString to Tank: {self.name}")
         return None
 
 
-WGTank.register_transformation(WGApiTankString, WGApiTankString.as_WGTank)
+Tank.register_transformation(WGApiTankString, WGApiTankString.as_WGTank)
 
 
 class WoTBlitzTankString(JSONExportable):
@@ -697,19 +742,6 @@ class WoTBlitzTankString(JSONExportable):
         indexes: list[list[tuple[str, BackendIndexType]]] = list()
         indexes.append([("code", TEXT)])
         return indexes
-
-    # @classmethod
-    # def from_tankopedia(cls, tankopedia: WGApiTankopedia) -> list['WoTBlitzTankString'] | None:
-    # 	res : list[WoTBlitzTankString] = list()
-    # 	try:
-    # 		if tankopedia.userStr is not None:
-    # 			for k, v in tankopedia.userStr.items():
-    # 				res.append(WoTBlitzTankString(code=k, name=v))
-    # 			return res
-    # 	except Exception as err:
-    # 		error(f"Could not read tank strings from Tankopedia: {err}")
-
-    # 	return None
 
 
 class WGApi:
@@ -909,7 +941,7 @@ class WGApi:
         region: Region,
         tank_ids: list[int] = [],
         fields: list[str] = [],
-    ) -> list[WGTankStat] | None:
+    ) -> list[TankStat] | None:
         try:
             resp: WGApiWoTBlitzTankStats | None = await self.get_tank_stats_full(
                 account_id=account_id, region=region, tank_ids=tank_ids, fields=fields
@@ -1007,7 +1039,7 @@ class WGApi:
             "last_battle_time",
             "nickname",
         ],
-    ) -> list[WGAccountInfo] | None:
+    ) -> list[AccountInfo] | None:
         try:
             resp: WGApiWoTBlitzAccountInfo | None
             resp = await self.get_account_info_full(
@@ -1086,7 +1118,7 @@ class WGApi:
         account_ids: list[int],
         region: Region,
         fields: list[str] = list(),
-    ) -> list[WGPlayerAchievementsMaxSeries] | None:
+    ) -> list[PlayerAchievementsMaxSeries] | None:
         try:
             resp: WGApiWoTBlitzPlayerAchievements | None
             resp = await self.get_player_achievements_full(
@@ -1138,7 +1170,7 @@ class WGApi:
         self,
         region: Region | None = None,
         fields: list[str] = ["tank_id", "name", "tier", "type", "nation", "is_premium"],
-    ) -> WGApiTankopedia | None:
+    ) -> WGApiWoTBlitzTankopedia | None:
         try:
             url: str | None
             if region is None:
@@ -1147,7 +1179,7 @@ class WGApi:
                 raise ValueError(f"No player achievements available")
             debug(f"URL: {url}")
             return await get_url_JSON_model(
-                self.session[region.value], url, resp_model=WGApiTankopedia
+                self.session[region.value], url, resp_model=WGApiWoTBlitzTankopedia
             )
 
         except Exception as err:

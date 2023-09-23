@@ -9,12 +9,22 @@ from enum import IntEnum, StrEnum
 from collections import defaultdict
 import logging
 from bson.objectid import ObjectId
-from pydantic import BaseModel, Extra, root_validator, validator, Field, HttpUrl
+from pydantic import Extra, root_validator, validator, Field, HttpUrl
+from pathlib import Path
+from hashlib import md5
+from zipfile import BadZipFile, Path as ZipPath, is_zipfile, ZipFile
+from io import BytesIO
+
+import aiofiles
 
 from pyutils import JSONExportable, Idx, BackendIndexType
 from pyutils.exportable import DESCENDING, ASCENDING, TEXT
 
 from .tank import EnumVehicleTypeInt
+from .release import Release
+from .wg_api import WGApiWoTBlitzTankopedia
+from .map import Maps, Map
+from .region import Region
 
 logger = logging.getLogger()
 error = logger.error
@@ -86,21 +96,21 @@ class WoTBlitzMaps(StrEnum):
 ###########################################
 
 
-class WoTBlitzReplayAchievement(JSONExportable):
+class ReplayAchievement(JSONExportable):
     t: int
     v: int
 
 
 ###########################################
 #
-# WoTBlitzReplayDetail()
+# ReplayDetail()
 #
 ###########################################
 
 
-class WoTBlitzReplayDetail(JSONExportable):
+class ReplayDetail(JSONExportable):
     # fmt: off
-    achievements : list[WoTBlitzReplayAchievement] | None = Field(default=None, alias='a')
+    achievements : list[ReplayAchievement] | None = Field(default=None, alias='a')
     base_capture_points	: int | None = Field(default=None, alias='bc')
     base_defend_points	: int | None = Field(default=None, alias='bd')
     chassis_id			: int | None = Field(default=None, alias='ch')
@@ -152,12 +162,12 @@ class WoTBlitzReplayDetail(JSONExportable):
 
 ###########################################
 #
-# WoTBlitzReplaySummary()
+# ReplaySummary()
 #
 ###########################################
 
 
-class WoTBlitzReplaySummary(JSONExportable):
+class ReplaySummary(JSONExportable):
     _TimestampFormat: str = "%Y-%m-%d %H:%M:%S"
     # fmt: off
     winner_team     : EnumWinnerTeam | None     = Field(default=..., alias="wt")
@@ -185,7 +195,7 @@ class WoTBlitzReplaySummary(JSONExportable):
     allies          : list[int]                 = Field(default=..., alias="a")
     enemies         : list[int]                 = Field(default=..., alias="e")
     mastery_badge   : int | None                = Field(default=None, alias="mb")
-    details         : list[WoTBlitzReplayDetail] = Field(default=..., alias="d")
+    details         : list[ReplayDetail] = Field(default=..., alias="d")
     # fmt: on
 
     class Config:
@@ -216,25 +226,25 @@ class WoTBlitzReplaySummary(JSONExportable):
 
     @root_validator(skip_on_failure=True)
     def root(cls, values: dict[str, Any]) -> dict[str, Any]:
-        values["battle_start_time"] = datetime.fromtimestamp(values["battle_start_timestamp"]).strftime(
-            cls._TimestampFormat
-        )
+        values["battle_start_time"] = datetime.fromtimestamp(
+            values["battle_start_timestamp"]
+        ).strftime(cls._TimestampFormat)
         return values
 
 
 ###########################################
 #
-# WoTBlitzReplayData()
+# ReplayData()
 #
 ###########################################
 
 
-class WoTBlitzReplayData(JSONExportable):
+class ReplayData(JSONExportable):
     # fmt: off
     id          : str | None            = Field(default=None, alias="_id")
     view_url    : HttpUrl | None        = Field(default=None, alias="v")
     download_url: HttpUrl | None        = Field(default=None, alias="d")
-    summary     : WoTBlitzReplaySummary = Field(default=..., alias="s")
+    summary     : ReplaySummary = Field(default=..., alias="s")
     
     _ViewUrlBase: str = "https://replays.wotinspector.com/en/view/"
     _DLurlBase  : str = "https://replays.wotinspector.com/en/download/"
@@ -246,7 +256,11 @@ class WoTBlitzReplayData(JSONExportable):
         validate_assignment = True
         allow_population_by_field_name = True
 
-    _exclude_export_DB_fields = {"view_url": True, "download_url": True, "summary": {"battle_start_time"}}
+    _exclude_export_DB_fields = {
+        "view_url": True,
+        "download_url": True,
+        "summary": {"battle_start_time"},
+    }
 
     @property
     def index(self) -> Idx:
@@ -282,13 +296,13 @@ class WoTBlitzReplayData(JSONExportable):
         return indexes
 
     @classmethod
-    def transform_WoTBlitzReplayJSON(cls, in_obj: "WoTBlitzReplayJSON") -> "WoTBlitzReplayData":
+    def transform_ReplayJSON(cls, in_obj: "ReplayJSON") -> "ReplayData":
         return in_obj.data
 
     @root_validator
     def store_id(cls, values: dict[str, Any]) -> dict[str, Any]:
         try:
-            # debug("validating: WoTBlitzReplayData()")
+            # debug("validating: ReplayData()")
             _id: str
             if values["id"] is not None:
                 # debug("data.id found")
@@ -312,16 +326,16 @@ class WoTBlitzReplayData(JSONExportable):
 
 ###########################################
 #
-# WoTBlitzReplayJSON()
+# ReplayJSON()
 #
 ###########################################
 
 
-class WoTBlitzReplayJSON(JSONExportable):
+class ReplayJSON(JSONExportable):
     # fmt: off
     id      : str | None        = Field(default=None, alias="_id")
     status  : str               = Field(default="ok", alias="s")
-    data    : WoTBlitzReplayData= Field(default=..., alias="d")
+    data    : ReplayData= Field(default=..., alias="d")
     error   : dict              = Field(default={}, alias="e")
 
     # _URL_REPLAY_JSON: str = "https://api.wotinspector.com/replay/upload?details=full&key="
@@ -370,7 +384,7 @@ class WoTBlitzReplayJSON(JSONExportable):
 
     @root_validator(pre=False)
     def store_id(cls, values: dict[str, Any]) -> dict[str, Any]:
-        debug("validating: WoTBlitzReplayJSON()")
+        debug("validating: ReplayJSON()")
         if "id" in values and values["id"] is not None:
             # debug("id=%s", values["id"])
             pass
@@ -449,4 +463,105 @@ class WoTBlitzReplayJSON(JSONExportable):
             raise Exception("Error reading replay")
 
 
-WoTBlitzReplayData.register_transformation(WoTBlitzReplayJSON, WoTBlitzReplayData.transform_WoTBlitzReplayJSON)
+ReplayData.register_transformation(ReplayJSON, ReplayData.transform_ReplayJSON)
+
+
+###########################################
+#
+# ReplayFile
+#
+###########################################
+
+
+class ReplayFileMeta(JSONExportable):
+    version: str
+    title: str = Field(default="")
+    dbid: int
+    playerName: str
+    battleStartTime: int
+    playerVehicleName: str
+    mapName: str
+    arenaUniqueId: int
+    battleDuration: float
+    vehicleCompDescriptor: int
+    camouflageId: int
+    mapId: int
+    arenaBonusType: int
+
+    @property
+    def release(self) -> Release:
+        """Return version as Release()"""
+        return Release(release=".".join(self.version.split(".")[0:2]))
+
+    def update_title(self, tankopedia: WGApiWoTBlitzTankopedia, maps: Maps) -> str:
+        """Create 'title' based on replay meta"""
+        title: str = ""
+        if (
+            tank := tankopedia.by_code(self.playerVehicleName)
+        ) is not None and tank.name is not None:
+            title = tank.name
+        else:
+            raise ValueError("could not find tank name from tankopedia")
+        try:
+            self.title = f"{title} @ {maps[self.mapName]}"
+            return self.title
+        except KeyError as err:
+            debug(f"map not found with key: {self.mapName}")
+        raise ValueError(f"could not find map for code: {self.mapName}")
+
+
+class ReplayFile:
+    """Class for reading WoT Blitz replay files"""
+
+    def __init__(self, path: Path | str):
+        self._path: Path
+        if isinstance(path, str):
+            self._path = Path(path)
+        else:
+            self._path = path
+
+        self._data: bytes
+        self._hash: str
+        self._opened: bool = False
+        self.meta: ReplayFileMeta
+
+        if not self._path.name.lower().endswith(".wotbreplay"):
+            raise ValueError(f"file does not have '.wotbreplay' suffix")
+        # if not is_zipfile(path):
+        #     raise ValueError(f"replay {path} is not a valid Zip file")
+
+    async def open(self):
+        """Open replay"""
+        debug("opening replay: %s", str(self._path))
+        async with aiofiles.open(self._path, "rb") as replay:
+            self._data = await replay.read()
+            hash = md5()
+            hash.update(self._data)
+            self._hash = hash.hexdigest()
+
+        with ZipFile(BytesIO(self._data)) as zreplay:
+            with zreplay.open("meta.json") as meta_json:
+                self.meta = ReplayFileMeta.parse_raw(meta_json.read())
+        self._opened = True
+
+    @property
+    def opened(self) -> bool:
+        return self._opened
+
+    @property
+    def hash(self) -> str:
+        if self.opened:
+            return self._hash
+        raise ValueError("replay has not been opened yet. Use open()")
+
+    @property
+    def title(self) -> str:
+        if self.opened:
+            return self.meta.title
+        raise ValueError("replay has not been opened yet. Use open()")
+
+    @property
+    def data(self) -> bytes:
+        if self.opened:
+            return self._data
+        raise ValueError("replay has not been opened yet. Use open()")
