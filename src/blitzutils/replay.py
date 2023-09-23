@@ -10,7 +10,12 @@ from collections import defaultdict
 import logging
 from bson.objectid import ObjectId
 from pydantic import Extra, root_validator, validator, Field, HttpUrl
-from pydantic import BaseModel, Extra, root_validator, validator, Field, HttpUrl
+from pathlib import Path
+from hashlib import md5
+from zipfile import BadZipFile, Path as ZipPath, is_zipfile, ZipFile
+from io import BytesIO
+
+import aiofiles
 
 from pyutils import JSONExportable, Idx, BackendIndexType
 from pyutils.exportable import DESCENDING, ASCENDING, TEXT
@@ -504,3 +509,59 @@ class ReplayFileMeta(JSONExportable):
             debug(f"map not found with key: {self.mapName}")
         raise ValueError(f"could not find map for code: {self.mapName}")
 
+
+class ReplayFile:
+    """Class for reading WoT Blitz replay files"""
+
+    def __init__(self, path: Path | str):
+        self._path: Path
+        if isinstance(path, str):
+            self._path = Path(path)
+        else:
+            self._path = path
+
+        self._data: bytes
+        self._hash: str
+        self._opened: bool = False
+        self.meta: ReplayFileMeta
+
+        if not self._path.name.lower().endswith(".wotbreplay"):
+            raise ValueError(f"file does not have '.wotbreplay' suffix")
+        # if not is_zipfile(path):
+        #     raise ValueError(f"replay {path} is not a valid Zip file")
+
+    async def open(self):
+        """Open replay"""
+        debug("opening replay: %s", str(self._path))
+        async with aiofiles.open(self._path, "rb") as replay:
+            self._data = await replay.read()
+            hash = md5()
+            hash.update(self._data)
+            self._hash = hash.hexdigest()
+
+        with ZipFile(BytesIO(self._data)) as zreplay:
+            with zreplay.open("meta.json") as meta_json:
+                self.meta = ReplayFileMeta.parse_raw(meta_json.read())
+        self._opened = True
+
+    @property
+    def opened(self) -> bool:
+        return self._opened
+
+    @property
+    def hash(self) -> str:
+        if self.opened:
+            return self._hash
+        raise ValueError("replay has not been opened yet. Use open()")
+
+    @property
+    def title(self) -> str:
+        if self.opened:
+            return self.meta.title
+        raise ValueError("replay has not been opened yet. Use open()")
+
+    @property
+    def data(self) -> bytes:
+        if self.opened:
+            return self._data
+        raise ValueError("replay has not been opened yet. Use open()")
