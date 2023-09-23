@@ -575,7 +575,8 @@ class WGApiWoTBlitzTankopedia(WGApiWoTBlitz):
     codes: dict[str, Tank] = Field(default=dict(), alias="c")
     # userStr	: dict[str, str] | None = Field(default=None, alias='s')
 
-    _exclude_export_DB_fields = {"userStr": True, "codes": True}
+    _exclude_export_DB_fields = {"codes": True}
+    _exclude_export_src_fields = {"codes": True}
 
     class Config:
         allow_mutation = True
@@ -587,21 +588,16 @@ class WGApiWoTBlitzTankopedia(WGApiWoTBlitz):
         if not isinstance(value, SortedDict):
             return SortedDict(int, **value)
 
-    # @root_validator(pre=False, skip_on_failure=True)
-    # def _validate_code(cls, values: dict[str, Any]) -> dict[str, Any]:
-    #     try:
-    #         if "codes" not in values or len(values["codes"]) == 0:
-    #             codes: dict[str, Tank] = dict()
-    #             data: SortedDict[str, Tank] = values["data"]
-    #             for tank in data:
-    #                 # tank = Tank.parse_raw(_tank)
-    #                 if tank.code is not None:
-    #                     codes[tank.code] = tank
-    #             values["codes"] = codes
-    #         return values
-    #     except Exception as err:
-    #         error(f"failed to generate 'codes' dict: {err}")
-    #         raise
+    @root_validator(pre=False)
+    def _validate_code(cls, values: dict[str, Any]) -> dict[str, Any]:
+        try:
+            if "codes" not in values or len(values["codes"]) == 0:
+                data: SortedDict[str, Tank] = values["data"]
+                values["codes"] = cls._update_codes(data=data)
+            return values
+        except Exception as err:
+            error(f"failed to generate 'codes' dict: {err}")
+            raise
 
     def __len__(self) -> int:
         return len(self.data)
@@ -620,15 +616,16 @@ class WGApiWoTBlitzTankopedia(WGApiWoTBlitz):
             self.meta = dict()
         self.meta["count"] = len(self.data)
 
-    def _code_add(self, tank: Tank) -> bool:
+    @classmethod
+    def _code_add(cls, tank: Tank, codes: dict[str, Tank]) -> bool:
         if tank.code is not None:
-            self.codes[tank.code] = tank
+            codes[tank.code] = tank
             return True
         return False
 
     def add(self, tank: Tank) -> None:
         self.data[str(tank.tank_id)] = tank
-        self._code_add(tank)
+        self._code_add(tank, self.codes)
         self.update_count()
 
     def pop(self, tank_id: int) -> Tank:
@@ -651,11 +648,22 @@ class WGApiWoTBlitzTankopedia(WGApiWoTBlitz):
             debug(f"no tank with short code: {code}")
         return None
 
+    @property
+    def has_codes(self):
+        """Whether tankopedia has short codes dict"""
+        return len(self.data) == len(self.codes)
+
+    @classmethod
+    def _update_codes(cls, data: SortedDict[str, Tank]) -> dict[str, Tank]:
+        """Helper to update .codes"""
+        codes: dict[str, Tank] = dict()
+        for tank in data.values():
+            cls._code_add(tank, codes)
+        return codes
+
     def update_codes(self) -> None:
         """update _code dict"""
-        self.codes = dict()
-        for tank in self.data.values():
-            self._code_add(tank)
+        self.codes = self._update_codes(self.data)
 
     def update(self, new: "WGApiWoTBlitzTankopedia") -> Tuple[set[int], set[int]]:
         """update tankopedia with another one"""
