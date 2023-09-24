@@ -12,7 +12,7 @@ from zipfile import BadZipFile, Path as ZipPath, is_zipfile, ZipFile
 from io import BytesIO
 
 from pyutils import ThrottledClientSession, JSONExportable
-from pyutils.utils import get_url_JSON_model
+from pyutils.utils import get_url_model
 
 from .wg_api import WGApiWoTBlitzTankopedia
 from .map import Maps
@@ -121,7 +121,7 @@ class WoTinspector:
     async def get_replay(self, replay_id: str) -> ReplayJSON | None:
         try:
             replay: ReplayJSON | None
-            replay = await get_url_JSON_model(
+            replay = await get_url_model(
                 self.session,
                 self.get_url_replay_JSON(replay_id),
                 resp_model=ReplayJSON,
@@ -232,7 +232,7 @@ class WoTinspector:
             url: str = self.get_url_replay_list(page=page)
             resp: WoTInspectorAPIReplays | None
             if (
-                resp := await get_url_JSON_model(
+                resp := await get_url_model(
                     self.session, url=url, resp_model=WoTInspectorAPIReplays
                 )
             ) is not None:
