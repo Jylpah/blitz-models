@@ -5,6 +5,7 @@ from typing import Any, Optional, Self, Tuple
 from enum import IntEnum, StrEnum
 from pydantic import root_validator, validator, Field, Extra, ValidationError
 from aiofiles import open
+from pathlib import Path
 from pyutils.jsonexportable import Idx
 from sortedcollections import SortedDict  # type: ignore
 from re import Pattern, compile, match
@@ -119,9 +120,15 @@ class Maps(JSONExportable):
             return SortedDict(**value)
 
     @classmethod
-    async def open_json(cls, filename: str) -> Self | None:
+    async def open_json(
+        cls, filename: Path | str, exceptions: bool = False
+    ) -> Self | None:
         """Open replay JSON file and return class instance"""
-        if (res := await super().open_json(filename)) is None:
+        if (
+            res := await super().open_json(filename, exceptions=exceptions)
+        ) is not None:
+            return res
+        else:
             warn("legacy JSON format is depreciated", category=DeprecationWarning)
             try:
                 res = cls()
@@ -136,10 +143,9 @@ class Maps(JSONExportable):
                 return res
             except OSError as err:
                 debug(f"Error reading file: {filename}: {err}")
-            except Exception as err:
+            except ValidationError as err:
                 debug(f"Error parsing file: {filename}: {err}")
             return None
-        return res
 
     def __iter__(self):
         return iter(self.__root__.values())

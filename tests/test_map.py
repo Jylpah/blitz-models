@@ -4,6 +4,7 @@ from os.path import dirname, realpath, join as pjoin, basename
 from pathlib import Path
 from typing import Tuple
 import logging
+import aiofiles
 
 logger = logging.getLogger()
 error = logger.error
@@ -36,10 +37,12 @@ FIXTURE_DIR = Path(dirname(realpath(__file__)))
 
 MAPS_JSON: str = "05_Maps.json"
 MAPS_OLD_JSON: str = "05_Maps_old.json"
+MAPS_NEW_JSON: str = "05_Maps_new.json"
 
 MAPS = pytest.mark.datafiles(
-    FIXTURE_DIR / "05_Maps.json",
-    FIXTURE_DIR / "05_Maps_old.json",
+    FIXTURE_DIR / MAPS_JSON,
+    FIXTURE_DIR / MAPS_OLD_JSON,
+    FIXTURE_DIR / MAPS_NEW_JSON,
 )
 
 
@@ -53,6 +56,16 @@ def maps_added_updated() -> Tuple[int, int]:
     return (3, 1)  # number changes: 05_Maps_old.json vs maps 05_Maps.json
 
 
+# async def open_maps(path: Path) -> Maps:
+#     maps: Maps
+#     try:
+#         async with aiofiles.open(path) as f:
+#             maps = Maps.parse_raw(await f.read())
+#         return maps
+#     except Exception as err:
+#         assert False, f"could not open Maps file: {path.name}: {err}"
+
+
 ########################################################
 #
 # Tests
@@ -63,34 +76,35 @@ def maps_added_updated() -> Tuple[int, int]:
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "file,count",
-    [
-        (MAPS_JSON, 58),
-        (MAPS_OLD_JSON, 55),
-    ],
+    [(MAPS_JSON, 58), (MAPS_OLD_JSON, 55), (MAPS_NEW_JSON, 58)],
 )
 @MAPS
 async def test_1_import_export(
-    tmp_path: Path, datafiles: Path, file: str, count: int
+    datafiles: Path, tmp_path: Path, file: str, count: int
 ) -> None:
     maps: Maps | None
     maps_fn: Path = tmp_path / file
+    assert maps_fn.is_file(), f"could not find maps file: {maps_fn}"
     assert (
-        maps := await Maps.open_json(str(maps_fn.resolve()))
-    ) is not None, f"could not parse Maps from {maps_fn.name}"
+        maps := await Maps.open_json(maps_fn)
+    ) is not None, f"could not open maps from: {maps_fn}"
 
     assert (
         len(maps) == count
     ), f"could not import all maps: got {len(maps)}, expected {count}"
 
-    maps_export_fn: str = f"{tmp_path.resolve()}/maps-export.json"
-    await maps.save_json(maps_export_fn)
-
-    maps_new: Maps | None = await Maps.open_json(maps_export_fn)
-    assert maps_new is not None, "could not import exported Maps from JSON"
+    maps_export_fn: Path = tmp_path / "maps-export.json"
+    assert (
+        await maps.save_json(maps_export_fn) > 0
+    ), f"could not write maps to file: {maps_export_fn}"
 
     assert (
-        len(maps_new) == count
-    ), f"could not import all maps: got {len(maps_new)}, expected {count}"
+        maps := await Maps.open_json(maps_export_fn)
+    ) is not None, f"could not open maps from: {maps_export_fn}"
+
+    assert (
+        len(maps) == count
+    ), f"could not import all maps: got {len(maps)}, expected {count}"
 
 
 @pytest.mark.asyncio
@@ -98,17 +112,19 @@ async def test_1_import_export(
 async def test_2_update(
     tmp_path: Path, datafiles: Path, maps_added_updated: tuple[int, int]
 ) -> None:
-    maps: Maps | None
+    maps_old: Maps | None
+    maps_new: Maps | None
 
     maps_old_fn: Path = tmp_path / MAPS_OLD_JSON
+
     assert (
-        maps_old := await Maps.open_json(str(maps_old_fn.resolve()))
-    ) is not None, f"could not parse Maps from {maps_old_fn.name}"
+        maps_old := await Maps.open_json(maps_old_fn)
+    ) is not None, f"could not open maps from: {maps_old_fn.name}"
 
     maps_new_fn: Path = tmp_path / MAPS_JSON
     assert (
-        maps_new := await Maps.open_json(str(maps_new_fn.resolve()))
-    ) is not None, f"could not parse Maps from {maps_new_fn.name}"
+        maps_new := await Maps.open_json(maps_new_fn)
+    ) is not None, f"could not open maps from: {maps_new_fn.name}"
 
     (added, updated) = maps_old.update(maps_new)
 
