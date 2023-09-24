@@ -90,9 +90,9 @@ def wgapi_tankstrs_user_strings() -> list[str]:
     ]
 
 
-@pytest.fixture
-def accounts_per_region() -> int:
-    return 50  # number of tanks in the 01_Tankopedia.json
+# @pytest.fixture
+# def accounts_per_region() -> int:
+#     return 50  # number of tanks in the 01_Tankopedia.json
 
 
 @pytest.fixture
