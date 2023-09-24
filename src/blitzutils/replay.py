@@ -503,7 +503,7 @@ class ReplayFileMeta(JSONExportable):
         else:
             raise ValueError("could not find tank name from tankopedia")
         try:
-            self.title = f"{title} @ {maps[self.mapName]}"
+            self.title = f"{title} @ {maps[self.mapName].name}"
             return self.title
         except KeyError as err:
             debug(f"map not found with key: {self.mapName}")
@@ -526,7 +526,7 @@ class ReplayFile:
         self.meta: ReplayFileMeta
 
         if not self._path.name.lower().endswith(".wotbreplay"):
-            raise ValueError(f"file does not have '.wotbreplay' suffix")
+            raise ValueError(f"file does not have '.wotbreplay' suffix: {self._path}")
         # if not is_zipfile(path):
         #     raise ValueError(f"replay {path} is not a valid Zip file")
 
@@ -545,23 +545,23 @@ class ReplayFile:
         self._opened = True
 
     @property
-    def opened(self) -> bool:
+    def is_opened(self) -> bool:
         return self._opened
 
     @property
     def hash(self) -> str:
-        if self.opened:
+        if self.is_opened:
             return self._hash
         raise ValueError("replay has not been opened yet. Use open()")
 
     @property
     def title(self) -> str:
-        if self.opened:
+        if self.is_opened:
             return self.meta.title
         raise ValueError("replay has not been opened yet. Use open()")
 
     @property
     def data(self) -> bytes:
-        if self.opened:
+        if self.is_opened:
             return self._data
         raise ValueError("replay has not been opened yet. Use open()")

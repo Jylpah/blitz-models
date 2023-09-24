@@ -33,7 +33,7 @@ from blitzutils import Release
 #
 ########################################################
 
-FIXTURE_DIR = Path(dirname(realpath(__file__)))
+FIXTURE_DIR = Path(__file__).parent
 
 REPLAY_FILES = pytest.mark.datafiles(FIXTURE_DIR / "02_Releases.csv")
 

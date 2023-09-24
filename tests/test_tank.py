@@ -81,10 +81,10 @@ def tanks_json_tanks() -> int:
 
 @pytest.fixture
 def tankopedia_tanks() -> int:
-    return 533  # number of tanks in the 01_Tankopedia.json
+    return 612  # number of tanks in the 01_Tankopedia.json
 
 
-FIXTURE_DIR = Path(dirname(realpath(__file__)))
+FIXTURE_DIR = Path(__file__).parent
 TANKS_JSON_FILES = pytest.mark.datafiles(FIXTURE_DIR / "01_WGTanks.json")
 TANKOPEDIA_FILES = pytest.mark.datafiles(FIXTURE_DIR / "01_Tankopedia.json")
 
@@ -299,6 +299,9 @@ async def test_10_WGApiTankopedia(
         len(tankopedia.data) == tankopedia_tanks
     ), f"could not import all the tanks: got {tankopedia.data}, should be {tankopedia_tanks}"
 
+    assert (
+        tankopedia.has_codes
+    ), f"could not generate all the codes: tanks={len(tankopedia.data)}, codes={len(tankopedia.codes)}"
     # test tankopedia export import
     tankopedia_file: str = f"{tmp_path.resolve()}/tankopedia.json"
     try:

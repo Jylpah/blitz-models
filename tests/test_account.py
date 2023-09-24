@@ -33,10 +33,12 @@ from blitzutils import Account
 #
 ########################################################
 
-FIXTURE_DIR = Path(dirname(realpath(__file__)))
+FIXTURE_DIR = Path(__file__).parent
 
 ACCOUNTS_CSV = pytest.mark.datafiles(FIXTURE_DIR / "03_Accounts.csv")
-ACCOUNTS_TXT = pytest.mark.datafiles(FIXTURE_DIR / "03_Accounts1.txt", FIXTURE_DIR / "03_Accounts2.txt")
+ACCOUNTS_TXT = pytest.mark.datafiles(
+    FIXTURE_DIR / "03_Accounts1.txt", FIXTURE_DIR / "03_Accounts2.txt"
+)
 
 
 @pytest.fixture
@@ -53,7 +55,9 @@ def accounts_count() -> int:
 
 @pytest.mark.asyncio
 @ACCOUNTS_CSV
-async def test_1_import_export_accounts(datafiles: Path, tmp_path: Path, accounts_count: int) -> None:
+async def test_1_import_export_accounts(
+    datafiles: Path, tmp_path: Path, accounts_count: int
+) -> None:
     for accounts_file in datafiles.iterdir():
         accounts: list[Account] = list()
 
@@ -101,12 +105,16 @@ async def test_1_import_export_accounts(datafiles: Path, tmp_path: Path, account
                 imported_accounts[ndx] == account
             ), f"imported accounts in wrong order: {imported_accounts[ndx]} != {account}"
 
-        assert len(set(imported_accounts)) == accounts_count, "some accounts imported as duplicate"
+        assert (
+            len(set(imported_accounts)) == accounts_count
+        ), "some accounts imported as duplicate"
 
 
 @pytest.mark.asyncio
 @ACCOUNTS_TXT
-async def test_2_import_export_accounts_txt(datafiles: Path, tmp_path: Path, accounts_count: int) -> None:
+async def test_2_import_export_accounts_txt(
+    datafiles: Path, tmp_path: Path, accounts_count: int
+) -> None:
     for accounts_file in datafiles.iterdir():
         accounts: set[Account] = set()
 
