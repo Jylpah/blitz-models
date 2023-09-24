@@ -107,6 +107,7 @@ def tanks_updated() -> list[Tank]:
         {
             "tank_id": 2129,
             "name": "Crusader",
+            "code": "GB20_Crusader",
             "nation": 4,
             "type": "lightTank",
             "tier": 5,
@@ -115,6 +116,7 @@ def tanks_updated() -> list[Tank]:
         {
             "tank_id": 5393,
             "name": "VK 16.02 Leopard",
+            "code": "VK1602",
             "nation": 1,
             "type": "lightTank",
             "tier": 6,
@@ -123,22 +125,25 @@ def tanks_updated() -> list[Tank]:
         {
             "tank_id": 8817,
             "name": "Titan Mk. I",
+            "code": "Oth29_A15HW",
             "nation": 7,
             "type": "mediumTank",
             "tier": 5,
             "is_premium": true
         },
         {
-        "tank_id": 53585,
-        "name": "Matilda Black Prince",
-        "nation": 5,
-        "type": "mediumTank",
-        "tier": 5,
-        "is_premium": false
+            "tank_id": 53585,
+            "name": "Matilda Black Prince",
+            "code": "GB68_Matilda_Black_Prince",
+            "nation": 5,
+            "type": "mediumTank",
+            "tier": 5,
+            "is_premium": false
         },
         {
             "tank_id": 14145,
             "name": "AMX ELC bis bis",
+            "code": "ELC_AMX",
             "nation": 4,
             "type": "lightTank",
             "tier": 5,
