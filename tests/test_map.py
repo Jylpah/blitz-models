@@ -33,7 +33,7 @@ from blitzutils import Map, Maps, MapMode
 #
 ########################################################
 
-FIXTURE_DIR = Path(dirname(realpath(__file__)))
+FIXTURE_DIR = Path(__file__).parent
 
 MAPS_JSON: str = "05_Maps.json"
 MAPS_OLD_JSON: str = "05_Maps_old.json"

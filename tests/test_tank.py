@@ -84,7 +84,7 @@ def tankopedia_tanks() -> int:
     return 612  # number of tanks in the 01_Tankopedia.json
 
 
-FIXTURE_DIR = Path(dirname(realpath(__file__)))
+FIXTURE_DIR = Path(__file__).parent
 TANKS_JSON_FILES = pytest.mark.datafiles(FIXTURE_DIR / "01_WGTanks.json")
 TANKOPEDIA_FILES = pytest.mark.datafiles(FIXTURE_DIR / "01_Tankopedia.json")
 

@@ -41,7 +41,7 @@ from blitzutils import (
 #
 ########################################################
 
-FIXTURE_DIR = Path(dirname(realpath(__file__)))
+FIXTURE_DIR = Path(__file__).parent
 ACCOUNTS = pytest.mark.datafiles(
     FIXTURE_DIR / "04_Accounts_EU.csv",
     FIXTURE_DIR / "04_Accounts_Com.csv",
@@ -69,13 +69,13 @@ async def accounts(datafiles: Path) -> dict[Region, list[Account]]:
     return res
 
 
-@pytest.fixture
-@WGAPI_TANKSTR
-def wgapi_tankstrs(datafiles: Path) -> list[WGApiTankString]:
-    res: list[WGApiTankString] = list()
-    for fn in datafiles.iterdir():
-        res.append(WGApiTankString.parse_file(fn))
-    return res
+# @pytest.fixture
+# @WGAPI_TANKSTR
+# def wgapi_tankstrs(datafiles: Path) -> list[WGApiTankString]:
+#     res: list[WGApiTankString] = list()
+#     for fn in datafiles.iterdir():
+#         res.append(WGApiTankString.parse_file(fn))
+#     return res
 
 
 @pytest.fixture
