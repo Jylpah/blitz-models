@@ -5,6 +5,8 @@ from .wotinspector import (
     WIReplaysData as WIReplaysData,
 )
 from .replay import (
+    ReplayFile as ReplayFile,
+    ReplayFileMeta as ReplayFileMeta,
     ReplayJSON as ReplayJSON,
     ReplayData as ReplayData,
     ReplaySummary as ReplaySummary,
