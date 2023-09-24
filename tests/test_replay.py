@@ -15,6 +15,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / "src"))
 
 from blitzutils import (
     ReplayJSON,
+    ReplayFile,
+    ReplayFileMeta,
+    WGApiWoTBlitzTankopedia,
+    Maps,
 )
 
 
@@ -34,9 +38,9 @@ from blitzutils import (
 #
 ########################################################
 
-FIXTURE_DIR = Path(dirname(realpath(__file__)))
+FIXTURE_DIR = Path(__file__).parent
 
-REPLAY_FILES = pytest.mark.datafiles(
+REPLAY_JSON_FILES = pytest.mark.datafiles(
     FIXTURE_DIR / "20200229_2321__jylpah_E-50_fort.wotbreplay.json",
     FIXTURE_DIR / "20200229_2324__jylpah_E-50_erlenberg.wotbreplay.json",
     FIXTURE_DIR / "20200229_2328__jylpah_E-50_grossberg.wotbreplay.json",
@@ -53,6 +57,64 @@ REPLAY_FILES = pytest.mark.datafiles(
     FIXTURE_DIR / "20200301_0039__jylpah_E-50_desert_train.wotbreplay.json",
 )
 
+REPLAY_FILES = pytest.mark.datafiles(
+    FIXTURE_DIR / "20200229_2321__jylpah_E-50_fort.wotbreplay",
+    FIXTURE_DIR / "20200229_2324__jylpah_E-50_erlenberg.wotbreplay",
+    FIXTURE_DIR / "20200229_2328__jylpah_E-50_grossberg.wotbreplay",
+    FIXTURE_DIR / "20200229_2332__jylpah_E-50_lumber.wotbreplay",
+    FIXTURE_DIR / "20200229_2337__jylpah_E-50_skit.wotbreplay",
+    FIXTURE_DIR / "20200229_2341__jylpah_E-50_erlenberg.wotbreplay",
+    FIXTURE_DIR / "20200229_2344__jylpah_E-50_rock.wotbreplay",
+    FIXTURE_DIR / "20200229_2349__jylpah_E-50_himmelsdorf.wotbreplay",
+    FIXTURE_DIR / "20200229_2353__jylpah_E-50_fort.wotbreplay",
+    FIXTURE_DIR / "20200301_0022__jylpah_E-50_rudniki.wotbreplay",
+    FIXTURE_DIR / "20200301_0026__jylpah_E-50_himmelsdorf.wotbreplay",
+    FIXTURE_DIR / "20200301_0030__jylpah_E-50_rift.wotbreplay",
+    FIXTURE_DIR / "20200301_0035__jylpah_E-50_rock.wotbreplay",
+    FIXTURE_DIR / "20200301_0039__jylpah_E-50_desert_train.wotbreplay",
+)
+
+
+MAPS_JSON: str = "05_Maps_new.json"
+
+MAPS = pytest.mark.datafiles(
+    FIXTURE_DIR / MAPS_JSON,
+)
+
+TANKOPEDIA_JSON: str = "01_Tankopedia.json"
+TANKOPEDIA = pytest.mark.datafiles(FIXTURE_DIR / TANKOPEDIA_JSON)
+
+
+def get_player(fn: Path) -> str:
+    parts: list[str] = fn.name.split("_")
+    return parts[3]
+
+
+def get_tank(fn: Path) -> str:
+    parts: list[str] = fn.name.split("_")
+    return parts[4]
+
+
+def get_map(fn: Path) -> str:
+    parts: list[str] = fn.name.split("_")
+    return "_".join(parts[5:]).removesuffix(".wotbreplay")
+
+
+# @pytest.fixture
+# def get_tankopedia() -> WGApiWoTBlitzTankopedia:
+#     with open(tmp_path / fn, "r") as f:
+#         if (tp := WGApiWoTBlitzTankopedia.parse_raw(f.read())) is not None:
+#             return tp
+#     raise ValueError(f"could not open tankopedia: {fn}")
+
+
+# @pytest.fixture
+# def get_maps(tmp_path: Path, fn: str = MAPS_JSON) -> Maps:
+#     with open(tmp_path / fn, "r") as f:
+#         if (tp := Maps.parse_raw(f.read())) is not None:
+#             return tp
+#     raise ValueError(f"could not open maps: {fn}")
+
 
 ########################################################
 #
@@ -62,20 +124,17 @@ REPLAY_FILES = pytest.mark.datafiles(
 
 
 @pytest.mark.asyncio
-@REPLAY_FILES
+@REPLAY_JSON_FILES
 async def test_1_import_export_replays(datafiles: Path, tmp_path: Path) -> None:
     for replay_file in datafiles.iterdir():
-        replay_filename: str = str(replay_file.resolve())
-        debug("replay: %s", basename(replay_filename))
-        replay = await ReplayJSON.open_json(replay_filename)
-        assert (
-            replay is not None
-        ), f"failed to import replay: {basename(replay_filename)}"
-        assert replay.is_ok, f"replay status is not OK: {basename(replay_filename)}"
+        debug("replay: %s", replay_file.name)
+        replay = await ReplayJSON.open_json(replay_file)
+        assert replay is not None, f"failed to import replay: {replay_file.name}"
+        assert replay.is_ok, f"replay status is not OK: {replay_file.name}"
 
         debug(
             "%s: testing get_players(), get_allies(), get_enemies()",
-            basename(replay_filename),
+            replay_file.name,
         )
         for _ in range(5):
             player: int = choice(replay.get_players())
@@ -91,7 +150,7 @@ async def test_1_import_export_replays(datafiles: Path, tmp_path: Path) -> None:
         ), f"number of platoons does not match: allied={len(allied_platoons)}, enemy={len(enemy_platoons)}"
 
         if len(allied_platoons) > 0:
-            debug("%s: testing platoon extraction", basename(replay_filename))
+            debug("%s: testing platoon extraction", replay_file.name)
             player = allied_platoons[1][0]
             enemy = enemy_platoons[1][1]
             assert enemy in replay.get_enemies(player), "platoon analysis failed"
@@ -104,10 +163,10 @@ async def test_1_import_export_replays(datafiles: Path, tmp_path: Path) -> None:
         imported_replay = await ReplayJSON.open_json(export_filename)
         assert (
             imported_replay is not None
-        ), f"failed to re-import replay: {basename(replay_filename)}"
+        ), f"failed to re-import replay: {replay_file.name}"
         assert (
             imported_replay.is_ok
-        ), f"reimported replay status is not OK: {basename(replay_filename)}"
+        ), f"reimported replay status is not OK: {replay_file.name}"
 
         # compare original and re-imported replay
         # replay.store_id()
@@ -125,3 +184,129 @@ async def test_1_import_export_replays(datafiles: Path, tmp_path: Path) -> None:
             replay.data.summary.arena_unique_id
             == imported_replay.data.summary.arena_unique_id
         ), f"re-imported replays data.summary.arena_unique_id does not match"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "file,md5hash",
+    [
+        (
+            "20200229_2321__jylpah_E-50_fort.wotbreplay",
+            "63dcc17340d3ce23e5b036a895d3d205",
+        ),
+        (
+            "20200229_2324__jylpah_E-50_erlenberg.wotbreplay",
+            "6232c7aa4cb419b73f295cff77231019",
+        ),
+        (
+            "20200229_2328__jylpah_E-50_grossberg.wotbreplay",
+            "4b2698b168edea033c0fbb87feef2b8b",
+        ),
+        (
+            "20200229_2332__jylpah_E-50_lumber.wotbreplay",
+            "87a4b4f822bc0d8b72680e21ea8621f4",
+        ),
+        (
+            "20200229_2337__jylpah_E-50_skit.wotbreplay",
+            "15306c49b1a74e52fa5d0ccc31940af3",
+        ),
+        (
+            "20200229_2341__jylpah_E-50_erlenberg.wotbreplay",
+            "7a660ed698c72d38482ae63af5303c0f",
+        ),
+        (
+            "20200229_2344__jylpah_E-50_rock.wotbreplay",
+            "52f09faf6b6d871bdbbd8181fc1c009f",
+        ),
+        (
+            "20200229_2349__jylpah_E-50_himmelsdorf.wotbreplay",
+            "cdb1cc750f365020f5854f4ab14968da",
+        ),
+        (
+            "20200229_2353__jylpah_E-50_fort.wotbreplay",
+            "cffd30be46d6a6361a3c22a2f6fdc064",
+        ),
+        (
+            "20200301_0022__jylpah_E-50_rudniki.wotbreplay",
+            "1efaabe632bc8ccf6ef563269da107f1",
+        ),
+        (
+            "20200301_0026__jylpah_E-50_himmelsdorf.wotbreplay",
+            "13c13175eef4ad838533805e4884047e",
+        ),
+        (
+            "20200301_0030__jylpah_E-50_rift.wotbreplay",
+            "38d8bca4b90eac91b1bc41dd7b0a401e",
+        ),
+        (
+            "20200301_0035__jylpah_E-50_rock.wotbreplay",
+            "762602554b903eef4800023b1e2df1c5",
+        ),
+        (
+            "20200301_0039__jylpah_E-50_desert_train.wotbreplay",
+            "60c14b403d7aafb1d3fd56a90a3b2592",
+        ),
+    ],
+)
+@MAPS
+@TANKOPEDIA
+@REPLAY_FILES
+async def test_2_read_replay_meta(
+    datafiles: Path,
+    tmp_path: Path,
+    file: str,
+    md5hash: str,
+) -> None:
+    replay_fn = tmp_path / file
+    debug("replay: %s", file)
+    replay = ReplayFile(replay_fn)
+    await replay.open()
+
+    assert replay.is_opened, f"failed to open replay file: {replay_fn.name}"
+    assert replay.meta.playerName == get_player(
+        replay_fn
+    ), f"incorrect player name: {replay.meta.playerName} != {get_player(replay_fn)}"
+
+    assert replay.meta.mapName == get_map(
+        replay_fn
+    ), f"incorrect map name: {replay.meta.mapName} != {get_map(replay_fn)}"
+
+    assert replay.meta.playerVehicleName == get_tank(
+        replay_fn
+    ), f"incorrect tank name: {replay.meta.playerVehicleName} != {get_tank(replay_fn)}"
+
+    assert (
+        replay.hash == md5hash
+    ), f"MD5 has does not math: hash={replay.hash}, MD5={md5hash}"
+
+
+@pytest.mark.asyncio
+@TANKOPEDIA
+@MAPS
+@REPLAY_FILES
+async def test_3_read_replays(
+    datafiles: Path,
+    tmp_path: Path,
+    tankopedia_fn: Path = Path(TANKOPEDIA_JSON),
+    maps_fn: Path = Path(MAPS_JSON),
+) -> None:
+    tankopedia: WGApiWoTBlitzTankopedia | None
+    maps: Maps | None
+    if (
+        tankopedia := await WGApiWoTBlitzTankopedia.open_json(tmp_path / tankopedia_fn)
+    ) is None:
+        assert False, f"could not open tankopedia {tankopedia_fn}"
+    if (maps := await Maps.open_json(tmp_path / maps_fn)) is None:
+        assert False, f"could not open maps {maps_fn}"
+
+    for replay_fn in datafiles.iterdir():
+        if replay_fn.suffix != ".wotbreplay":
+            continue
+        debug("replay: %s", replay_fn.name)
+        replay = ReplayFile(replay_fn)
+        await replay.open()
+
+        assert replay.is_opened, f"failed to open replay file: {replay_fn.name}"
+        assert (
+            len(replay.meta.update_title(tankopedia=tankopedia, maps=maps)) > 0
+        ), f"could not update title with tankopedia & maps: {replay_fn.name}"
