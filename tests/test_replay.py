@@ -19,6 +19,7 @@ from blitzutils import (
     ReplayFileMeta,
     WGApiWoTBlitzTankopedia,
     Maps,
+    WoTinspector,
 )
 
 
@@ -310,3 +311,38 @@ async def test_3_read_replays(
         assert (
             len(replay.meta.update_title(tankopedia=tankopedia, maps=maps)) > 0
         ), f"could not update title with tankopedia & maps: {replay_fn.name}"
+
+
+@pytest.mark.asyncio
+@TANKOPEDIA
+@MAPS
+@REPLAY_FILES
+async def test_4_post_replay(
+    datafiles: Path,
+    tmp_path: Path,
+    tankopedia_fn: Path = Path(TANKOPEDIA_JSON),
+    maps_fn: Path = Path(MAPS_JSON),
+) -> None:
+    tankopedia: WGApiWoTBlitzTankopedia | None
+    maps: Maps | None
+    uploaded_by: int = 521458531  # jylpah@EU
+    if (
+        tankopedia := await WGApiWoTBlitzTankopedia.open_json(tmp_path / tankopedia_fn)
+    ) is None:
+        assert False, f"could not open tankopedia {tankopedia_fn}"
+    if (maps := await Maps.open_json(tmp_path / maps_fn)) is None:
+        assert False, f"could not open maps {maps_fn}"
+
+    WI = WoTinspector(rate_limit=5)
+    for replay_fn in datafiles.iterdir():
+        if replay_fn.suffix != ".wotbreplay":
+            continue
+        debug("replay: %s", replay_fn.name)
+        res: tuple[str | None, ReplayJSON | None] = await WI.post_replay(
+            replay_fn,
+            uploaded_by=uploaded_by,
+            tankopedia=tankopedia,
+            maps=maps,
+            fetch_json=False,
+        )
+        assert res[0] is not None, f"could not post a replay: {replay_fn.name}"
