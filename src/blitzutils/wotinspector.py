@@ -202,7 +202,10 @@ class WoTinspector:
                             resp.reason,
                         )
                         message("%d Posted: %s", N, replay.meta.title)
-                        return replay.hash, ReplayJSON.parse_str(await resp.text())
+                        if fetch_json:
+                            return replay.hash, ReplayJSON.parse_str(await resp.text())
+                        else:
+                            return replay.hash, None
                     else:
                         debug(
                             "%d: HTTPS response NOT OK: %d %s",
