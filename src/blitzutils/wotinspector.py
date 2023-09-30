@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, cast, Any
+from typing import Optional, cast, Any, AsyncIterable, Iterable
 from aiohttp import ClientResponse
 from pathlib import Path
 from aiofiles import open
@@ -11,7 +11,7 @@ from base64 import b64encode
 from zipfile import BadZipFile, Path as ZipPath, is_zipfile, ZipFile
 from io import BytesIO
 
-from pyutils import ThrottledClientSession, JSONExportable
+from pyutils import ThrottledClientSession, JSONExportable, awrap
 from pyutils.utils import get_url_model
 
 from .wg_api import WGApiWoTBlitzTankopedia
@@ -140,11 +140,11 @@ class WoTinspector:
         uploaded_by: int = 0,
         tankopedia: WGApiWoTBlitzTankopedia | None = None,
         maps: Maps | None = None,
-        get_json: bool = False,
+        fetch_json: bool = False,
         title: str | None = None,
         priv: bool = False,
         N: int = -1,
-    ) -> str | None:
+    ) -> tuple[str | None, ReplayJSON | None]:
         """
         Post a WoT Blitz replay file to replays.WoTinspector.com
 
@@ -174,23 +174,21 @@ class WoTinspector:
                 "private": (1 if priv else 0),
                 "uploaded_by": uploaded_by,
             }
-            if get_json:  # WI rate-limits requests with details=full
+            if fetch_json:  # WI rate-limits requests with details=full
                 params["details"] = "full"
 
             url = self.URL_REPLAY_UL + urlencode(params, quote_via=quote)
             headers = {"Content-type": "application/x-www-form-urlencoded"}
-            payload = {"file": (str(filename), b64encode(replay.data))}
+            payload = {"file": (str(filename.name), b64encode(replay.data))}
         except BadZipFile as err:
             error(f"corrupted replay file: {filename}")
-            return None
+            return None, None
         except Exception as err:
             error(f"Thread {N}: Unexpected Exception: {err}")
-            return None
+            return None, None
 
         for retry in range(self.MAX_RETRIES):
-            debug(
-                f"Thread {id}: Posting: {title} Try #: {retry + 1}/{self.MAX_RETRIES}"
-            )
+            debug(f"{N}: Posting: {title} Try #: {retry + 1}/{self.MAX_RETRIES}")
             try:
                 async with self.session.post(
                     url, headers=headers, data=payload
@@ -203,7 +201,11 @@ class WoTinspector:
                             resp.status,
                             resp.reason,
                         )
-                        return replay.hash
+                        message("%d Posted: %s", N, replay.meta.title)
+                        if fetch_json:
+                            return replay.hash, ReplayJSON.parse_str(await resp.text())
+                        else:
+                            return replay.hash, None
                     else:
                         debug(
                             "%d: HTTPS response NOT OK: %d %s",
@@ -216,7 +218,20 @@ class WoTinspector:
             await sleep(SLEEP)
 
         debug(f"{N}: Could not post replay: {title}")
-        return None
+        return None, None
+
+    # async def post_replays(
+    #     self, filenames: Iterable[Path] | AsyncIterable[Path], **kwargs
+    # ) -> list[str | None]:
+    #     """Iterate over replays"""
+    #     res: list[str | None] = list()
+    #     if isinstance(filenames, Iterable):
+    #         async for filename in awrap(filenames):
+    #             res.append(await self.post_replay(filename=filename, **kwargs))
+    #     else:
+    #         async for filename in filenames:
+    #             res.append(await self.post_replay(filename=filename, **kwargs))
+    #     return res
 
     async def get_replay_listing(self, page: int = 0) -> ClientResponse:
         url: str = self.get_url_replay_listing(page)

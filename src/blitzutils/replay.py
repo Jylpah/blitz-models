@@ -513,31 +513,48 @@ class ReplayFileMeta(JSONExportable):
 class ReplayFile:
     """Class for reading WoT Blitz replay files"""
 
-    def __init__(self, path: Path | str):
-        self._path: Path
-        if isinstance(path, str):
-            self._path = Path(path)
-        else:
-            self._path = path
-
+    def __init__(self, replay: bytes | Path | str):
+        self._path: Path | None = None
         self._data: bytes
         self._hash: str
         self._opened: bool = False
         self.meta: ReplayFileMeta
 
-        if not self._path.name.lower().endswith(".wotbreplay"):
+        if isinstance(replay, str):
+            self._path = Path(replay)
+        elif isinstance(replay, Path):
+            self._path = replay
+        elif isinstance(replay, bytes):
+            self._data = replay
+            self._calc_hash()
+            self._opened = True
+        else:
+            raise TypeError(f"replay is not str, Path or bytes: {type(replay)}")
+
+        if not (self._path is None or self._path.name.lower().endswith(".wotbreplay")):
             raise ValueError(f"file does not have '.wotbreplay' suffix: {self._path}")
         # if not is_zipfile(path):
         #     raise ValueError(f"replay {path} is not a valid Zip file")
 
+    def _calc_hash(self) -> str:
+        hash = md5()
+        try:
+            hash.update(self._data)
+        except Exception as err:
+            error(f"{err}")
+            raise
+        self._hash = hash.hexdigest()
+        return self._hash
+
     async def open(self):
         """Open replay"""
+        if self._opened or self._path is None:
+            error(f"replay has been opened already: replay_id={self._hash}")
+            return None
         debug("opening replay: %s", str(self._path))
         async with aiofiles.open(self._path, "rb") as replay:
             self._data = await replay.read()
-            hash = md5()
-            hash.update(self._data)
-            self._hash = hash.hexdigest()
+            self._calc_hash()
 
         with ZipFile(BytesIO(self._data)) as zreplay:
             with zreplay.open("meta.json") as meta_json:
