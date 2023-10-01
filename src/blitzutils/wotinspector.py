@@ -80,9 +80,8 @@ class WoTinspector:
     URL_REPLAY_VIEW: str = URL_WI + "/en/view/"
     API_REPLAY_LIST: str = "https://api.wotinspector.com/replay/list"
     URL_REPLAY_UL: str = "https://api.wotinspector.com/replay/upload?"
-    URL_REPLAY_INFO: str = (
-        "https://api.wotinspector.com/replay/upload?details=full&key="
-    )
+    URL_REPLAY_UL_JSON: str = f"{URL_REPLAY_UL}details=full"
+
     URL_TANK_DB: str = "https://wotinspector.com/static/armorinspector/tank_db_blitz.js"
 
     MAX_RETRIES: int = 3
@@ -102,7 +101,7 @@ class WoTinspector:
             rate_limit=rate_limit,
             filters=[
                 self.API_REPLAY_LIST,
-                self.URL_REPLAY_INFO,
+                self.URL_REPLAY_UL_JSON,
                 self.URL_REPLAY_DL,
                 self.URL_REPLAY_LIST,
             ],
@@ -117,7 +116,7 @@ class WoTinspector:
             await self.session.close()
 
     def get_url_replay_JSON(self, id: str) -> str:
-        return f"{self.URL_REPLAY_INFO}{id}"
+        return f"{self.URL_REPLAY_UL_JSON}&key={id}"
 
     async def get_replay(self, replay_id: str) -> ReplayJSON | None:
         try:
@@ -189,10 +188,10 @@ class WoTinspector:
                 "key": replay_file.hash,
             }
             if fetch_json:
-                # params["key"] = replay_file.hash
-                params["details"] = "full"
-
-            url = self.URL_REPLAY_UL + urlencode(params, quote_via=quote)
+                url = self.URL_REPLAY_UL_JSON
+            else:
+                url = self.URL_REPLAY_UL
+            url += "&" + urlencode(params, quote_via=quote)
             headers = {"Content-type": "application/x-www-form-urlencoded"}
             # payload = {"filename": filename, "file": b64encode(replay_file.data)}
             payload = {"filename": filename, "file": b64encode(replay_file.data)}
