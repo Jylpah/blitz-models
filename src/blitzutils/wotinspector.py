@@ -16,7 +16,7 @@ from pyutils.utils import get_url_model, post_url
 
 from .wg_api import WGApiWoTBlitzTankopedia
 from .map import Maps
-from .replay import ReplayJSON, ReplayFileMeta, ReplayFile
+from .replay import ReplayJSON, ReplayFileMeta, ReplayFile, WoTinspectorAPI
 
 # Setup logging
 logger = logging.getLogger()
@@ -157,12 +157,9 @@ class WoTinspector:
                 filename = replay_file.hash + ".wotbreplay"
             else:
                 await replay_file.open()
-                if isinstance(replay, Path):
-                    filename = str(replay.resolve())
-                elif isinstance(replay, str):
-                    filename = replay
-                else:
-                    raise ValueError(f"replay is incompatible type: {type(replay)}")
+                if replay_file.path is None:
+                    raise ValueError("error reading reaply file path")
+                filename = replay_file.path.name
 
             try:
                 if tankopedia is not None and maps is not None:
@@ -187,13 +184,14 @@ class WoTinspector:
                 "uploaded_by": uploaded_by,
                 "key": replay_file.hash,
             }
+            url: str
             if fetch_json:
                 url = self.URL_REPLAY_UL_JSON
             else:
                 url = self.URL_REPLAY_UL
-            url += "&" + urlencode(params, quote_via=quote)
-            headers = {"Content-type": "application/x-www-form-urlencoded"}
-            # payload = {"filename": filename, "file": b64encode(replay_file.data)}
+            url = f"{url}&" + urlencode(params, quote_via=quote)
+            # headers = {"Content-type": "application/x-www-form-urlencoded"}
+            headers = {"Content-type": "application/json"}
             payload = {"filename": filename, "file": b64encode(replay_file.data)}
         except BadZipFile as err:
             error(f"corrupted replay file: {filename}")
@@ -211,7 +209,10 @@ class WoTinspector:
                 )
             ) is not None:
                 debug("response from %s: %s", url, res)
-                if (replay_json := ReplayJSON.parse_str(res)) is None:
+                if (api_json := WoTinspectorAPI.parse_str(res)) is None:
+                    error(f"Could not parse API response: {api_json}")
+                    return None, None
+                if (replay_json := ReplayJSON.parse_obj(api_json)) is None:
                     error(f"could not parse the JSON response: {res}")
                     return None, None
                 else:
