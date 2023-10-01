@@ -188,7 +188,8 @@ class WoTinspector:
                 "uploaded_by": uploaded_by,
                 "key": replay_file.hash,
             }
-            if fetch_json:  # WI rate-limits requests with details=full
+            if fetch_json:
+                # params["key"] = replay_file.hash
                 params["details"] = "full"
 
             url = self.URL_REPLAY_UL + urlencode(params, quote_via=quote)
