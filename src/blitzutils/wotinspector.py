@@ -211,15 +211,12 @@ class WoTinspector:
                     self.session, url=url, headers=headers, data=payload, retries=1
                 )
             ) is not None:
-                debug(f"response from {url}: {res}")
-                if fetch_json:
-                    if (replay_json := ReplayJSON.parse_str(res)) is None:
-                        error(f"could not parse the JSON response")
-                        return replay_file.hash, None
-                    else:
-                        return replay_file.hash, replay_json
+                debug("response from %s: %s", url, res)
+                if (replay_json := ReplayJSON.parse_str(res)) is None:
+                    error(f"could not parse the JSON response: {res}")
+                    return None, None
                 else:
-                    return replay_file.hash, None
+                    return replay_file.hash, replay_json
         except Exception as err:
             error(f"Unexpected Error: {type(err)}: {err}")
             return None, None

@@ -195,7 +195,8 @@ class ReplaySummary(JSONExportable):
     allies          : list[int]                 = Field(default=..., alias="a")
     enemies         : list[int]                 = Field(default=..., alias="e")
     mastery_badge   : int | None                = Field(default=None, alias="mb")
-    details         : list[ReplayDetail] = Field(default=..., alias="d")
+    details         : ReplayDetail | list[ReplayDetail] = Field(default=..., alias="d")
+
     # fmt: on
 
     class Config:
@@ -230,6 +231,11 @@ class ReplaySummary(JSONExportable):
             values["battle_start_timestamp"]
         ).strftime(cls._TimestampFormat)
         return values
+
+    @property
+    def has_full_details(self) -> bool:
+        """Whether the replay has full details or is summary version"""
+        return isinstance(self.details, list)
 
 
 ###########################################
@@ -421,6 +427,10 @@ class ReplayJSON(JSONExportable):
     def get_platoons(
         self, player: int | None = None
     ) -> Tuple[defaultdict[int, list[int]], defaultdict[int, list[int]]]:
+        if not isinstance(self.data.summary.details, list):
+            raise ValueError(
+                "replay JSON is summary format: cannot get platoons w/o full details"
+            )
         allied_platoons: defaultdict[int, list[int]] = defaultdict(list)
         enemy_platoons: defaultdict[int, list[int]] = defaultdict(list)
 
