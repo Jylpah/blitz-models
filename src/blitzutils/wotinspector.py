@@ -92,6 +92,7 @@ class WoTinspector:
     def __init__(
         self, rate_limit: float = DEFAULT_RATE_LIMIT, auth_token: Optional[str] = None
     ):
+        debug(f"rate_limit={rate_limit}, auth_token={auth_token}")
         headers: Optional[dict[str, str]] = None
         if auth_token is not None:
             headers = dict()
@@ -143,7 +144,7 @@ class WoTinspector:
         fetch_json: bool = False,
         title: str | None = None,
         priv: bool = False,
-        N: int = -1,
+        # N: int = -1,
     ) -> tuple[str | None, ReplayJSON | None]:
         """
         Post a WoT Blitz replay file to replays.WoTinspector.com
@@ -185,8 +186,10 @@ class WoTinspector:
                 "title": title,
                 "private": (1 if priv else 0),
                 "uploaded_by": uploaded_by,
+                "key": replay_file.hash,
             }
-            if fetch_json:  # WI rate-limits requests with details=full
+            if fetch_json:
+                # params["key"] = replay_file.hash
                 params["details"] = "full"
 
             url = self.URL_REPLAY_UL + urlencode(params, quote_via=quote)
@@ -196,23 +199,30 @@ class WoTinspector:
         except BadZipFile as err:
             error(f"corrupted replay file: {filename}")
             return None, None
+        except KeyError as err:
+            error(f"Unexpected KeyError: {err}")
+            return None, None
         # except Exception as err:
         #     error(f"Thread {N}: Unexpected Exception: {err}")
         #     return None, None
-
-        if (
-            res := await post_url(
-                self.session, url=url, headers=headers, data=payload, retries=1
-            )
-        ) is not None:
-            if fetch_json:
-                if (replay_json := ReplayJSON.parse_str(res)) is None:
-                    error(f"could not parse the JSON response")
-                    return replay_file.hash, None
+        try:
+            if (
+                res := await post_url(
+                    self.session, url=url, headers=headers, data=payload, retries=1
+                )
+            ) is not None:
+                debug(f"response from {url}: {res}")
+                if fetch_json:
+                    if (replay_json := ReplayJSON.parse_str(res)) is None:
+                        error(f"could not parse the JSON response")
+                        return replay_file.hash, None
+                    else:
+                        return replay_file.hash, replay_json
                 else:
-                    return replay_file.hash, replay_json
-            else:
-                return replay_file.hash, None
+                    return replay_file.hash, None
+        except Exception as err:
+            error(f"Unexpected Error: {type(err)}: {err}")
+            return None, None
 
         debug(f"Could not post replay: {title}: {res}")
         return None, None

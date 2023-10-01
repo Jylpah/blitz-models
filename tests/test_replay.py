@@ -326,6 +326,7 @@ async def test_4_post_replay(
     tankopedia: WGApiWoTBlitzTankopedia | None
     maps: Maps | None
     uploaded_by: int = 521458531  # jylpah@EU
+    max_replays: int = 2
     if (
         tankopedia := await WGApiWoTBlitzTankopedia.open_json(tmp_path / tankopedia_fn)
     ) is None:
@@ -333,16 +334,25 @@ async def test_4_post_replay(
     if (maps := await Maps.open_json(tmp_path / maps_fn)) is None:
         assert False, f"could not open maps {maps_fn}"
 
-    WI = WoTinspector(rate_limit=5)
-    for replay_fn in datafiles.iterdir():
-        if replay_fn.suffix != ".wotbreplay":
-            continue
-        debug("replay: %s", replay_fn.name)
-        res: tuple[str | None, ReplayJSON | None] = await WI.post_replay(
-            replay_fn,
-            uploaded_by=uploaded_by,
-            tankopedia=tankopedia,
-            maps=maps,
-            fetch_json=False,
-        )
-        assert res[0] is not None, f"could not post a replay: {replay_fn.name}"
+    WI = WoTinspector()
+    try:
+        for replay_fn in datafiles.iterdir():
+            if replay_fn.suffix != ".wotbreplay":
+                continue
+            fetch_json: bool = max_replays % 2 == 0
+            debug("replay: %s", replay_fn.name)
+            replay_id, replay_json = await WI.post_replay(
+                replay_fn,
+                uploaded_by=uploaded_by,
+                tankopedia=tankopedia,
+                maps=maps,
+                fetch_json=fetch_json,
+            )
+            assert replay_id is not None, f"could not post a replay: {replay_fn.name}"
+            assert not fetch_json or isinstance(
+                replay_json, ReplayJSON
+            ), f"did not receive ReplayJSON: type={type(replay_json)}, replay_json={replay_json}"
+            if (max_replays := max_replays - 1) <= 0:
+                break
+    finally:
+        await WI.close()
