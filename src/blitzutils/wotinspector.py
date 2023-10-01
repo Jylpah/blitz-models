@@ -12,7 +12,7 @@ from zipfile import BadZipFile, Path as ZipPath, is_zipfile, ZipFile
 from io import BytesIO
 
 from pyutils import ThrottledClientSession, JSONExportable, awrap
-from pyutils.utils import get_url_model
+from pyutils.utils import get_url_model, post_url
 
 from .wg_api import WGApiWoTBlitzTankopedia
 from .map import Maps
@@ -136,7 +136,7 @@ class WoTinspector:
 
     async def post_replay(
         self,
-        filename: Path,
+        replay: Path | str | bytes,
         uploaded_by: int = 0,
         tankopedia: WGApiWoTBlitzTankopedia | None = None,
         maps: Maps | None = None,
@@ -150,21 +150,31 @@ class WoTinspector:
 
         Returns ID of the replay
         """
+        filename: str = ""
         try:
-            replay = ReplayFile(filename)
-            await replay.open()
+            replay_file: ReplayFile = ReplayFile(replay=replay)
+            if isinstance(replay, bytes):
+                filename = replay_file.hash + ".wotbreplay"
+            elif isinstance(replay, Path):
+                await replay_file.open()
+                filename = str(replay.resolve())
+            elif isinstance(replay, str):
+                filename = replay
+            else:
+                raise ValueError(f"replay is incompatible type: {type(replay)}")
+
             try:
                 if tankopedia is not None and maps is not None:
-                    replay.meta.update_title(tankopedia=tankopedia, maps=maps)
+                    replay_file.meta.update_title(tankopedia=tankopedia, maps=maps)
                 else:
                     debug("no tankopedia and maps give to update replay title")
             except ValueError as err:
                 pass
 
             if title is None:
-                title = replay.title
+                title = replay_file.title
             if title == "":
-                title = f"{replay.meta.playerName}"
+                title = f"{replay_file.meta.playerName}"
 
             N = N if N > 0 else self.REPLAY_N
             self.REPLAY_N += 1
@@ -179,43 +189,27 @@ class WoTinspector:
 
             url = self.URL_REPLAY_UL + urlencode(params, quote_via=quote)
             headers = {"Content-type": "application/x-www-form-urlencoded"}
-            payload = {"file": (str(filename.name), b64encode(replay.data))}
+            payload = {"file": (filename, b64encode(replay_file.data))}
         except BadZipFile as err:
             error(f"corrupted replay file: {filename}")
             return None, None
-        except Exception as err:
-            error(f"Thread {N}: Unexpected Exception: {err}")
-            return None, None
+        # except Exception as err:
+        #     error(f"Thread {N}: Unexpected Exception: {err}")
+        #     return None, None
 
-        for retry in range(self.MAX_RETRIES):
-            debug(f"{N}: Posting: {title} Try #: {retry + 1}/{self.MAX_RETRIES}")
-            try:
-                async with self.session.post(
-                    url, headers=headers, data=payload
-                ) as resp:
-                    debug("%d: HTTP response status %d/%s", N, resp.status, resp.reason)
-                    if resp.ok:
-                        debug(
-                            "%d: HTTP response OK: %d %s. Reading response data",
-                            N,
-                            resp.status,
-                            resp.reason,
-                        )
-                        message("%d Posted: %s", N, replay.meta.title)
-                        if fetch_json:
-                            return replay.hash, ReplayJSON.parse_str(await resp.text())
-                        else:
-                            return replay.hash, None
-                    else:
-                        debug(
-                            "%d: HTTPS response NOT OK: %d %s",
-                            N,
-                            resp.status,
-                            resp.reason,
-                        )
-            except Exception as err:
-                debug(f"{N}: Unexpected exception {err}")
-            await sleep(SLEEP)
+        if (
+            res := await post_url(
+                self.session, url=url, headers=headers, json=payload, retries=1
+            )
+        ) is not None:
+            if fetch_json:
+                if (replay_json := ReplayJSON.parse_str(res)) is None:
+                    error(f"could not parse the JSON response")
+                    return replay_file.hash, None
+                else:
+                    return replay_file.hash, replay_json
+            else:
+                return replay_file.hash, None
 
         debug(f"{N}: Could not post replay: {title}")
         return None, None
