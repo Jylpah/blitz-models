@@ -186,6 +186,7 @@ class WoTinspector:
                 "title": title,
                 "private": (1 if priv else 0),
                 "uploaded_by": uploaded_by,
+                "key": replay_file.hash,
             }
             if fetch_json:  # WI rate-limits requests with details=full
                 params["details"] = "full"
@@ -209,6 +210,7 @@ class WoTinspector:
                     self.session, url=url, headers=headers, data=payload, retries=1
                 )
             ) is not None:
+                debug(f"response from {url}: {res}")
                 if fetch_json:
                     if (replay_json := ReplayJSON.parse_str(res)) is None:
                         error(f"could not parse the JSON response")
