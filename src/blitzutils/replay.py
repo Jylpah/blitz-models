@@ -337,12 +337,34 @@ class ReplayData(JSONExportable):
 ###########################################
 
 
-class ReplayJSON(JSONExportable):
+class WoTinspectorAPI(JSONExportable):
+    status: str = Field(default="ok", alias="s")
+    error: dict[str, Any] = Field(default={}, alias="e")
+
+    class Config:
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
+        allow_mutation = True
+        validate_assignment = True
+        allow_population_by_field_name = True
+        extra = Extra.allow
+
+    @property
+    def is_ok(self) -> bool:
+        return self.status == "ok" and len(self.error) == 0
+
+    @property
+    def error_msg(self) -> None | str:
+        if self.is_ok:
+            return None
+        else:
+            return ", ".join([f"{k}: {v}" for k, v in self.error.items()])
+
+
+class ReplayJSON(WoTinspectorAPI):
     # fmt: off
     id      : str | None        = Field(default=None, alias="_id")
-    status  : str               = Field(default="ok", alias="s")
-    data    : ReplayData        = Field(default=..., alias="d")
-    error   : dict              = Field(default={}, alias="e")
+    data    : ReplayData = Field(default=..., alias="d")
 
     # _URL_REPLAY_JSON: str = "https://api.wotinspector.com/replay/upload?details=full&key="
 
@@ -373,10 +395,6 @@ class ReplayJSON(JSONExportable):
     def indexes(self) -> dict[str, Idx]:
         """return backend indexes"""
         return {"id": self.index}
-
-    @property
-    def is_ok(self) -> bool:
-        return self.status == "ok" and len(self.error) == 0
 
     def get_id(self) -> str | None:
         try:
@@ -592,3 +610,7 @@ class ReplayFile:
         if self.is_opened:
             return self._data
         raise ValueError("replay has not been opened yet. Use open()")
+
+    @property
+    def path(self) -> Path | None:
+        return self._path
