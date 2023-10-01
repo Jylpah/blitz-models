@@ -335,7 +335,7 @@ class ReplayJSON(JSONExportable):
     # fmt: off
     id      : str | None        = Field(default=None, alias="_id")
     status  : str               = Field(default="ok", alias="s")
-    data    : ReplayData= Field(default=..., alias="d")
+    data    : ReplayData        = Field(default=..., alias="d")
     error   : dict              = Field(default={}, alias="e")
 
     # _URL_REPLAY_JSON: str = "https://api.wotinspector.com/replay/upload?details=full&key="
@@ -384,11 +384,11 @@ class ReplayJSON(JSONExportable):
 
     @root_validator(pre=False)
     def store_id(cls, values: dict[str, Any]) -> dict[str, Any]:
-        debug("validating: ReplayJSON()")
+        # debug("validating: ReplayJSON()")
         if "id" in values and values["id"] is not None:
             # debug("id=%s", values["id"])
             pass
-        elif values["data"].id is not None:
+        elif "data" in values and values["data"].id is not None:
             # debug("data.id=%s", values["data"].id)
             values["id"] = values["data"].id
         else:
