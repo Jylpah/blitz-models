@@ -155,17 +155,19 @@ class WoTinspector:
             replay_file: ReplayFile = ReplayFile(replay=replay)
             if isinstance(replay, bytes):
                 filename = replay_file.hash + ".wotbreplay"
-            elif isinstance(replay, Path):
-                await replay_file.open()
-                filename = str(replay.resolve())
-            elif isinstance(replay, str):
-                filename = replay
             else:
-                raise ValueError(f"replay is incompatible type: {type(replay)}")
+                await replay_file.open()
+                if isinstance(replay, Path):
+                    filename = str(replay.resolve())
+                elif isinstance(replay, str):
+                    filename = replay
+                else:
+                    raise ValueError(f"replay is incompatible type: {type(replay)}")
 
             try:
                 if tankopedia is not None and maps is not None:
                     replay_file.meta.update_title(tankopedia=tankopedia, maps=maps)
+                    debug("updated title=%s", replay_file.meta.title)
                 else:
                     debug("no tankopedia and maps give to update replay title")
             except ValueError as err:
@@ -176,8 +178,8 @@ class WoTinspector:
             if title == "":
                 title = f"{replay_file.meta.playerName}"
 
-            N = N if N > 0 else self.REPLAY_N
-            self.REPLAY_N += 1
+            # N = N if N > 0 else self.REPLAY_N
+            # self.REPLAY_N += 1
 
             params = {
                 "title": title,
@@ -189,7 +191,8 @@ class WoTinspector:
 
             url = self.URL_REPLAY_UL + urlencode(params, quote_via=quote)
             headers = {"Content-type": "application/x-www-form-urlencoded"}
-            payload = {"file": (filename, b64encode(replay_file.data))}
+            # payload = {"filename": filename, "file": b64encode(replay_file.data)}
+            payload = {"filename": filename, "file": b64encode(replay_file.data)}
         except BadZipFile as err:
             error(f"corrupted replay file: {filename}")
             return None, None
@@ -199,7 +202,7 @@ class WoTinspector:
 
         if (
             res := await post_url(
-                self.session, url=url, headers=headers, json=payload, retries=1
+                self.session, url=url, headers=headers, data=payload, retries=1
             )
         ) is not None:
             if fetch_json:
@@ -211,7 +214,7 @@ class WoTinspector:
             else:
                 return replay_file.hash, None
 
-        debug(f"{N}: Could not post replay: {title}")
+        debug(f"Could not post replay: {title}: {res}")
         return None, None
 
     # async def post_replays(
