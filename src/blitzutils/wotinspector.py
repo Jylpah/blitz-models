@@ -192,8 +192,8 @@ class WoTinspector:
                 url = self.URL_REPLAY_UL
             url = f"{url}&" + urlencode(params, quote_via=quote)
             headers = {"Content-type": "application/x-www-form-urlencoded"}
-            payload = {"file": b64encode(replay_file.data).hex()}
-            # payload = {"file": (filename, b64encode(replay_file.data))}
+            # Hack to fool aiohttp.FormData to send the data as application/x-www-form-urlencoded
+            payload = {"file": (filename, b64encode(replay_file.data))}
         except BadZipFile as err:
             error(f"corrupted replay file: {filename}")
             return None, None
