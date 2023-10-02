@@ -190,9 +190,10 @@ class WoTinspector:
             else:
                 url = self.URL_REPLAY_UL
             url = f"{url}&" + urlencode(params, quote_via=quote)
-            # headers = {"Content-type": "application/x-www-form-urlencoded"}
-            headers = {"Content-type": "application/json"}
-            payload = {"filename": filename, "file": b64encode(replay_file.data)}
+            headers = {"Content-type": "application/x-www-form-urlencoded"}
+            # headers = {"Content-type": "application/json"}
+            # payload = {"filename": filename, "file": b64encode(replay_file.data)}
+            payload = {"file": (filename, b64encode(replay_file.data))}
         except BadZipFile as err:
             error(f"corrupted replay file: {filename}")
             return None, None
