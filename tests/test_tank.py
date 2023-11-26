@@ -3,8 +3,9 @@ import pytest  # type: ignore
 from os.path import dirname, realpath, join as pjoin, basename
 from pathlib import Path
 import aiofiles
-from pydantic import BaseModel
+from pydantic import RootModel
 from random import shuffle
+from typing import List
 import logging
 
 logger = logging.getLogger()
@@ -89,17 +90,17 @@ TANKS_JSON_FILES = pytest.mark.datafiles(FIXTURE_DIR / "01_WGTanks.json")
 TANKOPEDIA_FILES = pytest.mark.datafiles(FIXTURE_DIR / "01_Tankopedia.json")
 
 
-class TanksJsonList(BaseModel):
-    __root__: list[Tank] = list()
+class TanksJsonList(RootModel):
+    root: List[Tank] = list()
 
     def __iter__(self):
-        return iter(self.__root__)
+        return iter(self.root)
 
     def __getitem__(self, item):
-        return self.__root__[item]
+        return self.root[item]
 
     def __len__(self) -> int:
-        return len(self.__root__)
+        return len(self.root)
 
 
 ########################################################
@@ -211,7 +212,7 @@ async def test_8_Tank_import(datafiles: Path) -> None:
     for tanks_json_fn in datafiles.iterdir():
         async with aiofiles.open(tanks_json_fn) as file:
             try:
-                tanks_json = TanksJsonList.parse_raw(await file.read())
+                tanks_json = TanksJsonList.model_validate_json(await file.read())
             except Exception as err:
                 assert (
                     False
@@ -236,7 +237,7 @@ async def test_9_WGApiTankopedia(
     for tanks_json_fn in datafiles.iterdir():
         async with aiofiles.open(tanks_json_fn) as file:
             try:
-                tanks_json = TanksJsonList.parse_raw(await file.read())
+                tanks_json = TanksJsonList.model_validate_json(await file.read())
             except Exception as err:
                 assert (
                     False
@@ -284,7 +285,9 @@ async def test_10_WGApiTankopedia(
     for tankopedia_fn in datafiles.iterdir():
         async with aiofiles.open(tankopedia_fn) as file:
             try:
-                tankopedia = WGApiWoTBlitzTankopedia.parse_raw(await file.read())
+                tankopedia = WGApiWoTBlitzTankopedia.model_validate_json(
+                    await file.read()
+                )
             except Exception as err:
                 assert (
                     False
@@ -333,7 +336,9 @@ async def test_11_WGApiTankopedia_sorted(
     for tankopedia_fn in datafiles.iterdir():
         async with aiofiles.open(tankopedia_fn) as file:
             try:
-                tankopedia = WGApiWoTBlitzTankopedia.parse_raw(await file.read())
+                tankopedia = WGApiWoTBlitzTankopedia.model_validate_json(
+                    await file.read()
+                )
             except Exception as err:
                 assert (
                     False
@@ -354,11 +359,11 @@ async def test_11_WGApiTankopedia_sorted(
         tankopedia_shuffled
     ), f"tankopedias has different number of tanks"
     tanks = list()
-    for tank in tankopedia.data.values():
+    for tank in tankopedia:
         tanks.append(tank)
 
     tanks2: list[Tank] = list()
-    for tank in tankopedia_shuffled.data.values():
+    for tank in tankopedia_shuffled:
         tanks2.append(tank)
 
     assert (
