@@ -35,7 +35,7 @@ from blitzutils import Release
 
 FIXTURE_DIR = Path(__file__).parent
 
-REPLAY_FILES = pytest.mark.datafiles(FIXTURE_DIR / "02_Releases.csv")
+RELEASE_FILES = pytest.mark.datafiles(FIXTURE_DIR / "02_Releases.csv")
 
 
 @pytest.fixture
@@ -51,7 +51,7 @@ def releases_count() -> int:
 
 
 @pytest.mark.asyncio
-@REPLAY_FILES
+@RELEASE_FILES
 async def test_1_import_export_releases(
     datafiles: Path, tmp_path: Path, releases_count: int
 ) -> None:
