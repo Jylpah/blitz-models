@@ -1,6 +1,6 @@
 from datetime import datetime, date
 from typing import Any, TypeVar, Self
-from pydantic import validator, Field, HttpUrl
+from pydantic import field_validator, ConfigDict, Field, HttpUrl, field_serializer
 import logging
 
 logger = logging.getLogger()
@@ -38,22 +38,24 @@ def isodate2datetime(d: str) -> datetime:
 
 # fmt: off
 class Release(JSONExportable,
-                     CSVExportable, 
-                     TXTExportable, Importable):
+                CSVExportable, 
+                TXTExportable, 
+                Importable):
     release     : str               = Field(default=..., alias="_id")
     launch_date : datetime | None   = Field(default=None)
     # _export_DB_by_alias			: bool = False
 
     _csv_custom_writers = {  "launch_date": datetime2isodate }
     _csv_custom_readers = {  "launch_date": isodate2datetime }
-    
+    model_config = ConfigDict(frozen=False, validate_assignment=True, populate_by_name=True)
+# fmt: on
 
-    # fmt: on
-    class Config:
-        allow_mutation = True
-        validate_assignment = True
-        allow_population_by_field_name = True
-        json_encoders = {datetime: lambda v: v.date().isoformat()}
+    @field_serializer('launch_date', when_used='json')
+    def serialize_dt(self, dt: datetime | None, _info):
+        if dt is None:
+            return None
+        else:
+            return dt.date().isoformat()
 
     @property
     def index(self) -> Idx:
@@ -70,13 +72,15 @@ class Release(JSONExportable,
         indexes.append([("name", ASCENDING), ("launch_date", DESCENDING)])
         return indexes
     
-    @validator("release")
+    @field_validator("release")
+    @classmethod
     def validate_release(cls, v: str) -> str:
         """Blitz release is format X.Y[.Z]"""
         rel: list[int] = cls._release_number(v)
         return cls._release_str(rel)
 
-    @validator("launch_date", pre=True)
+    @field_validator("launch_date", mode="before")
+    @classmethod
     def validate_date(cls, d):
         if d is None:
             return None
