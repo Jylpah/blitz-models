@@ -3,11 +3,18 @@ import json
 from warnings import warn
 from typing import Any, Optional, Self, Tuple
 from enum import IntEnum, StrEnum
-from pydantic import root_validator, validator, Field, Extra, ValidationError
+from pydantic import (
+    field_validator,
+    model_validator,
+    ConfigDict,
+    Field,
+    RootModel,
+    ValidationError,
+)
 from aiofiles import open
 from pathlib import Path
 from pyutils.jsonexportable import Idx
-from sortedcollections import SortedDict  # type: ignore
+
 from re import Pattern, compile, match
 
 from pyutils import (
@@ -47,77 +54,39 @@ class Map(JSONExportable):
     # _re_partial_name: Pattern = compile(r" - ")
     _re_partial_key: Pattern = compile(r'_\d{2}$')  # fmt: skip
 
-    @root_validator(pre=False)
-    def _map_mode(cls, values: dict[str, Any]) -> dict[str, Any]:
+    @model_validator(mode="after")
+    def _map_mode(self) -> Self:
         """Set map's type/mode"""
-        key: str = values["key"]
-        if cls._re_partial_key.search(key):
-            values["mode"] = MapMode.partial
-        elif key in {"test", "moon", "iceworld", "Wasteland"}:
-            values["mode"] = MapMode.special
-        elif key in {"tutorial"}:
-            values["mode"] = MapMode.training
-        return values
+        if self.mode != MapMode.normal:
+            return self
+        if self._re_partial_key.search(self.key):
+            self.mode = MapMode.partial
+        elif self.key in {"test", "moon", "iceworld", "Wasteland"}:
+            self.mode = MapMode.special
+        elif self.key in {"tutorial"}:
+            self.mode = MapMode.training
+        return self
 
-    class Config:
-        allow_mutation = True
-        validate_assignment = True
-        allow_population_by_field_name = True
+    model_config = ConfigDict(
+        frozen=False, validate_assignment=True, populate_by_name=True
+    )
 
     @property
     def index(self) -> Idx:
         return self.key
 
 
-class Maps(JSONExportable):
-    __root__: SortedDict[str, Map] = SortedDict()
+class Maps(RootModel, JSONExportable):
+    root: dict[str, Map] = dict()
 
     _exclude_unset = False
     _exclude_defaults = False
-
-    class Config:
-        allow_mutation = True
-        validate_assignment = True
-        allow_population_by_field_name = True
-
-    # @root_validator(pre=True)
-    # def _import_dict(cls, values: dict[str, Any]) -> dict[str, Map]:
-    #     res: dict[str, Map] = dict()
-    #     maps = values["__root__"]
-    #     for key, value in maps.items():
-    #         try:
-    #             res[key] = Map.parse_obj(value)
-    #             continue
-    #         except ValidationError:
-    #             debug(f"could not parse Map() from: {value}")
-    #         try:
-    #             res[key] = Map(key=key, name=value)
-    #             debug(f"new Map(key={key}, name={value})")
-    #         except Exception as err:
-    #             error(f"could not validate key={key}, map={value}")
-    #         values["__root__"] = res
-    #     return values
-
-    # @validator("__root__", pre=True)
-    # def _import_data(cls, value: dict[str, Any]) -> SortedDict[str, Map]:
-    #     res: SortedDict[str, Map] = SortedDict()
-    #     for key, val in value.items():
-    #         try:
-    #             res[key] = Map.parse_obj(val)
-    #             continue
-    #         except ValidationError:
-    #             debug(f"could not parse Map() from: {val}")
-    #         try:
-    #             res[key] = Map(key=key, name=val)
-    #             debug(f"new Map(key={key}, name={val})")
-    #         except Exception as err:
-    #             error(f"could not validate key={key}, map={val}: {err}")
-    #     return res
-
-    @validator("__root__", pre=False)
-    def _ensure_sorteddict(cls, value) -> SortedDict[str, Map]:
-        if not isinstance(value, SortedDict):
-            return SortedDict(**value)
+    model_config = ConfigDict(
+        frozen=False,
+        validate_assignment=True,
+        populate_by_name=True,
+        from_attributes=True,
+    )
 
     @classmethod
     async def open_json(
@@ -148,20 +117,20 @@ class Maps(JSONExportable):
             return None
 
     def __iter__(self):
-        return iter(self.__root__.values())
+        return iter([v for k, v in sorted(self.root.items())])
 
-    def __getitem__(self, key) -> Map:
-        return self.__root__[key]
+    def __getitem__(self, key: str) -> Map:
+        return self.root[key]
 
     def __setitem__(self, key: str, map: Map) -> None:
         if not isinstance(map, Map):
             raise TypeError(f"map is not type 'Map()', but {type(map)}")
         if not isinstance(key, str):
             raise TypeError(f"key is not type 'str', but {type(key)}")
-        self.__root__[key] = map
+        self.root[key] = map
 
     def __len__(self) -> int:
-        return len(self.__root__)
+        return len(self.root)
 
     def add(self, map: str | Map, key: str | None = None):
         if isinstance(map, str):
@@ -169,7 +138,7 @@ class Maps(JSONExportable):
                 map = Map(key=key, name=map)
             else:
                 raise ValueError("map name and key given, but key is not a string")
-        self.__root__[map.key] = map
+        self.root[map.key] = map
 
     def update(self, new: "Maps") -> Tuple[set[str], set[str]]:
         """update Maps with another Maps instance"""
@@ -181,5 +150,5 @@ class Maps(JSONExportable):
         updated: set[str] = new_keys & old_keys
         updated = {key for key in updated if new[key] != self[key]}
 
-        self.__root__.update({(key, new[key]) for key in added | updated})
+        self.root.update({(key, new[key]) for key in added | updated})
         return (added, updated)

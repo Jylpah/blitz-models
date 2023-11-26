@@ -56,16 +56,6 @@ def maps_added_updated() -> Tuple[int, int]:
     return (3, 1)  # number changes: 05_Maps_old.json vs maps 05_Maps.json
 
 
-# async def open_maps(path: Path) -> Maps:
-#     maps: Maps
-#     try:
-#         async with aiofiles.open(path) as f:
-#             maps = Maps.parse_raw(await f.read())
-#         return maps
-#     except Exception as err:
-#         assert False, f"could not open Maps file: {path.name}: {err}"
-
-
 ########################################################
 #
 # Tests
