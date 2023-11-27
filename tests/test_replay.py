@@ -104,7 +104,7 @@ def get_map(fn: Path) -> str:
 # @pytest.fixture
 # def get_tankopedia() -> WGApiWoTBlitzTankopedia:
 #     with open(tmp_path / fn, "r") as f:
-#         if (tp := WGApiWoTBlitzTankopedia.parse_raw(f.read())) is not None:
+#         if (tp := WGApiWoTBlitzTankopedia.model_validate_json(f.read())) is not None:
 #             return tp
 #     raise ValueError(f"could not open tankopedia: {fn}")
 
@@ -112,7 +112,7 @@ def get_map(fn: Path) -> str:
 # @pytest.fixture
 # def get_maps(tmp_path: Path, fn: str = MAPS_JSON) -> Maps:
 #     with open(tmp_path / fn, "r") as f:
-#         if (tp := Maps.parse_raw(f.read())) is not None:
+#         if (tp := Maps.model_validate_json(f.read())) is not None:
 #             return tp
 #     raise ValueError(f"could not open maps: {fn}")
 

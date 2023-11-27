@@ -4,12 +4,19 @@ Classes related WoT Blitz replay JSON files and WoTinspector replay JSON format
 """
 
 from datetime import datetime
-from typing import Any, Tuple
+from typing import Any, Self, Tuple
 from enum import IntEnum, StrEnum
 from collections import defaultdict
 import logging
 from bson.objectid import ObjectId
-from pydantic import Extra, root_validator, validator, Field, HttpUrl
+from pydantic import (
+    field_validator,
+    model_validator,
+    ConfigDict,
+    root_validator,
+    Field,
+    HttpUrl,
+)
 from pathlib import Path
 from hashlib import md5
 from zipfile import BadZipFile, Path as ZipPath, is_zipfile, ZipFile
@@ -151,13 +158,9 @@ class ReplayDetail(JSONExportable):
     vehicle_descr		: int | None = Field(default=None, alias='vi')
     wp_points_earned	: int | None = Field(default=None, alias='we')
     wp_points_stolen	: int | None = Field(default=None, alias='ws')
-
-    # fmt: on
-    class Config:
-        extra = Extra.allow
-        allow_mutation = True
-        validate_assignment = True
-        allow_population_by_field_name = True
+    # TODO[pydantic]: The following keys were removed: `allow_mutation`.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+    model_config = ConfigDict(extra="allow", frozen=False, validate_assignment=True, populate_by_name=True)
 
 
 ###########################################
@@ -199,20 +202,20 @@ class ReplaySummary(JSONExportable):
 
     # fmt: on
 
-    class Config:
-        extra = Extra.allow
-        allow_mutation = True
-        validate_assignment = True
-        allow_population_by_field_name = True
+    model_config = ConfigDict(
+        extra="allow", frozen=False, validate_assignment=True, populate_by_name=True
+    )
 
-    @validator("vehicle_tier")
+    @field_validator("vehicle_tier")
+    @classmethod
     def check_tier(cls, v: int | None) -> int | None:
         if v is not None:
             if v > 10 or v < 0:
                 raise ValueError("Tier has to be within [1, 10]")
         return v
 
-    @validator("protagonist_team")
+    @field_validator("protagonist_team")
+    @classmethod
     def check_protagonist_team(cls, v: int) -> int | None:
         if v is None:
             return None
@@ -221,16 +224,21 @@ class ReplaySummary(JSONExportable):
         else:
             raise ValueError("protagonist_team has to be 0, 1, 2 or None")
 
-    @validator("battle_start_time")
+    @field_validator("battle_start_time")
+    @classmethod
     def return_none(cls, v: str) -> None:
         return None
 
-    @root_validator(skip_on_failure=True)
-    def root(cls, values: dict[str, Any]) -> dict[str, Any]:
-        values["battle_start_time"] = datetime.fromtimestamp(
-            values["battle_start_timestamp"]
-        ).strftime(cls._TimestampFormat)
-        return values
+    @model_validator(mode="after")
+    def root(self) -> Self:
+        if self.battle_start_time is None:
+            self._set_skip_validation(
+                "battle_start_time",
+                datetime.fromtimestamp(self.battle_start_timestamp).strftime(
+                    self._TimestampFormat
+                ),
+            )
+        return self
 
     @property
     def has_full_details(self) -> bool:
@@ -254,13 +262,9 @@ class ReplayData(JSONExportable):
     
     _ViewUrlBase: str = "https://replays.wotinspector.com/en/view/"
     _DLurlBase  : str = "https://replays.wotinspector.com/en/download/"
-    # fmt: on
-
-    class Config:
-        arbitrary_types_allowed = True
-        allow_mutation = True
-        validate_assignment = True
-        allow_population_by_field_name = True
+    # TODO[pydantic]: The following keys were removed: `allow_mutation`.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+    model_config = ConfigDict(arbitrary_types_allowed=True, frozen=False, validate_assignment=True, populate_by_name=True)
 
     _exclude_export_DB_fields = {
         "view_url": True,
@@ -305,27 +309,30 @@ class ReplayData(JSONExportable):
     def transform_ReplayJSON(cls, in_obj: "ReplayJSON") -> "ReplayData":
         return in_obj.data
 
-    @root_validator
-    def store_id(cls, values: dict[str, Any]) -> dict[str, Any]:
+    @model_validator(mode='after')
+    def store_id(self) -> Self:
         try:
             # debug("validating: ReplayData()")
             _id: str
-            if values["id"] is not None:
+            if self.id is not None:
                 # debug("data.id found")
-                _id = values["id"]
-            elif values["view_url"] is not None:
-                _id = values["view_url"].split("/")[-1:][0]
-            elif values["download_url"] is not None:
-                _id = values["download_url"].split("/")[-1:][0]
+                _id = self.id
+            elif self.view_url is not None:
+                _id = str(self.view_url).split("/")[-1:][0]
+            elif self.download_url is not None:
+                _id = str(self.download_url).split("/")[-1:][0]            
             else:
                 # debug("could not modify id")
-                return values  # could not modify 'id'
+                return self  # could not modify 'id'
                 # raise ValueError('Replay ID is missing')
             # debug("setting id=%s", _id)
-            values["id"] = _id
-            values["view_url"] = f"{cls._ViewUrlBase}{_id}"
-            values["download_url"] = f"{cls._DLurlBase}{_id}"
-            return values
+            if self.id is None:
+                self._set_skip_validation("id",_id)
+            if self.view_url is None:
+                self._set_skip_validation("view_url",HttpUrl(_id))
+            if self.download_url is None:
+                self._set_skip_validation("download_url",HttpUrl(_id))
+            return self
         except Exception as err:
             raise ValueError(f"Error reading replay ID: {err}")
 
@@ -340,14 +347,13 @@ class ReplayData(JSONExportable):
 class WoTinspectorAPI(JSONExportable):
     status: str = Field(default="ok", alias="s")
     error: dict[str, Any] = Field(default={}, alias="e")
-
-    class Config:
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
-        allow_mutation = True
-        validate_assignment = True
-        allow_population_by_field_name = True
-        extra = Extra.allow
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        frozen=False,
+        validate_assignment=True,
+        populate_by_name=True,
+        extra="allow",
+    )
 
     @property
     def is_ok(self) -> bool:
@@ -375,14 +381,7 @@ class ReplayJSON(WoTinspectorAPI):
                  "download_url": True, 
                  "summary": {"battle_start_time"}}
     }
-    # fmt: on
-
-    class Config:
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
-        allow_mutation = True
-        validate_assignment = True
-        allow_population_by_field_name = True
+    model_config = ConfigDict(arbitrary_types_allowed=True, frozen=False, validate_assignment=True, populate_by_name=True)
 
     @property
     def index(self) -> Idx:
@@ -406,19 +405,18 @@ class ReplayJSON(WoTinspectorAPI):
             error(f"Could not read replay id: {err}")
         return None
 
-    @root_validator(pre=False)
-    def store_id(cls, values: dict[str, Any]) -> dict[str, Any]:
+    @model_validator(mode='after')
+    def store_id(self) -> Self:
         # debug("validating: ReplayJSON()")
-        if "id" in values and values["id"] is not None:
-            # debug("id=%s", values["id"])
+        if self.id is not None:
             pass
-        elif "data" in values and values["data"].id is not None:
+        elif self.data.id is not None:
             # debug("data.id=%s", values["data"].id)
-            values["id"] = values["data"].id
+            self._set_skip_validation("id", self.data.id)
         else:
             debug("no 'id' field found")
         # debug("set id=%s", values["id"])
-        return values
+        return self
 
     # def get_url_json(self) -> str:
     #     return f"{self._URL_REPLAY_JSON}{self.id}"
@@ -586,7 +584,7 @@ class ReplayFile:
 
         with ZipFile(BytesIO(self._data)) as zreplay:
             with zreplay.open("meta.json") as meta_json:
-                self.meta = ReplayFileMeta.parse_raw(meta_json.read())
+                self.meta = ReplayFileMeta.model_validate_json(meta_json.read())
         self._opened = True
 
     @property
@@ -614,3 +612,99 @@ class ReplayFile:
     @property
     def path(self) -> Path | None:
         return self._path
+
+
+###########################################
+#
+# WoTinspector API v2
+#
+###########################################
+
+
+###########################################
+#
+# WIReplay()
+#
+###########################################
+
+
+class WIReplay(JSONExportable):
+    """Replay schema on https://api.wotinspector.com/"""
+
+    _TimestampFormat: str = "%Y-%m-%d %H:%M:%S"
+    # fmt: off
+    id              : str                       = Field(default=..., alias="_id") # new
+    map_id          : int                       = Field(default=..., alias="mi")  # new
+    battle_duration : float                     = Field(default=..., alias="bd")
+
+
+    winner_team     : EnumWinnerTeam | None     = Field(default=..., alias="wt")
+    battle_result   : EnumBattleResult | None   = Field(default=..., alias="br")
+    room_type       : int | None                = Field(default=None, alias="rt")
+    battle_type     : int | None                = Field(default=None, alias="bt")
+    uploaded_by     : int                       = Field(default=0, alias="ul")
+    title           : str | None                = Field(default=..., alias="t")
+    player_name     : str                       = Field(default=..., alias="pn")
+    protagonist     : int                       = Field(default=..., alias="p")
+    protagonist_team: int | None                = Field(default=..., alias="pt")
+    map_name        : str                       = Field(default=..., alias="mn")
+    vehicle         : str                       = Field(default=..., alias="v")
+    vehicle_tier    : int | None                = Field(default=..., alias="vx")
+    vehicle_type    : EnumVehicleTypeInt | None = Field(default=..., alias="vt")
+    credits_total   : int | None                = Field(default=None, alias="ct")
+    credits_base    : int | None                = Field(default=None, alias="cb")
+    exp_base        : int | None                = Field(default=None, alias="eb")
+    exp_total       : int | None                = Field(default=None, alias="et")
+    battle_start_timestamp: int                 = Field(default=..., alias="bts")
+    battle_start_time: str | None               = Field(default=None, repr=False)  # duplicate of 'bts'
+    
+    description     : str | None                = Field(default=None, alias="de")
+    arena_unique_id : int                       = Field(default=..., alias="aid")
+    allies          : list[int]                 = Field(default=..., alias="a")
+    enemies         : list[int]                 = Field(default=..., alias="e")
+    mastery_badge   : int | None                = Field(default=None, alias="mb")
+    details         : ReplayDetail | list[ReplayDetail] = Field(default=..., alias="d")
+    # TODO[pydantic]: The following keys were removed: `allow_mutation`.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+    model_config = ConfigDict(extra="allow", frozen=False, validate_assignment=True, populate_by_name=True)
+
+    @field_validator("vehicle_tier")
+    @classmethod
+    def check_tier(cls, v: int | None) -> int | None:
+        if v is not None:
+            if v > 10 or v < 0:
+                raise ValueError("Tier has to be within [1, 10]")
+        return v
+
+    @field_validator("protagonist_team")
+    @classmethod
+    def check_protagonist_team(cls, v: int) -> int | None:
+        if v is None:
+            return None
+        elif v == 0 or v == 1 or v == 2:
+            return v
+        else:
+            raise ValueError("protagonist_team has to be 0, 1, 2 or None")
+
+    @field_validator("battle_start_time")
+    @classmethod
+    def return_none(cls, v: str) -> None:
+        return None
+
+
+    @model_validator(mode="after")
+    def root(self) -> Self:
+        if self.battle_start_time is None:
+            self._set_skip_validation(
+                "battle_start_time",
+                datetime.fromtimestamp(self.battle_start_timestamp).strftime(
+                    self._TimestampFormat
+                ),
+            )
+        return self
+
+
+    @property
+    def has_full_details(self) -> bool:
+        """Whether the replay has full details or is summary version"""
+        return isinstance(self.details, list)

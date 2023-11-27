@@ -4,7 +4,7 @@ from aiohttp import ClientResponse, FormData
 from pathlib import Path
 from aiofiles import open
 from asyncio import sleep
-from pydantic import Field, Extra
+from pydantic import ConfigDict, Field
 from hashlib import md5
 from urllib.parse import urlencode, quote
 from base64 import b64encode
@@ -33,22 +33,20 @@ class WIReplaySummary(JSONExportable):
     player_name: str
     vehicle_descr: int
     region: str
-
-    class Config:
-        allow_population_by_field_name = True
-        allow_mutation = True
-        validate_assignment = True
-        extra = Extra.allow
+    # TODO[pydantic]: The following keys were removed: `allow_mutation`.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+    model_config = ConfigDict(
+        populate_by_name=True, frozen=False, validate_assignment=True, extra="allow"
+    )
 
 
 class WIReplaysData(JSONExportable):
     replays: list[WIReplaySummary]
-
-    class Config:
-        allow_population_by_field_name = True
-        allow_mutation = True
-        validate_assignment = True
-        extra = Extra.allow
+    # TODO[pydantic]: The following keys were removed: `allow_mutation`.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+    model_config = ConfigDict(
+        populate_by_name=True, frozen=False, validate_assignment=True, extra="allow"
+    )
 
 
 class WoTInspectorAPIReplays(JSONExportable):
@@ -58,12 +56,11 @@ class WoTInspectorAPIReplays(JSONExportable):
     status: str = Field(default="ok")
     data: WIReplaysData
     error: dict[str, Any]
-
-    class Config:
-        allow_population_by_field_name = True
-        allow_mutation = True
-        validate_assignment = True
-        extra = Extra.allow
+    # TODO[pydantic]: The following keys were removed: `allow_mutation`.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+    model_config = ConfigDict(
+        populate_by_name=True, frozen=False, validate_assignment=True, extra="allow"
+    )
 
 
 ## -----------------------------------------------------------
@@ -213,7 +210,7 @@ class WoTinspector:
                 if (api_json := WoTinspectorAPI.parse_str(res)) is None:
                     error(f"Could not parse API response: {api_json}")
                     return None, None
-                if (replay_json := ReplayJSON.parse_obj(api_json)) is None:
+                if (replay_json := ReplayJSON.model_validate(api_json)) is None:
                     error(f"could not parse the JSON response: {res}")
                     return None, None
                 else:
