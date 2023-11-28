@@ -1,3 +1,4 @@
+from pyclbr import Class
 from typing import Any, Optional, ClassVar, TypeVar, Sequence, Tuple, Self, Type, Dict
 from types import TracebackType
 import logging
@@ -46,6 +47,8 @@ verbose = logger.info
 debug = logger.debug
 
 B = TypeVar("B", bound="BaseModel")
+
+_NULL_OBJECT_ID: ObjectId = ObjectId("0" * 24)
 
 
 ###########################################
@@ -133,14 +136,14 @@ class WGTankStatAll(JSONExportable):
         return None
 
 
-def lateinit_object_id() -> ObjectId:
-    """Required for initializing a model w/o a '_id' field"""
-    raise RuntimeError("should never be called")
+# def lateinit_object_id() -> ObjectId:
+#     """Required for initializing a model w/o a '_id' field"""
+#     raise RuntimeError("lateinit_object_id(): should never be called")
 
 
 class TankStat(JSONExportable):
     # fmt: off
-    id:                 ObjectId = Field(default_factory=lateinit_object_id, alias="_id")
+    id:                 ObjectId = Field(default=_NULL_OBJECT_ID, alias="_id")
     region:             Region | None = Field(default=None, alias="r")
     all:                WGTankStatAll = Field(..., alias="s")
     last_battle_time:   int = Field(..., alias="lb")
@@ -167,7 +170,9 @@ class TankStat(JSONExportable):
     # _include_export_DB_fields	: ClassVar[Optional[TypeExcludeDict]] = None
     # _include_export_src_fields	: ClassVar[Optional[TypeExcludeDict]] = None
     # Example TankStat()
-    _example = """{
+    _example: ClassVar[
+        str
+    ] = """{
                     "r": "eu",
                     "s": {
                         "b": 92,
@@ -298,7 +303,7 @@ class TankStat(JSONExportable):
         try:
             # debug('starting')
             # debug(f'{values}')
-            if self.id is None:
+            if self.id == _NULL_OBJECT_ID:
                 self._set_skip_validation(
                     "id",
                     self.mk_id(self.account_id, self.last_battle_time, self.tank_id),
@@ -323,14 +328,14 @@ class TankStat(JSONExportable):
 class WGApiWoTBlitz(JSONExportable):
     # fmt: off
     status: str = Field(default="ok", alias="s")
-    meta:   dict[str, Any] | None = Field(default=None, alias="m")
+    meta:   Optional[Dict[str, Any]] = Field(default=None, alias="m")
     error:  WGApiError | None = Field(default=None, alias="e")
+    
+    _exclude_defaults   : ClassVar[bool] = False
+    _exclude_none       : ClassVar[bool] = True
+    _exclude_unset      : ClassVar[bool] = False
     # fmt: on
-    _exclude_defaults = False
-    _exclude_none = True
-    _exclude_unset = False
-    # TODO[pydantic]: The following keys were removed: `allow_mutation`.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+
     model_config = ConfigDict(
         frozen=False, validate_assignment=True, populate_by_name=True
     )
@@ -354,18 +359,18 @@ class WGApiWoTBlitz(JSONExportable):
 
 
 class WGApiWoTBlitzAccountInfo(WGApiWoTBlitz):
-    data: dict[str, AccountInfo | None] | None = Field(default=None, alias="d")
-    # TODO[pydantic]: The following keys were removed: `allow_mutation`.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+    """Model for WG API /wotb/account/info/"""
+
+    data: Dict[str, Optional[AccountInfo]] | None = Field(default=None, alias="d")
     model_config = ConfigDict(
         frozen=False, validate_assignment=True, populate_by_name=True
     )
 
 
 class WGApiWoTBlitzTankStats(WGApiWoTBlitz):
-    data: dict[str, list[TankStat] | None] | None = Field(default=None, alias="d")
-    # TODO[pydantic]: The following keys were removed: `allow_mutation`.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+    """Model for WG API /wotb/tanks/stats/"""
+
+    data: Dict[str, Optional[list[TankStat]]] | None = Field(default=None, alias="d")
     model_config = ConfigDict(
         frozen=False, validate_assignment=True, populate_by_name=True
     )
@@ -374,22 +379,21 @@ class WGApiWoTBlitzTankStats(WGApiWoTBlitz):
 class PlayerAchievements(JSONExportable):
     """Placeholder class for data.achievements that are not collected"""
 
-    # TODO[pydantic]: The following keys were removed: `allow_mutation`.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
     model_config = ConfigDict(
         frozen=False, validate_assignment=True, populate_by_name=True, extra="allow"
     )
 
 
 class PlayerAchievementsMaxSeries(JSONExportable):
-    id: ObjectId | None = Field(default=None, alias="_id")
+    # fmt: off
+    id          : ObjectId | None = Field(default=None, alias="_id")
     jointVictory: int = Field(default=0, alias="jv")
-    account_id: int = Field(default=0, alias="a")
-    region: Region | None = Field(default=None, alias="r")
-    release: str | None = Field(default=None, alias="u")
-    added: int = Field(default=epoch_now(), alias="t")
+    account_id  : int = Field(default=0, alias="a")
+    region      : Region | None = Field(default=None, alias="r")
+    release     : str | None = Field(default=None, alias="u")
+    added       : int = Field(default=epoch_now(), alias="t")
 
-    _include_export_DB_fields = {
+    _include_export_DB_fields : ClassVar[Optional[TypeExcludeDict]] = {
         "id": True,
         "jointVictory": True,
         "account_id": True,
@@ -398,16 +402,16 @@ class PlayerAchievementsMaxSeries(JSONExportable):
         "added": True,
     }
 
-    _exclude_defaults = False
+    _exclude_defaults : ClassVar[bool] = False
 
-    _example = """{
+    _example : ClassVar[str] = """{
                 "jv": 5825,
                 "a": 521458531,
                 "r": "eu",
                 "u": "10.2",
                 "t": 1692296001
                 }"""
-
+    # fmt: on
     model_config = ConfigDict(
         frozen=False,
         validate_assignment=True,
@@ -469,9 +473,11 @@ class PlayerAchievementsMaxSeries(JSONExportable):
     @model_validator(mode="after")
     def set_region_id(self) -> Self:
         if self.region is None and self.account_id > 0:
-            self.region = Region.from_id(self.account_id)
+            self._set_skip_validation("region", Region.from_id(self.account_id))
 
-        self.id = self.mk_index(self.account_id, self.region, self.added)
+        self._set_skip_validation(
+            "id", self.mk_index(self.account_id, self.region, self.added)
+        )
         return self
 
     def __str__(self) -> str:
@@ -528,6 +534,8 @@ class WGApiWoTBlitzPlayerAchievements(WGApiWoTBlitz):
     model_config = ConfigDict(
         frozen=False, validate_assignment=True, populate_by_name=True
     )
+
+    ## CHECK / FIX: This might not work with v2
 
     @field_validator("data", mode="before")
     @classmethod
@@ -690,9 +698,8 @@ class WGApiTankString(JSONExportable):
     is_premium: bool
     is_collectible: bool
 
-    _url: str = ".wotblitz.com/en/api/tankopedia/vehicle/"
-    # TODO[pydantic]: The following keys were removed: `allow_mutation`.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+    _url: ClassVar[str] = ".wotblitz.com/en/api/tankopedia/vehicle/"
+
     model_config = ConfigDict(
         frozen=False, validate_assignment=True, populate_by_name=True
     )
@@ -707,6 +714,7 @@ class WGApiTankString(JSONExportable):
     @classmethod
     def url(cls, user_string: str, region: Region = Region.eu) -> str:
         """Get URL as string for a 'user_string'"""
+        debug("_url: %s", cls._url)
         return f"https://{region}{cls._url}{user_string}/"
 
     def as_WGTank(self) -> Tank | None:
@@ -730,8 +738,7 @@ Tank.register_transformation(WGApiTankString, WGApiTankString.as_WGTank)
 class WoTBlitzTankString(JSONExportable):
     code: str = Field(default=..., alias="_id")
     name: str = Field(default=..., alias="n")
-    # TODO[pydantic]: The following keys were removed: `allow_mutation`.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+
     model_config = ConfigDict(
         frozen=False, validate_assignment=True, populate_by_name=True
     )
@@ -755,11 +762,12 @@ class WoTBlitzTankString(JSONExportable):
 class WGApi:
     # constants
     DEFAULT_WG_APP_ID: str = "81381d3f45fa4aa75b78a7198eb216ad"
-    DEFAULT_LESTA_APP_ID: str = ""
+    # DEFAULT_LESTA_APP_ID: str = ""
 
     URL_SERVER = {
         "eu": "https://api.wotblitz.eu/wotb/",
-        "ru": "https://api.wotblitz.ru/wotb/",
+        # "ru": "https://api.wotblitz.ru/wotb/",
+        "ru": None,
         "com": "https://api.wotblitz.com/wotb/",
         "asia": "https://api.wotblitz.asia/wotb/",
         "china": None,
@@ -768,23 +776,23 @@ class WGApi:
     def __init__(
         self,
         app_id: str = DEFAULT_WG_APP_ID,
-        ru_app_id: str = DEFAULT_LESTA_APP_ID,
+        # ru_app_id: str = DEFAULT_LESTA_APP_ID,
         # tankopedia_fn : str = 'tanks.json',
         # maps_fn 		: str = 'maps.json',
         rate_limit: float = 10,
-        ru_rate_limit: float = -1,
+        # ru_rate_limit: float = -1,
         default_region: Region = Region.eu,
     ):
         assert app_id is not None, "WG App ID must not be None"
         assert rate_limit is not None, "rate_limit must not be None"
         debug(f"rate_limit: {rate_limit}")
         self.app_id: str = app_id
-        self.ru_app_id: str = ru_app_id
+        # self.ru_app_id: str = ru_app_id
         self.session: dict[str, ThrottledClientSession] = dict()
         self.default_region: Region = default_region
 
-        if ru_rate_limit < 0:
-            ru_rate_limit = rate_limit
+        # if ru_rate_limit < 0:
+        #     ru_rate_limit = rate_limit
 
         headers = {"Accept-Encoding": "gzip, deflate"}
 
@@ -793,11 +801,11 @@ class WGApi:
             self.session[region.value] = ThrottledClientSession(
                 rate_limit=rate_limit, headers=headers, timeout=timeout
             )
-        for region in [Region.ru]:
-            timeout = ClientTimeout(total=10)
-            self.session[region.value] = ThrottledClientSession(
-                rate_limit=ru_rate_limit, headers=headers, timeout=timeout
-            )
+        # for region in [Region.ru]:
+        #     timeout = ClientTimeout(total=10)
+        #     self.session[region.value] = ThrottledClientSession(
+        #         rate_limit=ru_rate_limit, headers=headers, timeout=timeout
+        #     )
         debug("WG aiohttp session initiated")
 
     async def __aenter__(self) -> Self:
@@ -813,10 +821,10 @@ class WGApi:
 
     async def close(self) -> None:
         """Close aiohttp sessions"""
-        for server in self.session.keys():
+        for server, session in self.session.items():
             try:
                 debug(f"trying to close session to {server} server")
-                await self.session[server].close()
+                await session.close()
                 debug(f"session to {server} server closed")
             except Exception as err:
                 error(f"{err}")
@@ -904,16 +912,16 @@ class WGApi:
             field_str: str = ""
             if len(fields) > 0:
                 field_str = "&fields=" + quote(",".join(fields))
-            if region == Region.ru:
-                return (
-                    f"{server}{URL_WG_TANK_STATS}?application_id={self.ru_app_id}&account_id={account_id}{tank_id_str}{field_str}",
-                    account_region,
-                )
-            else:
-                return (
-                    f"{server}{URL_WG_TANK_STATS}?application_id={self.app_id}&account_id={account_id}{tank_id_str}{field_str}",
-                    account_region,
-                )
+            # if region == Region.ru:
+            #     return (
+            #         f"{server}{URL_WG_TANK_STATS}?application_id={self.ru_app_id}&account_id={account_id}{tank_id_str}{field_str}",
+            #         account_region,
+            #     )
+            # else:
+            return (
+                f"{server}{URL_WG_TANK_STATS}?application_id={self.app_id}&account_id={account_id}{tank_id_str}{field_str}",
+                account_region,
+            )
         except Exception as err:
             debug(f"Failed to form url for account_id: {account_id}: {err}")
         return None
@@ -997,10 +1005,10 @@ class WGApi:
             field_str: str = ""
             if len(fields) > 0:
                 field_str = "&fields=" + quote(",".join(fields))
-            if region == Region.ru:
-                return f"{server}{URL_WG_ACCOUNT_INFO}?application_id={self.ru_app_id}&account_id={account_str}{field_str}"
-            else:
-                return f"{server}{URL_WG_ACCOUNT_INFO}?application_id={self.app_id}&account_id={account_str}{field_str}"
+            # if region == Region.ru:
+            #     return f"{server}{URL_WG_ACCOUNT_INFO}?application_id={self.ru_app_id}&account_id={account_str}{field_str}"
+            # else:
+            return f"{server}{URL_WG_ACCOUNT_INFO}?application_id={self.app_id}&account_id={account_str}{field_str}"
         except Exception as err:
             debug(f"Failed to form url: {err}")
         return None
@@ -1087,10 +1095,10 @@ class WGApi:
             field_str: str = ""
             if len(fields) > 0:
                 field_str = "&fields=" + quote(",".join(fields))
-            if region == Region.ru:
-                return f"{server}{URL_WG_PLAYER_ACHIEVEMENTS}?application_id={self.ru_app_id}&account_id={account_str}{field_str}"
-            else:
-                return f"{server}{URL_WG_PLAYER_ACHIEVEMENTS}?application_id={self.app_id}&account_id={account_str}{field_str}"
+            # if region == Region.ru:
+            #     return f"{server}{URL_WG_PLAYER_ACHIEVEMENTS}?application_id={self.ru_app_id}&account_id={account_str}{field_str}"
+            # else:
+            return f"{server}{URL_WG_PLAYER_ACHIEVEMENTS}?application_id={self.app_id}&account_id={account_str}{field_str}"
         except Exception as err:
             debug(f"Failed to form url: {err}")
         return None
@@ -1166,10 +1174,12 @@ class WGApi:
             field_str: str = ""
             if len(fields) > 0:
                 field_str = "fields=" + quote(",".join(fields))
-            if region == Region.ru:
-                return f"{server}{URL_WG_TANKOPEDIA}?application_id={self.ru_app_id}&{field_str}"
-            else:
-                return f"{server}{URL_WG_TANKOPEDIA}?application_id={self.app_id}&{field_str}"
+            # if region == Region.ru:
+            #     return f"{server}{URL_WG_TANKOPEDIA}?application_id={self.ru_app_id}&{field_str}"
+            # else:
+            return (
+                f"{server}{URL_WG_TANKOPEDIA}?application_id={self.app_id}&{field_str}"
+            )
         except Exception as err:
             debug(f"Failed to form url: {err}")
         return None
@@ -1229,11 +1239,11 @@ def add_args_wg(parser: ArgumentParser, config: Optional[ConfigParser] = None) -
         WG_WORKERS: int = 10
         WG_APP_ID: str = WGApi.DEFAULT_WG_APP_ID
         WG_DEFAULT_REGION: str = Region.eu.name
-        # Lesta / RU
-        LESTA_RATE_LIMIT: float = 10
-        LESTA_WORKERS: int = 10
-        LESTA_APP_ID: str = WGApi.DEFAULT_LESTA_APP_ID
-        # NULL_RESPONSES 	: int 	= 20
+        # # Lesta / RU
+        # LESTA_RATE_LIMIT: float = 10
+        # LESTA_WORKERS: int = 10
+        # LESTA_APP_ID: str = WGApi.DEFAULT_LESTA_APP_ID
+        # # NULL_RESPONSES 	: int 	= 20
 
         if config is not None and "WG" in config.sections():
             configWG = config["WG"]
@@ -1242,11 +1252,11 @@ def add_args_wg(parser: ArgumentParser, config: Optional[ConfigParser] = None) -
             WG_APP_ID = configWG.get("app_id", WG_APP_ID)
             WG_DEFAULT_REGION = configWG.get("default_region", WG_DEFAULT_REGION)
 
-        if config is not None and "LESTA" in config.sections():
-            configRU = config["LESTA"]
-            LESTA_RATE_LIMIT = configRU.getfloat("rate_limit", LESTA_RATE_LIMIT)
-            LESTA_WORKERS = configRU.getint("api_workers", LESTA_WORKERS)
-            LESTA_APP_ID = configRU.get("app_id", LESTA_APP_ID)
+        # if config is not None and "LESTA" in config.sections():
+        #     configRU = config["LESTA"]
+        #     LESTA_RATE_LIMIT = configRU.getfloat("rate_limit", LESTA_RATE_LIMIT)
+        #     LESTA_WORKERS = configRU.getint("api_workers", LESTA_WORKERS)
+        #     LESTA_APP_ID = configRU.get("app_id", LESTA_APP_ID)
 
         parser.add_argument(
             "--wg-workers",
@@ -1279,20 +1289,20 @@ def add_args_wg(parser: ArgumentParser, config: Optional[ConfigParser] = None) -
             help=f"default API region (default: {WG_DEFAULT_REGION})",
         )
 
-        parser.add_argument(
-            "--ru-app-id",
-            type=str,
-            default=LESTA_APP_ID,
-            metavar="APP_ID",
-            help="Set Lesta (RU) APP ID",
-        )
-        parser.add_argument(
-            "--ru-rate-limit",
-            type=float,
-            default=LESTA_RATE_LIMIT,
-            metavar="RATE_LIMIT",
-            help="Rate limit for Lesta (RU) API",
-        )
+        # parser.add_argument(
+        #     "--ru-app-id",
+        #     type=str,
+        #     default=LESTA_APP_ID,
+        #     metavar="APP_ID",
+        #     help="Set Lesta (RU) APP ID",
+        # )
+        # parser.add_argument(
+        #     "--ru-rate-limit",
+        #     type=float,
+        #     default=LESTA_RATE_LIMIT,
+        #     metavar="RATE_LIMIT",
+        #     help="Rate limit for Lesta (RU) API",
+        # )
         return True
     except Exception as err:
         error(f"{err}")

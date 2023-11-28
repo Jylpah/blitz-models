@@ -153,7 +153,7 @@ def tanks_updated() -> list[Tank]:
     )
     tanks: list[Tank] = list()
     for obj in objs:
-        tanks.append(Tank.parse_obj(obj))
+        tanks.append(Tank.model_validate(obj))
     return tanks
 
 
@@ -197,14 +197,13 @@ async def test_2_api_tank_stats(datafiles: Path) -> None:
     async with WGApi() as wg:
         for account_fn in datafiles.iterdir():
             accounts: list[Account] = list()
-            async for account in Account.import_file(str(account_fn.resolve())):
+            async for account in Account.import_file(account_fn):
                 accounts.append(account)
 
             region: Region = accounts[0].region
 
-            account_ids: list[int] = list()
             stats_ok: bool = False
-            for account in accounts[:10]:
+            for account in accounts[:20]:
                 tank_stats = await wg.get_tank_stats(
                     account_id=account.id, region=region
                 )
@@ -226,7 +225,7 @@ async def test_3_api_player_achievements(datafiles: Path) -> None:
     async with WGApi() as wg:
         for account_fn in datafiles.iterdir():
             accounts: list[Account] = list()
-            async for account in Account.import_file(str(account_fn.resolve())):
+            async for account in Account.import_file(account_fn):
                 accounts.append(account)
 
             region: Region = accounts[0].region
@@ -291,7 +290,11 @@ async def test_5_api_tankstrs(
     """test for WGApiTankString()"""
     for fn in datafiles.iterdir():
         try:
-            tank_str: WGApiTankString = WGApiTankString.parse_file(fn)
+            tank_str: WGApiTankString
+            if (res := await WGApiTankString.open_json(fn)) is not None:
+                tank_str = res
+            else:
+                raise ValueError(f"could read WGApiTankString from file: {fn}")
         except Exception as err:
             assert (
                 False
