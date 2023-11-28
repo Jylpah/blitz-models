@@ -1,6 +1,6 @@
 [project]
 name = "blitz-utils"
-version = "0.5.8"
+version = "1.0.0a1"
 authors = [{ name = "Jylpah", email = "jylpah@gmail.com" }]
 description = "Python utils for Wargaming's World of Tanks Blitz game "
 readme = "README.md"
@@ -21,10 +21,10 @@ dependencies = [
     "aiosqlite>=0.19.0",
     "isort>=5.12.0",
     "pyarrow>=11.0.0",
-    "pydantic>=1.10.7, ==1.*",
+    "pydantic>=2.4.2",
     "pymongo>=4.3.3",
     "sortedcollections>=2.1.0",
-    "pyutils @ git+https://github.com/Jylpah/pyutils.git",
+    "pyutils @ git+https://github.com/Jylpah/pyutils.git@dev-pydantic-v2",
 ]
 
 [project.optional-dependencies]
@@ -58,6 +58,7 @@ allow-direct-references = true
 
 [tool.mypy]
 plugins = ["pydantic.mypy"]
+mypy_path = "$MYPY_CONFIG_FILE_DIR/src"
 
 [tool.black]
 # line-length = 88
