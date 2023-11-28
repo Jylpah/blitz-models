@@ -226,9 +226,16 @@ async def test_8_Tank_import(datafiles: Path) -> None:
         ), f"could not parse any Tank from file: {basename(tanks_json_fn)}"
 
 
+def test_9_tank_example_instance() -> None:
+    try:
+        ts = Tank.example_instance()
+    except Exception as err:
+        assert False, f"Could not validate Tank example instance : {type(err)}: {err}"
+
+
 @pytest.mark.asyncio
 @TANKS_JSON_FILES
-async def test_9_WGApiTankopedia(
+async def test_10_WGApiTankopedia(
     tmp_path: Path, datafiles: Path, tanks_json_tanks: int
 ) -> None:
     tankopedia = WGApiWoTBlitzTankopedia()
@@ -276,7 +283,7 @@ async def test_9_WGApiTankopedia(
 
 @pytest.mark.asyncio
 @TANKOPEDIA_FILES
-async def test_10_WGApiTankopedia(
+async def test_11_WGApiTankopedia(
     tmp_path: Path, datafiles: Path, tankopedia_tanks: int
 ) -> None:
     tankopedia = WGApiWoTBlitzTankopedia()
@@ -327,7 +334,7 @@ async def test_10_WGApiTankopedia(
 
 @pytest.mark.asyncio
 @TANKOPEDIA_FILES
-async def test_11_WGApiTankopedia_sorted(
+async def test_12_WGApiTankopedia_sorted(
     tmp_path: Path, datafiles: Path, tankopedia_tanks: int
 ) -> None:
     tankopedia = WGApiWoTBlitzTankopedia()

@@ -219,9 +219,18 @@ async def test_2_api_tank_stats(datafiles: Path) -> None:
             assert stats_ok, f"Could not find any stats for {region} region"
 
 
+def test_3_tankstat_example_instance() -> None:
+    try:
+        ts = TankStat.example_instance()
+    except Exception as err:
+        assert (
+            False
+        ), f"Could not validate TankStat example instance : {type(err)}: {err}"
+
+
 @pytest.mark.asyncio
 @ACCOUNTS
-async def test_3_api_player_achievements(datafiles: Path) -> None:
+async def test_4_api_player_achievements(datafiles: Path) -> None:
     async with WGApi() as wg:
         for account_fn in datafiles.iterdir():
             accounts: list[Account] = list()
@@ -244,9 +253,18 @@ async def test_3_api_player_achievements(datafiles: Path) -> None:
             ), "incorrect type returned"
 
 
+def test_5_player_achievements_example_instance() -> None:
+    try:
+        pa = PlayerAchievementsMaxSeries.example_instance()
+    except Exception as err:
+        assert (
+            False
+        ), f"Could not validate PlayerAchievementsMaxSeries example instance: {type(err)}: {err}"
+
+
 @pytest.mark.asyncio
 @ACCOUNTS
-async def test_4_api_tankopedia(
+async def test_6_api_tankopedia(
     datafiles: Path, tanks_remove: list[int], tanks_updated: list[Tank]
 ) -> None:
     tankopedia: WGApiWoTBlitzTankopedia | None
@@ -284,7 +302,7 @@ async def test_4_api_tankopedia(
 
 @pytest.mark.asyncio
 @WGAPI_TANKSTR
-async def test_5_api_tankstrs(
+async def test_7_api_tankstrs(
     datafiles: Path, wgapi_tankstrs_user_strings: list[str]
 ) -> None:
     """test for WGApiTankString()"""

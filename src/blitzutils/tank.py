@@ -1,7 +1,7 @@
 import logging
 import json
 from warnings import warn
-from typing import Any, Optional
+from typing import Any, ClassVar, Optional
 from enum import IntEnum, StrEnum
 from pydantic import field_validator, ConfigDict, root_validator, Field
 
@@ -128,18 +128,17 @@ class Tank(JSONExportable, CSVExportable, TXTExportable):
     type 	  	: EnumVehicleTypeStr| None	= Field(default=None)
     tier 		: EnumVehicleTier| None 	= Field(default=None)
     is_premium 	: bool 						= Field(default=False)
-    # fmt: on
+ 
 
-    _example = """{
-                    "_id": 2849,
-                    "name": "T34",
-                    "nation": 2,
-                    "type": 2,
-                    "tier": 8,
-                    "is_premium": true
-                }"""
-    # TODO[pydantic]: The following keys were removed: `allow_mutation`.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+    _example: ClassVar[str] = """{
+                                    "_id": 2849,
+                                    "name": "T34",
+                                    "nation": 2,
+                                    "type": "mediumTank",
+                                    "tier": 8,
+                                    "is_premium": true
+                                }"""
+    # fmt: on
     model_config = ConfigDict(
         frozen=False, validate_assignment=True, populate_by_name=True, extra="allow"
     )
