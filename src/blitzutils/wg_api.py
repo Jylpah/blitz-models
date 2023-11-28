@@ -113,14 +113,14 @@ class WGTankStatAll(JSONExportable):
     spotted:            int = Field(default=-1, alias="sp")
     hits:               int = Field(default=-1, alias="h")
     frags:              int = Field(default=-1, alias="k")
-    max_xp:             int | None
+    max_xp:             int | None = None
     capture_points:     int = Field(default=-1, alias="cp")
     damage_dealt:       int = Field(default=-1, alias="dd")
     damage_received:    int = Field(default=-1, alias="dr")
     max_frags:          int = Field(default=-1, alias="mk")
     shots:              int = Field(default=-1, alias="sh")
-    frags8p:            int | None
-    xp:                 int | None
+    frags8p:            int | None = None
+    xp:                 int | None = None
     win_and_survived:   int = Field(default=-1, alias="ws")
     survived_battles:   int = Field(default=-1, alias="sb")
     dropped_capture_points: int = Field(default=-1, alias="dp")
@@ -152,11 +152,11 @@ class TankStat(JSONExportable):
     mark_of_mastery:    int = Field(default=0, alias="m")
     battle_life_time:   int = Field(default=0, alias="l")
     release:            str | None = Field(default=None, alias="u")
-    max_xp:             int | None
-    in_garage_updated:  int | None
-    max_frags:          int | None
-    frags:              int | None
-    in_garage:          bool | None
+    max_xp:             int | None = None
+    in_garage_updated:  int | None = None
+    max_frags:          int | None = None
+    frags:              int | None = None
+    in_garage:          bool | None = None
     # fmt: on
 
     _exclude_export_DB_fields: ClassVar[Optional[TypeExcludeDict]] = {
