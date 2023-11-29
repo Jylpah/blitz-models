@@ -356,3 +356,12 @@ async def test_4_post_replay(
                 break
     finally:
         await WI.close()
+
+
+def test_5_replay_example_instance() -> None:
+    try:
+        r = ReplayJSON.example_instance()
+    except Exception as err:
+        assert (
+            False
+        ), f"Could not validate ReplayJSON example instance : {type(err)}: {err}"
