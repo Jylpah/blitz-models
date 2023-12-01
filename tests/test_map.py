@@ -14,7 +14,7 @@ debug = logger.debug
 
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / "src"))
 
-from blitzutils import Map, Maps, MapMode
+from blitzutils import Map, Maps, MapMode, MapModeStr
 
 
 ########################################################
@@ -125,3 +125,24 @@ async def test_2_update(
     assert maps_added_updated[1] == len(
         updated
     ), f"could not import all maps: got {len(updated)}, expected {maps_added_updated[0]}"
+
+
+@pytest.mark.asyncio
+@pytest.mark.datafiles(FIXTURE_DIR / MAPS_JSON)
+async def test_3_mapmode(tmp_path: Path, datafiles: Path) -> None:
+    maps_fn: Path = Path("__not_existing__")
+    maps: Maps | None = None
+    for fn in datafiles.iterdir():
+        maps_fn = fn
+
+    assert (
+        maps := await Maps.open_json(maps_fn)
+    ) is not None, f"could not open maps from: {maps_fn.name}"
+
+    map_mode: MapMode
+    map_mode_str: MapModeStr
+    for map in maps:
+        map_mode = map.mode
+        map_mode_str = map_mode.toMapModeStr
+        assert map_mode.name == map_mode_str.name, "conversion to MapModeStr"
+        assert map_mode == map_mode_str.toMapMode, "conversion back to MapMode failed"

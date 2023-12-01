@@ -41,6 +41,23 @@ class MapMode(IntEnum):
     special = 2
     partial = 3
 
+    @property
+    def toMapModeStr(self) -> "MapModeStr":
+        """Convert to MapModeStr"""
+        return MapModeStr[self.name]
+
+
+class MapModeStr(StrEnum):
+    training = "training"
+    normal = "normal"
+    special = "special"
+    partial = "partial"
+
+    @property
+    def toMapMode(self) -> MapMode:
+        """Convert to MapMode"""
+        return MapMode[self.name]
+
 
 class Map(JSONExportable):
     key: str = Field(default=..., alias="_id")

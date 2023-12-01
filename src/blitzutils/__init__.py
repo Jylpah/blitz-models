@@ -28,6 +28,7 @@ from .map import (
     Map as Map,
     Maps as Maps,
     MapMode as MapMode,
+    MapModeStr as MapModeStr,
 )
 from .wg_api import (
     AccountInfo as AccountInfo,
