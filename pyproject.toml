@@ -1,6 +1,6 @@
 [project]
 name = "blitz-utils"
-version = "1.0.0a1"
+version = "1.0.0a2"
 authors = [{ name = "Jylpah", email = "jylpah@gmail.com" }]
 description = "Python utils for Wargaming's World of Tanks Blitz game "
 readme = "README.md"
