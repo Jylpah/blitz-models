@@ -1,5 +1,15 @@
 import logging
-from typing import Optional, cast, Any, AsyncIterable, Iterable
+from typing import (
+    Annotated,
+    Dict,
+    Literal,
+    Optional,
+    cast,
+    Any,
+    AsyncIterable,
+    Iterable,
+    List,
+)
 from aiohttp import ClientResponse, FormData
 from pathlib import Path
 from aiofiles import open
