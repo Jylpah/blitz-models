@@ -199,8 +199,8 @@ class Replay(JSONExportable):
     battle_start_time: AwareDatetime    = Field(alias="bts")                # is 'int' in v1 and has 'str' counterpart
     # upload_time: AwareDatetime
     upload_time     : AwareDatetime | None = Field(default=None, alias="uts") # not in v1
-    allies          : Sequence[int]     = Field(default=..., alias="a")
-    enemies         : Sequence[int]     = Field(default=..., alias="e")
+    allies          : Sequence[int]     = Field(default_factory=list, alias="a")
+    enemies         : Sequence[int]     = Field(default_factory=list, alias="e")
     # protagonist_clan    : int  
     protagonist_clan: int | None        = Field(default=None, alias='pc') # can be None
     # protagonist_team: int
