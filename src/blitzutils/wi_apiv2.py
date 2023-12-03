@@ -8,7 +8,7 @@ from enum import Enum
 from typing import Any, Mapping, Optional, Sequence, Self
 from pydantic import AnyUrl, AwareDatetime, ConfigDict, Field
 
-from .replay import ReplayDetail
+from .replay import ReplayDetail, EnumWinnerTeam, EnumBattleResult
 from pyutils import JSONExportable
 
 import logging
@@ -163,52 +163,82 @@ class Replay(JSONExportable):
         extra="allow",
         populate_by_name=True,
     )
-    id: str
-    map_id: int
-    battle_duration: float
-    title: Optional[str] = None
-    player_name: str
-    protagonist: int
-    vehicle_descr: int
-    mastery_badge: int
-    exp_base: int
-    enemies_spotted: int
-    enemies_destroyed: int
-    damage_assisted: int
-    damage_made: int
-    details_url: AnyUrl
-    download_url: AnyUrl
-    game_version: Mapping[str, Any]
-    arena_unique_id: str
-    download_count: int
-    data_version: int
-    private: Optional[bool] = False
-    private_clan: bool
-    battle_start_time: AwareDatetime
-    upload_time: AwareDatetime
-    allies: Sequence[int]
-    enemies: Sequence[int]
-    protagonist_clan: int
-    protagonist_team: int
-    battle_result: int
-    credits_base: int
-    tags: Sequence[int]
-    battle_type: int
-    room_type: int
-    last_accessed_time: AwareDatetime
-    winner_team: int
-    finish_reason: int
-    players_data: Sequence[PlayerData]
-    exp_total: int
-    credits_total: int
-    repair_cost: int
-    exp_free: int
-    exp_free_base: int
-    exp_penalty: int
-    credits_penalty: int
-    credits_contribution_in: int
-    credits_contribution_out: int
-    camouflage_id: int
+    # fmt: off
+    # id: str
+    id              : str = Field(default=..., alias="_id")
+    # map_id: int
+    map_id          : int               = Field(default=-1, alias="mi")  # not in v1
+    # battle_duration: float
+    battle_duration : float             = Field(default=..., alias="bd")
+    title           : Optional[str]     = Field(default=None, alias="t")
+    player_name     : str               = Field(default=..., alias="pn")
+    protagonist     : int               = Field(default=..., alias="p")
+    vehicle_descr   : int               = Field(default=-1, alias='vi')    # not in v1
+    # mastery_badge: int
+    mastery_badge   : int | None        = Field(default=None, alias="mb")  # can be None
+    # exp_base: int
+    exp_base        : int | None        = Field(default=None, alias="eb")  # can be None
+    # enemies_spotted     : int
+    enemies_spotted : int | None        = Field(default=None, alias='es')  # can be None
+    # enemies_destroyed   : int
+    enemies_destroyed: int | None       = Field(default=None, alias='ek')  # can be None
+    # damage_assisted     : int
+    damage_assisted : int | None        = Field(default=None, alias='da')  # can be None
+    # damage_made         : int
+    damage_made     : int | None        = Field(default=None, alias='dm')  # can be None
+    # details_url: AnyUrl
+    details_url     : AnyUrl | None     = Field(default=None, alias="deu") # ReplayData.view_url in v1
+    # download_url: AnyUrl
+    download_url    : AnyUrl | None     = Field(default=None, alias="dlu")
+    game_version    : Mapping[str, Any] = Field(default_factory=dict, alias="gv")  # not in v1
+    arena_unique_id : str               = Field(default=..., alias="aid") # was 'int' in v1
+    download_count  : int               = Field(default=0, alias='dlc')    # not in v1
+    data_version    : int               = Field(default=-1, alias='ver')    # not in v1
+    private         : Optional[bool]    = Field(default=False, alias="priv") # not in v1
+    private_clan    : bool              = Field(default=False, alias="pric") # not in v1
+    battle_start_time: AwareDatetime    = Field(alias="bts")                # is 'int' in v1 and has 'str' counterpart
+    # upload_time: AwareDatetime
+    upload_time     : AwareDatetime | None = Field(default=None, alias="uts") # not in v1
+    allies          : Sequence[int]     = Field(default=..., alias="a")
+    enemies         : Sequence[int]     = Field(default=..., alias="e")
+    # protagonist_clan    : int  
+    protagonist_clan: int | None        = Field(default=None, alias='pc') # can be None
+    # protagonist_team: int
+    protagonist_team: int | None        = Field(default=None, alias="pt")
+    # battle_result: int
+    battle_result   : EnumBattleResult | None = Field(default=..., alias="br")
+    # credits_base: int
+    credits_base    : int | None        = Field(default=None, alias="cb")
+    tags            : Sequence[int]     = Field(default_factory=list, alias="tgs") # not in v1
+    # battle_type   : int
+    battle_type     : int | None        = Field(default=None, alias="bt")
+    # room_type: int
+    room_type       : int | None        = Field(default=None, alias="rt")
+    last_accessed_time: AwareDatetime | None = Field(default=None)  # not in v1, not needed
+    # winner_team: int
+    winner_team     : EnumWinnerTeam | None = Field(default=..., alias="wt")
+    finish_reason   : int               = Field(default=-1, alias="ft")  # not in v1, Enum??
+    players_data    : Sequence[PlayerData] = Field(default_factory=list, alias="d") # in v1 ReplayDetail | list[ReplayDetail]
+    # exp_total: int
+    exp_total       : int | None        = Field(default=None, alias="et")
+    # credits_total : int
+    credits_total   : int | None        = Field(default=None, alias="ct")
+    # repair_cost: int
+    repair_cost     : int | None        = Field(default=None, alias="rc")
+    # exp_free: int
+    exp_free        : int | None        = Field(default=None, alias="ef")
+    # exp_free_base: int
+    exp_free_base   : int | None        = Field(default=None, alias="efb")
+    # exp_penalty: int
+    exp_penalty     : int | None        = Field(default=None, alias="ep")
+    # credits_penalty: int
+    credits_penalty : int | None        = Field(default=None, alias="cp")
+    # credits_contribution_in: int
+    credits_contribution_in: int | None = Field(default=None, alias="cci")
+    # credits_contribution_out: int
+    credits_contribution_out: int | None= Field(default=None, alias="cco")
+    camouflage_id   : int               = Field(default=-1, alias="cid")
+    # fmt: off
 
 
 class ReplayList(JSONExportable):
