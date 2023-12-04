@@ -126,15 +126,75 @@ class PlayerData(JSONExportable):
     vehicle_descr		: int | None = Field(default=None, alias='vi')
     wp_points_earned	: int | None = Field(default=None, alias='we')
     wp_points_stolen	: int | None = Field(default=None, alias='ws')
+    # fmt: on
+    model_config = ConfigDict(
+        extra="allow", frozen=False, validate_assignment=True, populate_by_name=True
+    )
 
-    model_config = ConfigDict(extra="allow", frozen=False, validate_assignment=True, populate_by_name=True)
+    _example = """
+    {
+      "team": 1,
+      "name": "jylpah",
+      "entity_id": 10361636,
+      "dbid": 521458531,
+      "clanid": 156,
+      "clan_tag": "SPRTA",
+      "hitpoints_left": 0,
+      "credits": 16277,
+      "exp": 592,
+      "shots_made": 9,
+      "shots_hit": 7,
+      "shots_splash": 0,
+      "shots_pen": 4,
+      "damage_made": 2650,
+      "damage_received": 2600,
+      "damage_assisted": 549,
+      "damage_assisted_track": 450,
+      "hits_received": 15,
+      "hits_bounced": 4,
+      "hits_splash": 0,
+      "hits_pen": 11,
+      "enemies_spotted": 0,
+      "enemies_damaged": 3,
+      "enemies_destroyed": 0,
+      "time_alive": 224,
+      "distance_travelled": 726,
+      "killed_by": 10361635,
+      "base_capture_points": 0,
+      "base_defend_points": 0,
+      "exp_for_damage": 208,
+      "exp_for_assist": 60,
+      "exp_team_bonus": 171,
+      "wp_points_earned": 0,
+      "wp_points_stolen": 0,
+      "hero_bonus_credits": 0,
+      "hero_bonus_exp": 0,
+      "death_reason": 0,
+      "achievements": [
+        {
+          "t": 411,
+          "v": 2
+        },
+        {
+          "t": 403,
+          "v": 2
+        }
+      ],
+      "vehicle_descr": 58641,
+      "turret_id": 28947,
+      "gun_id": 21012,
+      "chassis_id": 34834,
+      "squad_index": 0,
+      "damage_blocked": 4700
+    }
+    """
 
     @classmethod
     def from_ReplayDetail(cls, replay_detail: ReplayDetail) -> Self | None:
         """convert V1 ReplayDetail to V2 PlayerData"""
         try:
-            d : dict[str, Any] = replay_detail.model_dump()
-            
+            d: dict[str, Any] = replay_detail.model_dump()
+
             # dbid field
             d["id"] = d["ai"]
             del d["ai"]
@@ -145,7 +205,7 @@ class PlayerData(JSONExportable):
 
             return cls.model_validate(d)
         except KeyError as err:
-            error(f"{err}")  
+            error(f"{err}")
         return None
 
 
@@ -159,6 +219,12 @@ class Product(JSONExportable):
 
 
 class Replay(JSONExportable):
+    """
+    Model for a replay
+    """
+
+    # TODO: Add example_instance
+
     model_config = ConfigDict(
         extra="allow",
         populate_by_name=True,
@@ -239,6 +305,199 @@ class Replay(JSONExportable):
     credits_contribution_out: int | None= Field(default=None, alias="cco")
     camouflage_id   : int               = Field(default=-1, alias="cid")
     # fmt: off
+
+
+    _example = """
+    {
+  "id": "4e82956ce42fd8090a70d02a886a18be",
+  "map_id": 5,
+  "battle_duration": 245.33473,
+  "title": "VK 72.01 (K) @ Falls Creek",
+  "player_name": "jylpah",
+  "protagonist": 521458531,
+  "vehicle_descr": 58641,
+  "mastery_badge": 0,
+  "exp_base": 592,
+  "enemies_spotted": 0,
+  "enemies_destroyed": 0,
+  "damage_assisted": 999,
+  "damage_made": 2650,
+  "details_url": "https://replays.wotinspector.com/en/view/4e82956ce42fd8090a70d02a886a18be",
+  "download_url": "https://replays.wotinspector.com/download/4e82956ce42fd8090a70d02a886a18be",
+  "game_version": {
+    "name": "10.1.0_apple",
+    "package": "blitz10.1"
+  },
+  "arena_unique_id": "16117927324875930",
+  "download_count": 0,
+  "data_version": 6,
+  "private": false,
+  "private_clan": false,
+  "battle_start_time": "2023-07-18T20:57:01Z",
+  "upload_time": "2023-10-02T05:58:12.711136Z",
+  "allies": [
+    521458531,
+    597563210,
+    564799647,
+    650763665,
+    665370740,
+    594896096,
+    538458467
+  ],
+  "enemies": [
+    588636999,
+    596090909,
+    542046639,
+    612849634,
+    581974895,
+    597219828,
+    520032043
+  ],
+  "protagonist_clan": 500000156,
+  "protagonist_team": 1,
+  "battle_result": 0,
+  "credits_base": 16277,
+  "tags": [
+    0
+  ],
+  "battle_type": 1,
+  "room_type": 1,
+  "last_accessed_time": "2023-10-02T13:22:23.552216Z",
+  "winner_team": 2,
+  "finish_reason": 1,
+  "players_data": [
+      {
+      "team": 1,
+      "name": "Apex_LGN",
+      "entity_id": 10361638,
+      "dbid": 650763665,
+      "clanid": 210033,
+      "clan_tag": "_TQT_",
+      "hitpoints_left": 0,
+      "credits": 10144,
+      "exp": 594,
+      "shots_made": 8,
+      "shots_hit": 7,
+      "shots_splash": 0,
+      "shots_pen": 5,
+      "damage_made": 2287,
+      "damage_received": 1900,
+      "damage_assisted": 262,
+      "damage_assisted_track": 0,
+      "hits_received": 8,
+      "hits_bounced": 2,
+      "hits_splash": 0,
+      "hits_pen": 6,
+      "enemies_spotted": 2,
+      "enemies_damaged": 3,
+      "enemies_destroyed": 1,
+      "time_alive": 171,
+      "distance_travelled": 640,
+      "killed_by": 10361631,
+      "base_capture_points": 0,
+      "base_defend_points": 0,
+      "exp_for_damage": 193,
+      "exp_for_assist": 19,
+      "exp_team_bonus": 180,
+      "wp_points_earned": 365,
+      "wp_points_stolen": 0,
+      "hero_bonus_credits": 0,
+      "hero_bonus_exp": 0,
+      "death_reason": 0,
+      "achievements": [
+        {
+          "t": 411,
+          "v": 0
+        },
+        {
+          "t": 403,
+          "v": 0
+        }
+      ],
+      "vehicle_descr": 10369,
+      "turret_id": 14979,
+      "gun_id": 14468,
+      "chassis_id": 15234,
+      "squad_index": 0,
+      "damage_blocked": 1470
+    },
+    {
+      "team": 2,
+      "name": "FALOSS_VOIN",
+      "entity_id": 10361639,
+      "dbid": 588636999,
+      "clanid": 186043,
+      "clan_tag": "DNLA",
+      "hitpoints_left": 1185,
+      "credits": 14194,
+      "exp": 1076,
+      "shots_made": 10,
+      "shots_hit": 8,
+      "shots_splash": 0,
+      "shots_pen": 6,
+      "damage_made": 2371,
+      "damage_received": 715,
+      "damage_assisted": 105,
+      "damage_assisted_track": 0,
+      "hits_received": 3,
+      "hits_bounced": 1,
+      "hits_splash": 0,
+      "hits_pen": 2,
+      "enemies_spotted": 3,
+      "enemies_damaged": 4,
+      "enemies_destroyed": 0,
+      "time_alive": 229,
+      "distance_travelled": 660,
+      "killed_by": 0,
+      "base_capture_points": 0,
+      "base_defend_points": 0,
+      "exp_for_damage": 272,
+      "exp_for_assist": 4,
+      "exp_team_bonus": 521,
+      "wp_points_earned": 0,
+      "wp_points_stolen": 0,
+      "hero_bonus_credits": 0,
+      "hero_bonus_exp": 0,
+      "death_reason": -1,
+      "achievements": [
+        {
+          "t": 476,
+          "v": 83
+        },
+        {
+          "t": 401,
+          "v": 33
+        },
+        {
+          "t": 407,
+          "v": 2
+        },
+        {
+          "t": 418,
+          "v": 13
+        }
+      ],
+      "vehicle_descr": 10369,
+      "turret_id": 14979,
+      "gun_id": 14468,
+      "chassis_id": 15234,
+      "squad_index": 0,
+      "damage_blocked": 470
+      }
+    ],
+    "exp_total": 888,
+    "credits_total": 30523,
+    "repair_cost": 0,
+    "exp_free": 188,
+    "exp_free_base": 29,
+    "exp_penalty": 0,
+    "credits_penalty": 0,
+    "credits_contribution_in": 0,
+    "credits_contribution_out": 0,
+    "camouflage_id": -1
+    }
+
+    """
 
 
 class ReplayList(JSONExportable):
