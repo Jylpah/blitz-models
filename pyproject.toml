@@ -24,7 +24,7 @@ dependencies = [
     "pydantic>=1.10.7, ==1.*",
     "pymongo>=4.3.3",
     "sortedcollections>=2.1.0",
-    "pyutils @ git+https://github.com/Jylpah/pyutils.git",
+    "pyutils @ git+https://github.com/Jylpah/pyutils.git@main-v1",
 ]
 
 [project.optional-dependencies]
