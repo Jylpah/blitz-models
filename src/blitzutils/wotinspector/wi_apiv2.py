@@ -5,9 +5,20 @@
 from __future__ import annotations
 
 from enum import Enum, IntEnum
-from re import I
-from typing import Any, Mapping, Optional, Sequence, Self, Type, List, Dict
+from typing import (
+    Any,
+    AsyncIterable,
+    AsyncIterator,
+    Mapping,
+    Optional,
+    Sequence,
+    Self,
+    Type,
+    List,
+    Dict,
+)
 from types import TracebackType
+from aiohttp import ClientSession
 from pydantic import AnyUrl, AwareDatetime, ConfigDict, Field, FieldSerializationInfo
 
 from .wi_apiv1 import ReplayDetail, EnumWinnerTeam, EnumBattleResult
@@ -632,7 +643,7 @@ class PaginatedReplayList(JSONExportable):
     results: Optional[List[ReplaySummary]] = None
 
 
-class WotInspectorV2:
+class WotInspector:
     """WoTinspector.com API v2 client"""
 
     URL_BASE: str = "https://api.wotinspector.com/v2"
@@ -711,3 +722,47 @@ class WotInspectorV2:
             return paginated_list.results
         debug("could not retrieve valid replay list")
         return None
+
+    class AsyncReplayIterable(AsyncIterable[ReplaySummary]):
+        """Async iterable ovar API v2' replays list"""
+
+        def __init__(
+            self, wi: WotInspector, page: int = 1, max_pages: int = 10, **filter_args
+        ) -> None:
+            super().__init__()
+            self._filter_args: Dict[str, Any] = filter_args
+            self._wi: WotInspector = wi
+            self._replay_list: List[ReplaySummary] | None = None
+            self._index: int = -1  # must be -1 to work during the first time
+            self._page: int = page
+            self._max_pages: int = max_pages
+
+        def __aiter__(self) -> AsyncIterator[ReplaySummary]:
+            return self
+
+        async def __anext__(self) -> ReplaySummary:
+            self._index += 1
+            if self._replay_list is None or self._index == len(self._replay_list):
+                replay_list: List[ReplaySummary] | None
+                if (
+                    self._max_pages == 0
+                    or (
+                        replay_list := await self._wi.get_replay_list(
+                            page=self._page, **self._filter_args
+                        )
+                    )
+                    is None
+                ):
+                    raise StopAsyncIteration
+                self._replay_list = replay_list
+                self._page += 1
+                self._max_pages -= 1
+                self._index = 0
+            if self._replay_list is not None and self._index < len(self._replay_list):
+                return self._replay_list[self._index]
+            raise StopAsyncIteration
+
+    def list_replays(
+        self, page: int = 1, max_pages: int = 10, **filter_args
+    ) -> AsyncReplayIterable:
+        return AsyncReplayIterable(self, page=page, max_pages=max_pages, **filter_args)
