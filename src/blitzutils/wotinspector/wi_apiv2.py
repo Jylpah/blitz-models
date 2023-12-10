@@ -5,11 +5,12 @@
 from __future__ import annotations
 
 from enum import Enum, IntEnum
-from typing import Any, Mapping, Optional, Sequence, Self, Type
+from re import I
+from typing import Any, Mapping, Optional, Sequence, Self, Type, List, Dict
 from types import TracebackType
 from pydantic import AnyUrl, AwareDatetime, ConfigDict, Field, FieldSerializationInfo
 
-from .replay import ReplayDetail, EnumWinnerTeam, EnumBattleResult
+from .wi_apiv1 import ReplayDetail, EnumWinnerTeam, EnumBattleResult
 from pyutils import JSONExportable, ThrottledClientSession
 from pyutils.utils import get_url_model
 
@@ -508,7 +509,7 @@ class Replay(JSONExportable):
     """
 
 
-class ReplayList(JSONExportable):
+class ReplaySummary(JSONExportable):
     model_config = ConfigDict(
         extra="allow",
         populate_by_name=True,
@@ -617,7 +618,7 @@ class PaginatedProductList(JSONExportable):
     results: Optional[Sequence[Product]] = None
 
 
-class PaginatedReplayListList(JSONExportable):
+class PaginatedReplayList(JSONExportable):
     model_config = ConfigDict(
         extra="allow",
         populate_by_name=True,
@@ -628,14 +629,14 @@ class PaginatedReplayListList(JSONExportable):
     previous: Optional[AnyUrl] = Field(
         None, examples=["http://api.example.org/accounts/?page=2"]
     )
-    results: Optional[Sequence[ReplayList]] = None
+    results: Optional[List[ReplaySummary]] = None
 
 
 class WotInspectorV2:
     """WoTinspector.com API v2 client"""
 
     URL_BASE: str = "https://api.wotinspector.com/v2"
-    URL_REPLAY_LIST: str = URL_BASE + "/blitz/replays/"
+    URL_REPLAY_LIST: str = URL_BASE + "/blitz/replays"
     URL_REPLAY_GET: str = URL_BASE + "/blitz/replays"
 
     DEFAULT_RATE_LIMIT: float = 20 / 3600  # 20 requests / hour
@@ -674,5 +675,39 @@ class WotInspectorV2:
         await self.close()
 
     @classmethod
-    def url_replay(cls, id: str) -> str:
+    def get_url_replay(cls, id: str) -> str:
         return f"{cls.URL_REPLAY_GET}/{id}/"
+
+    @classmethod
+    def get_url_replay_list(cls, page: int = 1, **kwargs) -> str:
+        kwargs["page"] = page
+        return (
+            f"{cls.URL_REPLAY_LIST}/?{'&'.join([f'{k}={v}' for k,v in kwargs.items()])}"
+        )
+
+    async def get_replay(self, id: str) -> Replay | None:
+        """Get replay with id as Replay model"""
+        return await get_url_model(
+            self.session,
+            self.get_url_replay(id),
+            resp_model=Replay,
+        )
+
+    async def get_replay_list(
+        self, page: int = 1, **kwargs
+    ) -> List[ReplaySummary] | None:
+        """Get list of replays"""
+        debug(
+            f"starting: page={page}, {', '.join([ f'{k}={v}' for k,v in kwargs.items()])}"
+        )
+        paginated_list: PaginatedReplayList | None
+        if (
+            paginated_list := await get_url_model(
+                self.session,
+                url=self.get_url_replay_list(page=page, **kwargs),
+                resp_model=PaginatedReplayList,
+            )
+        ) is not None:
+            return paginated_list.results
+        debug("could not retrieve valid replay list")
+        return None
