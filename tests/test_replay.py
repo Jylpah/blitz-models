@@ -1,6 +1,5 @@
 import sys
 import pytest  # type: ignore
-from os.path import dirname, realpath, join as pjoin, basename
 from pathlib import Path
 from random import choice
 import logging
@@ -14,14 +13,15 @@ debug = logger.debug
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / "src"))
 
 from blitzutils import (
-    ReplayJSON,
-    ReplayFile,
-    ReplayFileMeta,
     WGApiWoTBlitzTankopedia,
     Maps,
-    WoTinspector,
 )
 
+from blitzutils.wotinspector.wi_apiv1 import (
+    ReplayJSON,
+    ReplayFile,
+    WoTinspector,
+)
 
 ########################################################
 #

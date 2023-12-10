@@ -1,19 +1,5 @@
 from .config import get_config_file as get_config_file
-from .wotinspector import (
-    WoTinspector as WoTinspector,
-    WoTInspectorAPIReplays as WoTInspectorAPIReplays,
-    WIReplaysData as WIReplaysData,
-)
-from .replay import (
-    ReplayFile as ReplayFile,
-    ReplayFileMeta as ReplayFileMeta,
-    ReplayJSON as ReplayJSON,
-    ReplayData as ReplayData,
-    ReplaySummary as ReplaySummary,
-    ReplayDetail as ReplayDetail,
-    ReplayAchievement as ReplayAchievement,
-    WoTBlitzMaps as WoTBlitzMaps,
-)
+
 from .region import Region as Region
 from .release import Release as Release
 from .account import Account as Account
@@ -48,23 +34,7 @@ from .wg_api import (
     WGApiTankString as WGApiTankString,
     add_args_wg as add_args_wg,
 )
-from .wi_apiv2 import (
-    BattleDetails as BattleDetails,
-    ChatMessage as ChatMessage,
-    GameVersion as GameVersion,
-    HeatmapSet as HeatmapSet,
-    MapEntry as MapEntry,
-    PaginatedGameVersionList as PaginatedGameVersionList,
-    PaginatedProductList as PaginatedProductList,
-    PaginatedReplayListList as PaginatedReplayListList,
-    PlatformEnum as PlatformEnum,
-    PlayerData as PlayerData,
-    Product as Product,
-    Replay as Replay,
-    ReplayList as ReplayList,
-    ReplayRequest as ReplayRequest,
-    Shot as Shot,
-)
+
 
 __all__ = [
     "account",
@@ -74,5 +44,4 @@ __all__ = [
     "region",
     "tank",
     "wg_api",
-    "wotinspector",
 ]

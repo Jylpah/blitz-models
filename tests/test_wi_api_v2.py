@@ -13,19 +13,8 @@ debug = logger.debug
 
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / "src"))
 
-from blitzutils import (
-    Account,
-    Region,
-    WGApi,
-    AccountInfo,
-    PlayerAchievementsMaxSeries,
-    TankStat,
-    WGApiWoTBlitzTankopedia,
-    Tank,
-    WGApiTankString,
-)
 
-from blitzutils.wi_apiv2 import Replay, PlayerData
+from blitzutils.wotinspector.wi_apiv2 import Replay, PlayerData
 
 ########################################################
 #

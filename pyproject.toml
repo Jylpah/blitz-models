@@ -1,8 +1,9 @@
 [project]
 name = "blitz-utils"
-version = "1.0.0a2"
+# name = "blitz-models"
+version = "1.0.0a3"
 authors = [{ name = "Jylpah", email = "jylpah@gmail.com" }]
-description = "Python utils for Wargaming's World of Tanks Blitz game "
+description = "Pydantic models for Wargaming's World of Tanks Blitz game "
 readme = "README.md"
 requires-python = ">=3.11"
 classifiers = [
