@@ -1,9 +1,9 @@
 import logging
 import json
 from warnings import warn
-from typing import Any, Optional
+from typing import Any, ClassVar, Optional
 from enum import IntEnum, StrEnum
-from pydantic import root_validator, validator, Field, Extra
+from pydantic import field_validator, ConfigDict, root_validator, Field
 
 from pyutils import (
     CSVExportable,
@@ -128,22 +128,20 @@ class Tank(JSONExportable, CSVExportable, TXTExportable):
     type 	  	: EnumVehicleTypeStr| None	= Field(default=None)
     tier 		: EnumVehicleTier| None 	= Field(default=None)
     is_premium 	: bool 						= Field(default=False)
+ 
+
+    _example: ClassVar[str] = """{
+                                    "_id": 2849,
+                                    "name": "T34",
+                                    "nation": 2,
+                                    "type": "mediumTank",
+                                    "tier": 8,
+                                    "is_premium": true
+                                }"""
     # fmt: on
-
-    _example = """{
-                    "_id": 2849,
-                    "name": "T34",
-                    "nation": 2,
-                    "type": 2,
-                    "tier": 8,
-                    "is_premium": true
-                }"""
-
-    class Config:
-        allow_mutation = True
-        validate_assignment = True
-        allow_population_by_field_name = True
-        extra = Extra.allow
+    model_config = ConfigDict(
+        frozen=False, validate_assignment=True, populate_by_name=True, extra="allow"
+    )
 
     @property
     def index(self) -> Idx:
@@ -163,13 +161,15 @@ class Tank(JSONExportable, CSVExportable, TXTExportable):
         indexes.append([("name", TEXT)])
         return indexes
 
-    @validator("tank_id")
+    @field_validator("tank_id")
+    @classmethod
     def validate_id(cls, v: int) -> int:
         if v > 0:
             return v
         raise ValueError("id must be > 0")
 
-    @validator("nation", pre=True)
+    @field_validator("nation", mode="before")
+    @classmethod
     def validate_nation(cls, v: Any) -> Any:
         if isinstance(v, str):
             return EnumNation[v].value

@@ -1,6 +1,5 @@
 import sys
 import pytest  # type: ignore
-from os.path import dirname, realpath, join as pjoin, basename
 from pathlib import Path
 from random import choice
 import logging
@@ -14,14 +13,15 @@ debug = logger.debug
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / "src"))
 
 from blitzutils import (
-    ReplayJSON,
-    ReplayFile,
-    ReplayFileMeta,
     WGApiWoTBlitzTankopedia,
     Maps,
-    WoTinspector,
 )
 
+from blitzutils.wotinspector.wi_apiv1 import (
+    ReplayJSON,
+    ReplayFile,
+    WoTinspector,
+)
 
 ########################################################
 #
@@ -56,6 +56,7 @@ REPLAY_JSON_FILES = pytest.mark.datafiles(
     FIXTURE_DIR / "20200301_0030__jylpah_E-50_rift.wotbreplay.json",
     FIXTURE_DIR / "20200301_0035__jylpah_E-50_rock.wotbreplay.json",
     FIXTURE_DIR / "20200301_0039__jylpah_E-50_desert_train.wotbreplay.json",
+    on_duplicate="overwrite",
 )
 
 REPLAY_FILES = pytest.mark.datafiles(
@@ -73,17 +74,18 @@ REPLAY_FILES = pytest.mark.datafiles(
     FIXTURE_DIR / "20200301_0030__jylpah_E-50_rift.wotbreplay",
     FIXTURE_DIR / "20200301_0035__jylpah_E-50_rock.wotbreplay",
     FIXTURE_DIR / "20200301_0039__jylpah_E-50_desert_train.wotbreplay",
+    on_duplicate="overwrite",
 )
 
 
 MAPS_JSON: str = "05_Maps_new.json"
 
-MAPS = pytest.mark.datafiles(
-    FIXTURE_DIR / MAPS_JSON,
-)
+MAPS = pytest.mark.datafiles(FIXTURE_DIR / MAPS_JSON, on_duplicate="overwrite")
 
 TANKOPEDIA_JSON: str = "01_Tankopedia.json"
-TANKOPEDIA = pytest.mark.datafiles(FIXTURE_DIR / TANKOPEDIA_JSON)
+TANKOPEDIA = pytest.mark.datafiles(
+    FIXTURE_DIR / TANKOPEDIA_JSON, on_duplicate="overwrite"
+)
 
 
 def get_player(fn: Path) -> str:
@@ -104,7 +106,7 @@ def get_map(fn: Path) -> str:
 # @pytest.fixture
 # def get_tankopedia() -> WGApiWoTBlitzTankopedia:
 #     with open(tmp_path / fn, "r") as f:
-#         if (tp := WGApiWoTBlitzTankopedia.parse_raw(f.read())) is not None:
+#         if (tp := WGApiWoTBlitzTankopedia.model_validate_json(f.read())) is not None:
 #             return tp
 #     raise ValueError(f"could not open tankopedia: {fn}")
 
@@ -112,7 +114,7 @@ def get_map(fn: Path) -> str:
 # @pytest.fixture
 # def get_maps(tmp_path: Path, fn: str = MAPS_JSON) -> Maps:
 #     with open(tmp_path / fn, "r") as f:
-#         if (tp := Maps.parse_raw(f.read())) is not None:
+#         if (tp := Maps.model_validate_json(f.read())) is not None:
 #             return tp
 #     raise ValueError(f"could not open maps: {fn}")
 
@@ -356,3 +358,12 @@ async def test_4_post_replay(
                 break
     finally:
         await WI.close()
+
+
+def test_5_replay_example_instance() -> None:
+    try:
+        r = ReplayJSON.example_instance()
+    except Exception as err:
+        assert (
+            False
+        ), f"Could not validate ReplayJSON example instance : {type(err)}: {err}"

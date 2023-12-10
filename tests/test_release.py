@@ -10,7 +10,7 @@ message = logger.warning
 verbose = logger.info
 debug = logger.debug
 
-sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / "src"))
+sys.path.insert(0, str((Path(__file__).parent.parent / "src").resolve()))
 
 from pyutils import export, awrap
 from blitzutils import Release
@@ -35,7 +35,9 @@ from blitzutils import Release
 
 FIXTURE_DIR = Path(__file__).parent
 
-REPLAY_FILES = pytest.mark.datafiles(FIXTURE_DIR / "02_Releases.csv")
+RELEASE_FILES = pytest.mark.datafiles(
+    FIXTURE_DIR / "02_Releases.csv", on_duplicate="overwrite"
+)
 
 
 @pytest.fixture
@@ -51,26 +53,26 @@ def releases_count() -> int:
 
 
 @pytest.mark.asyncio
-@REPLAY_FILES
+@RELEASE_FILES
 async def test_1_import_export_releases(
     datafiles: Path, tmp_path: Path, releases_count: int
 ) -> None:
     for releases_file in datafiles.iterdir():
         releases: list[Release] = list()
 
-        releases_filename: str = str(releases_file.resolve())
-        debug("replay: %s", basename(releases_filename))
-        async for release in Release.import_csv(releases_filename):
+        debug("replay: %s", basename(releases_file.name))
+        async for release in Release.import_csv(releases_file):
             releases.append(release)
 
         assert (
             len(releases) == releases_count
-        ), f"could not import all the releases: {len(releases)} != {releases_count}"
+        ), f"could not import all the releases from CSV: {len(releases)} != {releases_count}"
 
         # export loaded replay as JSON
-        json_filename: str = str(tmp_path / "export_release.json")
+        json_filename: Path = tmp_path / "export_release.json"
         await export(awrap(releases), "json", json_filename)
 
+        # import form JSON
         imported_releases: list[Release] = list()
         async for release in Release.import_file(json_filename):
             imported_releases.append(release)
@@ -85,16 +87,17 @@ async def test_1_import_export_releases(
             ), f"imported releases in wrong order: {imported_releases[ndx]} != {release}"
 
         # export loaded replay as CSV
-        csv_filename: str = str(tmp_path / "export_release.csv")
+        csv_filename: Path = tmp_path / "export_release.csv"
         await export(awrap(releases), "csv", csv_filename)
 
+        # import form CSV
         imported_releases = list()
         async for release in Release.import_file(csv_filename):
             imported_releases.append(release)
 
         assert (
             len(imported_releases) == releases_count
-        ), f"could not import all the releases from JSON: {len(imported_releases)} != {releases_count}"
+        ), f"could not import all the releases from CSV: {len(imported_releases)} != {releases_count}"
 
         for ndx, release in enumerate(releases):
             assert (

@@ -14,7 +14,7 @@ debug = logger.debug
 
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / "src"))
 
-from blitzutils import Map, Maps, MapMode
+from blitzutils import Map, Maps, MapMode, MapModeStr
 
 
 ########################################################
@@ -43,6 +43,7 @@ MAPS = pytest.mark.datafiles(
     FIXTURE_DIR / MAPS_JSON,
     FIXTURE_DIR / MAPS_OLD_JSON,
     FIXTURE_DIR / MAPS_NEW_JSON,
+    on_duplicate="overwrite",
 )
 
 
@@ -54,16 +55,6 @@ def maps_all() -> int:
 @pytest.fixture
 def maps_added_updated() -> Tuple[int, int]:
     return (3, 1)  # number changes: 05_Maps_old.json vs maps 05_Maps.json
-
-
-# async def open_maps(path: Path) -> Maps:
-#     maps: Maps
-#     try:
-#         async with aiofiles.open(path) as f:
-#             maps = Maps.parse_raw(await f.read())
-#         return maps
-#     except Exception as err:
-#         assert False, f"could not open Maps file: {path.name}: {err}"
 
 
 ########################################################
@@ -135,3 +126,24 @@ async def test_2_update(
     assert maps_added_updated[1] == len(
         updated
     ), f"could not import all maps: got {len(updated)}, expected {maps_added_updated[0]}"
+
+
+@pytest.mark.asyncio
+@pytest.mark.datafiles(FIXTURE_DIR / MAPS_JSON, on_duplicate="overwrite")
+async def test_3_mapmode(tmp_path: Path, datafiles: Path) -> None:
+    maps_fn: Path = Path("__not_existing__")
+    maps: Maps | None = None
+    for fn in datafiles.iterdir():
+        maps_fn = fn
+
+    assert (
+        maps := await Maps.open_json(maps_fn)
+    ) is not None, f"could not open maps from: {maps_fn.name}"
+
+    map_mode: MapMode
+    map_mode_str: MapModeStr
+    for map in maps:
+        map_mode = map.mode
+        map_mode_str = map_mode.toMapModeStr
+        assert map_mode.name == map_mode_str.name, "conversion to MapModeStr"
+        assert map_mode == map_mode_str.toMapMode, "conversion back to MapMode failed"

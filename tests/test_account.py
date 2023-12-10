@@ -35,9 +35,14 @@ from blitzutils import Account
 
 FIXTURE_DIR = Path(__file__).parent
 
-ACCOUNTS_CSV = pytest.mark.datafiles(FIXTURE_DIR / "03_Accounts.csv")
+ACCOUNTS_CSV = pytest.mark.datafiles(
+    FIXTURE_DIR / "03_Accounts.csv",
+    on_duplicate="overwrite",
+)
 ACCOUNTS_TXT = pytest.mark.datafiles(
-    FIXTURE_DIR / "03_Accounts1.txt", FIXTURE_DIR / "03_Accounts2.txt"
+    FIXTURE_DIR / "03_Accounts1.txt",
+    FIXTURE_DIR / "03_Accounts2.txt",
+    on_duplicate="overwrite",
 )
 
 
