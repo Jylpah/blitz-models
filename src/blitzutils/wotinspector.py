@@ -43,8 +43,7 @@ class WIReplaySummary(JSONExportable):
     player_name: str
     vehicle_descr: int
     region: str
-    # TODO[pydantic]: The following keys were removed: `allow_mutation`.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+
     model_config = ConfigDict(
         populate_by_name=True, frozen=False, validate_assignment=True, extra="allow"
     )
@@ -52,8 +51,6 @@ class WIReplaySummary(JSONExportable):
 
 class WIReplaysData(JSONExportable):
     replays: list[WIReplaySummary]
-    # TODO[pydantic]: The following keys were removed: `allow_mutation`.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
     model_config = ConfigDict(
         populate_by_name=True, frozen=False, validate_assignment=True, extra="allow"
     )
@@ -66,8 +63,6 @@ class WoTInspectorAPIReplays(JSONExportable):
     status: str = Field(default="ok")
     data: WIReplaysData
     error: dict[str, Any]
-    # TODO[pydantic]: The following keys were removed: `allow_mutation`.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
     model_config = ConfigDict(
         populate_by_name=True, frozen=False, validate_assignment=True, extra="allow"
     )
