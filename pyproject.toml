@@ -1,7 +1,6 @@
 [project]
-name = "blitz-utils"
-# name = "blitz-models"
-version = "1.0.0a3"
+name = "blitz-models"
+version = "1.0.0a4"
 authors = [{ name = "Jylpah", email = "jylpah@gmail.com" }]
 description = "Pydantic models for Wargaming's World of Tanks Blitz game "
 readme = "README.md"
@@ -25,7 +24,7 @@ dependencies = [
     "pydantic>=2.4.2",
     "pymongo>=4.3.3",
     "sortedcollections>=2.1.0",
-    "pyutils @ git+https://github.com/Jylpah/pyutils.git@dev-pydantic-v2",
+    "pyutils @ git+https://github.com/Jylpah/pyutils.git@pydantic-v2",
 ]
 
 [project.optional-dependencies]
@@ -40,7 +39,7 @@ dev = [
     "pytest-cov>=4.1.0",
     "pytest-timeout",
     "types-aiofiles>=23.1.0.1",
-    "pyutils[dev] @ git+https://github.com/Jylpah/pyutils.git@dev",
+    "pyutils @ git+https://github.com/Jylpah/pyutils.git@dev-pydantic-v2",
 ]
 
 [project.urls]
