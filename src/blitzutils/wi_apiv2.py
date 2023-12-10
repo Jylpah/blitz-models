@@ -4,12 +4,14 @@
 
 from __future__ import annotations
 
-from enum import Enum
-from typing import Any, Mapping, Optional, Sequence, Self
-from pydantic import AnyUrl, AwareDatetime, ConfigDict, Field
+from enum import Enum, IntEnum
+from typing import Any, Mapping, Optional, Sequence, Self, Type
+from types import TracebackType
+from pydantic import AnyUrl, AwareDatetime, ConfigDict, Field, FieldSerializationInfo
 
 from .replay import ReplayDetail, EnumWinnerTeam, EnumBattleResult
-from pyutils import JSONExportable
+from pyutils import JSONExportable, ThrottledClientSession
+from pyutils.utils import get_url_model
 
 import logging
 
@@ -19,6 +21,14 @@ error = logger.error
 message = logger.warning
 verbose = logger.info
 debug = logger.debug
+
+
+class MasteryBadge(IntEnum):
+    ace_tanker = 4
+    first_class = 3
+    second_class = 2
+    third_class = 1
+    no = 0
 
 
 class ChatMessage(JSONExportable):
@@ -223,15 +233,13 @@ class Replay(JSONExportable):
     Model for a replay
     """
 
-    # TODO: Add example_instance
-
     model_config = ConfigDict(
         extra="allow",
         populate_by_name=True,
     )
     # fmt: off
     # id: str
-    id              : str = Field(default=..., alias="_id")
+    id              : str               = Field(default=..., alias="_id")
     # map_id: int
     map_id          : int               = Field(default=-1, alias="mi")  # not in v1
     # battle_duration: float
@@ -241,17 +249,17 @@ class Replay(JSONExportable):
     protagonist     : int               = Field(default=..., alias="p")
     vehicle_descr   : int               = Field(default=-1, alias='vi')    # not in v1
     # mastery_badge: int
-    mastery_badge   : int | None        = Field(default=None, alias="mb")  # can be None
+    mastery_badge   : MasteryBadge      = Field(default=MasteryBadge.no, alias="mb")  # can be None
     # exp_base: int
-    exp_base        : int | None        = Field(default=None, alias="eb")  # can be None
+    exp_base        : int               = Field(default=0, alias="eb")  # can be None
     # enemies_spotted     : int
-    enemies_spotted : int | None        = Field(default=None, alias='es')  # can be None
+    enemies_spotted : int               = Field(default=0, alias='es')  # can be None
     # enemies_destroyed   : int
-    enemies_destroyed: int | None       = Field(default=None, alias='ek')  # can be None
+    enemies_destroyed: int               = Field(default=0, alias='ek')  # can be None
     # damage_assisted     : int
-    damage_assisted : int | None        = Field(default=None, alias='da')  # can be None
+    damage_assisted : int               = Field(default=0, alias='da')  # can be None
     # damage_made         : int
-    damage_made     : int | None        = Field(default=None, alias='dm')  # can be None
+    damage_made     : int               = Field(default=0, alias='dm')  # can be None
     # details_url: AnyUrl
     details_url     : AnyUrl | None     = Field(default=None, alias="deu") # ReplayData.view_url in v1
     # download_url: AnyUrl
@@ -505,23 +513,25 @@ class ReplayList(JSONExportable):
         extra="allow",
         populate_by_name=True,
     )
-    id: str
-    map_id: int
-    battle_duration: float
-    title: Optional[str] = None
-    player_name: str
-    protagonist: int
-    vehicle_descr: int
-    mastery_badge: int
-    exp_base: int
-    enemies_spotted: int
-    enemies_destroyed: int
-    damage_assisted: int
-    damage_made: int
-    details_url: AnyUrl
-    download_url: AnyUrl
-    game_version: Mapping[str, Any]
-    arena_unique_id: str
+    # fmt: off
+    id                  : str
+    map_id              : int
+    battle_duration     : float
+    title               : Optional[str] = None
+    player_name         : str
+    protagonist         : int
+    vehicle_descr       : int
+    mastery_badge       : MasteryBadge = Field(default=MasteryBadge.no)
+    exp_base            : int = Field(default=0)
+    enemies_spotted     : int = Field(default=0)
+    enemies_destroyed   : int = Field(default=0)
+    damage_assisted     : int = Field(default=0)
+    damage_made         : int = Field(default=0)
+    details_url         : Optional[AnyUrl] = Field(default=None)
+    download_url        : Optional[AnyUrl] = Field(default=None)
+    game_version        : Mapping[str, Any]
+    arena_unique_id     : str
+    # fmt: on
 
 
 class ReplayRequest(JSONExportable):
@@ -529,10 +539,12 @@ class ReplayRequest(JSONExportable):
         extra="allow",
         populate_by_name=True,
     )
-    title: Optional[str] = Field(None, min_length=1)
-    private: Optional[bool] = False
-    upload_url: Optional[AnyUrl] = None
-    upload_file: Optional[bytes] = None
+    # fmt: off
+    title       : Optional[str] = Field(None, min_length=1)
+    private     : Optional[bool] = Field(default=None)
+    upload_url  : Optional[AnyUrl] = Field(default=None)
+    upload_file : Optional[bytes] = Field(default=None)
+    # fmt: on
 
 
 class Shot(JSONExportable):
@@ -617,3 +629,50 @@ class PaginatedReplayListList(JSONExportable):
         None, examples=["http://api.example.org/accounts/?page=2"]
     )
     results: Optional[Sequence[ReplayList]] = None
+
+
+class WotInspectorV2:
+    """WoTinspector.com API v2 client"""
+
+    URL_BASE: str = "https://api.wotinspector.com/v2"
+    URL_REPLAY_LIST: str = URL_BASE + "/blitz/replays/"
+    URL_REPLAY_GET: str = URL_BASE + "/blitz/replays"
+
+    DEFAULT_RATE_LIMIT: float = 20 / 3600  # 20 requests / hour
+
+    def __init__(
+        self, rate_limit: float = DEFAULT_RATE_LIMIT, auth_token: Optional[str] = None
+    ) -> None:
+        debug(f"rate_limit={rate_limit}, auth_token={auth_token}")
+        headers: Optional[dict[str, str]] = None
+        if auth_token is not None:
+            headers = dict()
+            headers["Authorization"] = f"Token {auth_token}"
+
+        self.session = ThrottledClientSession(
+            rate_limit=rate_limit,
+            filters=[self.URL_REPLAY_LIST],
+            re_filter=False,
+            limit_filtered=True,
+            headers=headers,
+        )
+
+    async def close(self) -> None:
+        if self.session is not None:
+            debug("Closing aiohttp session")
+            await self.session.close()
+
+    async def __aenter__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_value: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -> Self:
+        return self
+
+    async def __aexit__(self) -> None:
+        await self.close()
+
+    @classmethod
+    def url_replay(cls, id: str) -> str:
+        return f"{cls.URL_REPLAY_GET}/{id}/"
