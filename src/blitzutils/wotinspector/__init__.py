@@ -21,8 +21,6 @@ from .wi_apiv1 import (
     WoTinspector as WoTinspectorV1,
     WoTInspectorAPIReplays as WoTInspectorAPIReplays,
     WIReplaysData as WIReplaysData,
-    ReplayFile as ReplayFile,
-    ReplayFileMeta as ReplayFileMeta,
     ReplayJSON as ReplayJSON,
     ReplayData as ReplayData,
     # ReplaySummary as ReplaySummary,

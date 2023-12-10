@@ -36,7 +36,7 @@ from pyutils.utils import get_url_model, post_url
 from ..wg_api import WGApiWoTBlitzTankopedia
 from ..tank import EnumVehicleTypeInt
 from ..map import Maps
-from ..release import Release
+from ..replay import ReplayFile
 
 
 # Setup logging
@@ -1372,220 +1372,91 @@ ReplayData.register_transformation(ReplayJSON, ReplayData.transform_ReplayJSON)
 
 ###########################################
 #
-# ReplayFile
-#
-###########################################
-
-
-class ReplayFileMeta(JSONExportable):
-    version: str
-    title: str = Field(default="")
-    dbid: int
-    playerName: str
-    battleStartTime: int
-    playerVehicleName: str
-    mapName: str
-    arenaUniqueId: int
-    battleDuration: float
-    vehicleCompDescriptor: int
-    camouflageId: int
-    mapId: int
-    arenaBonusType: int
-
-    @property
-    def release(self) -> Release:
-        """Return version as Release()"""
-        return Release(release=".".join(self.version.split(".")[0:2]))
-
-    def update_title(self, tankopedia: WGApiWoTBlitzTankopedia, maps: Maps) -> str:
-        """Create 'title' based on replay meta"""
-        title: str = ""
-        if (
-            tank := tankopedia.by_code(self.playerVehicleName)
-        ) is not None and tank.name is not None:
-            title = tank.name
-        else:
-            raise ValueError("could not find tank name from tankopedia")
-        try:
-            self.title = f"{title} @ {maps[self.mapName].name}"
-            return self.title
-        except KeyError as err:
-            debug(f"map not found with key: {self.mapName}")
-        raise ValueError(f"could not find map for code: {self.mapName}")
-
-
-class ReplayFile:
-    """Class for reading WoT Blitz replay files"""
-
-    def __init__(self, replay: bytes | Path | str):
-        self._path: Path | None = None
-        self._data: bytes
-        self._hash: str
-        self._opened: bool = False
-        self.meta: ReplayFileMeta
-
-        if isinstance(replay, str):
-            self._path = Path(replay)
-        elif isinstance(replay, Path):
-            self._path = replay
-        elif isinstance(replay, bytes):
-            self._data = replay
-            self._calc_hash()
-            self._opened = True
-        else:
-            raise TypeError(f"replay is not str, Path or bytes: {type(replay)}")
-
-        if not (self._path is None or self._path.name.lower().endswith(".wotbreplay")):
-            raise ValueError(f"file does not have '.wotbreplay' suffix: {self._path}")
-        # if not is_zipfile(path):
-        #     raise ValueError(f"replay {path} is not a valid Zip file")
-
-    def _calc_hash(self) -> str:
-        hash = md5()
-        try:
-            hash.update(self._data)
-        except Exception as err:
-            error(f"{err}")
-            raise
-        self._hash = hash.hexdigest()
-        return self._hash
-
-    async def open(self):
-        """Open replay"""
-        if self._opened or self._path is None:
-            error(f"replay has been opened already: replay_id={self._hash}")
-            return None
-        debug("opening replay: %s", str(self._path))
-        async with aiofiles.open(self._path, "rb") as replay:
-            self._data = await replay.read()
-            self._calc_hash()
-
-        with ZipFile(BytesIO(self._data)) as zreplay:
-            with zreplay.open("meta.json") as meta_json:
-                self.meta = ReplayFileMeta.model_validate_json(meta_json.read())
-        self._opened = True
-
-    @property
-    def is_opened(self) -> bool:
-        return self._opened
-
-    @property
-    def hash(self) -> str:
-        if self.is_opened:
-            return self._hash
-        raise ValueError("replay has not been opened yet. Use open()")
-
-    @property
-    def title(self) -> str:
-        if self.is_opened:
-            return self.meta.title
-        raise ValueError("replay has not been opened yet. Use open()")
-
-    @property
-    def data(self) -> bytes:
-        if self.is_opened:
-            return self._data
-        raise ValueError("replay has not been opened yet. Use open()")
-
-    @property
-    def path(self) -> Path | None:
-        return self._path
-
-
-###########################################
-#
-# WoTinspector API v2
-#
-###########################################
-
-
-###########################################
-#
 # WIReplay()
 #
 ###########################################
 
 
-class WIReplay(JSONExportable):
-    """Replay schema on https://api.wotinspector.com/"""
+# class WIReplay(JSONExportable):
+#     """Replay schema on https://api.wotinspector.com/"""
 
-    _TimestampFormat: str = "%Y-%m-%d %H:%M:%S"
-    # fmt: off
-    id              : str                       = Field(default=..., alias="_id") # new
-    map_id          : int                       = Field(default=..., alias="mi")  # new
-    battle_duration : float                     = Field(default=..., alias="bd")
-
-
-    winner_team     : EnumWinnerTeam | None     = Field(default=..., alias="wt")
-    battle_result   : EnumBattleResult | None   = Field(default=..., alias="br")
-    room_type       : int | None                = Field(default=None, alias="rt")
-    battle_type     : int | None                = Field(default=None, alias="bt")
-    uploaded_by     : int                       = Field(default=0, alias="ul")
-    title           : str | None                = Field(default=..., alias="t")
-    player_name     : str                       = Field(default=..., alias="pn")
-    protagonist     : int                       = Field(default=..., alias="p")
-    protagonist_team: int | None                = Field(default=..., alias="pt")
-    map_name        : str                       = Field(default=..., alias="mn")
-    vehicle         : str                       = Field(default=..., alias="v")
-    vehicle_tier    : int | None                = Field(default=..., alias="vx")
-    vehicle_type    : EnumVehicleTypeInt | None = Field(default=..., alias="vt")
-    credits_total   : int | None                = Field(default=None, alias="ct")
-    credits_base    : int | None                = Field(default=None, alias="cb")
-    exp_base        : int | None                = Field(default=None, alias="eb")
-    exp_total       : int | None                = Field(default=None, alias="et")
-    battle_start_timestamp: int                 = Field(default=..., alias="bts")
-    battle_start_time: str | None               = Field(default=None, repr=False)  # duplicate of 'bts'
-    
-    description     : str | None                = Field(default=None, alias="de")
-    arena_unique_id : int                       = Field(default=..., alias="aid")
-    allies          : list[int]                 = Field(default=..., alias="a")
-    enemies         : list[int]                 = Field(default=..., alias="e")
-    mastery_badge   : int | None                = Field(default=None, alias="mb")
-    details         : ReplayDetail | list[ReplayDetail] = Field(default=..., alias="d")
-    # TODO[pydantic]: The following keys were removed: `allow_mutation`.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
-    model_config = ConfigDict(extra="allow", frozen=False, validate_assignment=True, populate_by_name=True)
-
-    @field_validator("vehicle_tier")
-    @classmethod
-    def check_tier(cls, v: int | None) -> int | None:
-        if v is not None:
-            if v > 10 or v < 0:
-                raise ValueError("Tier has to be within [1, 10]")
-        return v
-
-    @field_validator("protagonist_team")
-    @classmethod
-    def check_protagonist_team(cls, v: int) -> int | None:
-        if v is None:
-            return None
-        elif v == 0 or v == 1 or v == 2:
-            return v
-        else:
-            raise ValueError("protagonist_team has to be 0, 1, 2 or None")
-
-    @field_validator("battle_start_time")
-    @classmethod
-    def return_none(cls, v: str) -> None:
-        return None
+#     _TimestampFormat: str = "%Y-%m-%d %H:%M:%S"
+#     # fmt: off
+#     id              : str                       = Field(default=..., alias="_id") # new
+#     map_id          : int                       = Field(default=..., alias="mi")  # new
+#     battle_duration : float                     = Field(default=..., alias="bd")
 
 
-    @model_validator(mode="after")
-    def root(self) -> Self:
-        if self.battle_start_time is None:
-            self._set_skip_validation(
-                "battle_start_time",
-                datetime.fromtimestamp(self.battle_start_timestamp).strftime(
-                    self._TimestampFormat
-                ),
-            )
-        return self
+#     winner_team     : EnumWinnerTeam | None     = Field(default=..., alias="wt")
+#     battle_result   : EnumBattleResult | None   = Field(default=..., alias="br")
+#     room_type       : int | None                = Field(default=None, alias="rt")
+#     battle_type     : int | None                = Field(default=None, alias="bt")
+#     uploaded_by     : int                       = Field(default=0, alias="ul")
+#     title           : str | None                = Field(default=..., alias="t")
+#     player_name     : str                       = Field(default=..., alias="pn")
+#     protagonist     : int                       = Field(default=..., alias="p")
+#     protagonist_team: int | None                = Field(default=..., alias="pt")
+#     map_name        : str                       = Field(default=..., alias="mn")
+#     vehicle         : str                       = Field(default=..., alias="v")
+#     vehicle_tier    : int | None                = Field(default=..., alias="vx")
+#     vehicle_type    : EnumVehicleTypeInt | None = Field(default=..., alias="vt")
+#     credits_total   : int | None                = Field(default=None, alias="ct")
+#     credits_base    : int | None                = Field(default=None, alias="cb")
+#     exp_base        : int | None                = Field(default=None, alias="eb")
+#     exp_total       : int | None                = Field(default=None, alias="et")
+#     battle_start_timestamp: int                 = Field(default=..., alias="bts")
+#     battle_start_time: str | None               = Field(default=None, repr=False)  # duplicate of 'bts'
+
+#     description     : str | None                = Field(default=None, alias="de")
+#     arena_unique_id : int                       = Field(default=..., alias="aid")
+#     allies          : list[int]                 = Field(default=..., alias="a")
+#     enemies         : list[int]                 = Field(default=..., alias="e")
+#     mastery_badge   : int | None                = Field(default=None, alias="mb")
+#     details         : ReplayDetail | list[ReplayDetail] = Field(default=..., alias="d")
+#     # TODO[pydantic]: The following keys were removed: `allow_mutation`.
+#     # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+#     model_config = ConfigDict(extra="allow", frozen=False, validate_assignment=True, populate_by_name=True)
+
+#     @field_validator("vehicle_tier")
+#     @classmethod
+#     def check_tier(cls, v: int | None) -> int | None:
+#         if v is not None:
+#             if v > 10 or v < 0:
+#                 raise ValueError("Tier has to be within [1, 10]")
+#         return v
+
+#     @field_validator("protagonist_team")
+#     @classmethod
+#     def check_protagonist_team(cls, v: int) -> int | None:
+#         if v is None:
+#             return None
+#         elif v == 0 or v == 1 or v == 2:
+#             return v
+#         else:
+#             raise ValueError("protagonist_team has to be 0, 1, 2 or None")
+
+#     @field_validator("battle_start_time")
+#     @classmethod
+#     def return_none(cls, v: str) -> None:
+#         return None
 
 
-    @property
-    def has_full_details(self) -> bool:
-        """Whether the replay has full details or is summary version"""
-        return isinstance(self.details, list)
+#     @model_validator(mode="after")
+#     def root(self) -> Self:
+#         if self.battle_start_time is None:
+#             self._set_skip_validation(
+#                 "battle_start_time",
+#                 datetime.fromtimestamp(self.battle_start_timestamp).strftime(
+#                     self._TimestampFormat
+#                 ),
+#             )
+#         return self
+
+
+#     @property
+#     def has_full_details(self) -> bool:
+#         """Whether the replay has full details or is summary version"""
+#         return isinstance(self.details, list)
 
 
 class WIReplaySummary(JSONExportable):
