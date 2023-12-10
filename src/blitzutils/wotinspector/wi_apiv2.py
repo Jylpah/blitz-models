@@ -9,6 +9,7 @@ from typing import (
     Any,
     AsyncIterable,
     AsyncIterator,
+    ClassVar,
     Mapping,
     Optional,
     Sequence,
@@ -17,8 +18,9 @@ from typing import (
     List,
     Dict,
 )
+from datetime import datetime
 from types import TracebackType
-from aiohttp import ClientSession
+from aiohttp import ClientSession, FormData
 from pydantic import (
     AnyUrl,
     AwareDatetime,
@@ -26,11 +28,21 @@ from pydantic import (
     Field,
     FieldSerializationInfo,
     field_validator,
+    model_validator,
 )
+from zipfile import BadZipFile
+from pathlib import Path
+from urllib.parse import urlencode, quote
+from base64 import b64encode
+
+from pyutils import JSONExportable, ThrottledClientSession
+from pyutils.utils import get_url_model, post_url
 
 from .wi_apiv1 import ReplayDetail, EnumWinnerTeam, EnumBattleResult
-from pyutils import JSONExportable, ThrottledClientSession
-from pyutils.utils import get_url_model
+
+from ..wg_api import WGApiWoTBlitzTankopedia
+from ..map import Maps
+from ..replay import ReplayFile
 
 import logging
 
@@ -302,6 +314,8 @@ class Replay(JSONExportable):
     Model for a replay
     """
 
+    _TimestampFormat: ClassVar[str] = "%Y-%m-%d %H:%M:%S"
+
     model_config = ConfigDict(
         extra="allow",
         populate_by_name=True,
@@ -425,9 +439,33 @@ class Replay(JSONExportable):
         else:
             return value
 
+    @field_validator("vehicle_tier")
+    @classmethod
+    def check_tier(cls, v: int | None) -> int | None:
+        if v is not None:
+            if v > 10 or v < 0:
+                raise ValueError("Tier has to be within [1, 10]")
+        return v
+
     @property
     def is_complete(self) -> bool:
         return self.winner_team is not None
+
+    @model_validator(mode="after")
+    def root(self) -> Self:
+        if self.battle_start_time is None:
+            self._set_skip_validation(
+                "battle_start_time",
+                datetime.fromtimestamp(self.battle_start_timestamp).strftime(
+                    self._TimestampFormat
+                ),
+            )
+        return self
+
+    # @property
+    # def has_full_details(self) -> bool:
+    #     """Whether the replay has full details or is summary version"""
+    #     return isinstance(self.player_data, list)
 
     _example = """
     {
@@ -765,8 +803,7 @@ class WotInspector:
     """WoTinspector.com API v2 client"""
 
     URL_BASE: str = "https://api.wotinspector.com/v2"
-    URL_REPLAY_LIST: str = URL_BASE + "/blitz/replays"
-    URL_REPLAY_GET: str = URL_BASE + "/blitz/replays"
+    URL_REPLAYS: str = URL_BASE + "/blitz/replays/"
 
     DEFAULT_RATE_LIMIT: float = 20 / 3600  # 20 requests / hour
 
@@ -781,7 +818,7 @@ class WotInspector:
 
         self.session = ThrottledClientSession(
             rate_limit=rate_limit,
-            filters=[self.URL_REPLAY_LIST],
+            filters=[self.URL_REPLAYS],
             re_filter=False,
             limit_filtered=True,
             headers=headers,
@@ -805,14 +842,12 @@ class WotInspector:
 
     @classmethod
     def get_url_replay(cls, id: str) -> str:
-        return f"{cls.URL_REPLAY_GET}/{id}/"
+        return f"{cls.URL_REPLAYS}{id}/"
 
     @classmethod
     def get_url_replay_list(cls, page: int = 1, **kwargs) -> str:
         kwargs["page"] = page
-        return (
-            f"{cls.URL_REPLAY_LIST}/?{'&'.join([f'{k}={v}' for k,v in kwargs.items()])}"
-        )
+        return f"{cls.URL_REPLAYS}?{'&'.join([f'{k}={v}' for k,v in kwargs.items()])}"
 
     async def get_replay(self, id: str) -> Replay | None:
         """Get replay with id as Replay model"""
@@ -888,3 +923,72 @@ class WotInspector:
         return WotInspector.AsyncReplayIterable(
             self, page=page, max_pages=max_pages, **filter_args
         )
+
+    async def post_replay(
+        self,
+        replay: Path | str | bytes,
+        title: str | None = None,
+        priv: bool = False,
+        tankopedia: WGApiWoTBlitzTankopedia | None = None,  # to auto-title
+        maps: Maps | None = None,  # to auto-title
+    ) -> Replay | None:
+        """
+        Post a WoT Blitz replay file to api.WoTinspector.com using API v2
+
+        Returns 'Replay' model
+        """
+        filename: str = ""
+        try:
+            replay_file: ReplayFile = ReplayFile(replay=replay)
+            if isinstance(replay, bytes):
+                filename = replay_file.hash + ".wotbreplay"
+            else:
+                await replay_file.open()
+                if replay_file.path is None:
+                    raise ValueError("error reading reaply file path")
+                filename = replay_file.path.name
+
+            try:
+                if tankopedia is not None and maps is not None:
+                    replay_file.meta.update_title(tankopedia=tankopedia, maps=maps)
+                    debug("updated title=%s", replay_file.meta.title)
+                else:
+                    debug("no tankopedia and maps give to update replay title")
+            except ValueError as err:
+                pass
+
+            if title is None:
+                title = replay_file.title
+            if title == "":
+                title = f"{replay_file.meta.playerName}"
+
+            headers = {"Content-type": "multipart/form-data"}
+            data = FormData()
+            data.add_field(name="title", value=title)
+            data.add_field(name="private", value=priv)
+            data.add_field(name="upload_file", value=replay_file.data)
+
+        except BadZipFile as err:
+            error(f"corrupted replay file: {filename}")
+            return None
+        except KeyError as err:
+            error(f"Unexpected KeyError: {err}")
+            return None
+
+        try:
+            if (
+                res := await post_url(
+                    self.session,
+                    url=self.URL_REPLAYS,
+                    headers=headers,
+                    data=data,
+                    retries=1,
+                )
+            ) is None:
+                error(f"received NULL response")
+            else:
+                debug("response from %s: %s", self.URL_REPLAYS, res)
+                return Replay.parse_str(res)
+        except Exception as err:
+            error(f"Unexpected Error: {type(err)}: {err}")
+        return None
