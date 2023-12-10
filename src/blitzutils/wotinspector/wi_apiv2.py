@@ -19,7 +19,14 @@ from typing import (
 )
 from types import TracebackType
 from aiohttp import ClientSession
-from pydantic import AnyUrl, AwareDatetime, ConfigDict, Field, FieldSerializationInfo
+from pydantic import (
+    AnyUrl,
+    AwareDatetime,
+    ConfigDict,
+    Field,
+    FieldSerializationInfo,
+    field_validator,
+)
 
 from .wi_apiv1 import ReplayDetail, EnumWinnerTeam, EnumBattleResult
 from pyutils import JSONExportable, ThrottledClientSession
@@ -105,53 +112,103 @@ class PlayerData(JSONExportable):
     # fmt: off
     # should this be List[Dict[str, int]] instead? 
     achievements        : Sequence[Mapping[str, int]] | None = Field(default=None, alias='a')
-    team                : int = Field(default=-1, alias="t")
-    name                : str = Field(default="", alias="n")
-    base_capture_points	: int | None = Field(default=None, alias='bc')
-    base_defend_points	: int | None = Field(default=None, alias='bd')
-    chassis_id			: int | None = Field(default=None, alias='ch')
-    clan_tag			: str | None = Field(default=None, alias='ct')
-    clanid				: int | None = Field(default=None, alias='ci')
-    credits				: int | None = Field(default=None, alias='cr')
-    damage_assisted		: int | None = Field(default=None, alias='da')
-    damage_assisted_track: int | None = Field(default=None, alias='dat')
-    damage_blocked		: int | None = Field(default=None, alias='db')
-    damage_made			: int | None = Field(default=None, alias='dm')
-    damage_received		: int | None = Field(default=None, alias='dr')
-    dbid				: int  		 = Field(default=..., alias='id')   # is 'ai' in v1 !!
-    death_reason		: int | None = Field(default=None, alias='de')
-    distance_travelled	: int | None = Field(default=None, alias='dt')
-    enemies_damaged		: int | None = Field(default=None, alias='ed')
-    enemies_destroyed	: int | None = Field(default=None, alias='ek')
-    enemies_spotted		: int | None = Field(default=None, alias='es')
-    entity_id           : int | None = Field(default=None, alias="ei")
-    exp					: int | None = Field(default=None, alias='ex')
-    exp_for_assist		: int | None = Field(default=None, alias='exa')
-    exp_for_damage		: int | None = Field(default=None, alias='exd')
-    exp_team_bonus		: int | None = Field(default=None, alias='et')
-    gun_id				: int | None = Field(default=None, alias='gi')
-    hero_bonus_credits	: int | None = Field(default=None, alias='hc')
-    hero_bonus_exp		: int | None = Field(default=None, alias='he')
-    hitpoints_left		: int | None = Field(default=None, alias='hl')
-    hits_bounced		: int | None = Field(default=None, alias='hb')
-    hits_pen			: int | None = Field(default=None, alias='hp')
-    hits_received		: int | None = Field(default=None, alias='hr')
-    hits_splash			: int | None = Field(default=None, alias='hs')
-    killed_by			: int | None = Field(default=None, alias='ki')
-    shots_hit			: int | None = Field(default=None, alias='sh')
-    shots_made			: int | None = Field(default=None, alias='sm')
-    shots_pen			: int | None = Field(default=None, alias='sp')
-    shots_splash		: int | None = Field(default=None, alias='ss')
-    squad_index			: int | None = Field(default=None, alias='sq')
-    time_alive			: int | None = Field(default=None, alias='ta')  # is 't' in v1 !!!!
-    turret_id			: int | None = Field(default=None, alias='ti')
-    vehicle_descr		: int | None = Field(default=None, alias='vi')
-    wp_points_earned	: int | None = Field(default=None, alias='we')
-    wp_points_stolen	: int | None = Field(default=None, alias='ws')
+    team                : int       = Field(default=-1, alias="t")
+    name                : str       = Field(default="", alias="n")
+    base_capture_points	: int       = Field(default=0, alias='bc')
+    base_defend_points	: int       = Field(default=0, alias='bd')
+    chassis_id			: int | None= Field(default=None, alias='ch')
+    clan_tag            : str | None= Field(default=None, alias='ct')
+    clanid              : int | None= Field(default=None, alias='ci')
+    credits				: int       = Field(default=0, alias='cr')
+    damage_assisted		: int       = Field(default=0, alias='da')
+    damage_assisted_track: int      = Field(default=0, alias='dat')
+    damage_blocked		: int       = Field(default=0, alias='db')
+    damage_made			: int       = Field(default=0, alias='dm')
+    damage_received		: int       = Field(default=0, alias='dr')
+    dbid				: int  	 = Field(default=..., alias='id')   # is 'ai' in v1 !!
+    death_reason		: int | None= Field(default=None, alias='de')
+    distance_travelled	: int       = Field(default=0, alias='dt')
+    enemies_damaged		: int       = Field(default=0, alias='ed')
+    enemies_destroyed	: int       = Field(default=0, alias='ek')
+    enemies_spotted		: int       = Field(default=0, alias='es')
+    entity_id           : int | None= Field(default=None, alias="ei")
+    exp					: int       = Field(default=0, alias='ex')
+    exp_for_assist		: int       = Field(default=0, alias='exa')
+    exp_for_damage		: int       = Field(default=0, alias='exd')
+    exp_team_bonus		: int       = Field(default=0, alias='et')
+    gun_id				: int | None= Field(default=None, alias='gi')
+    hero_bonus_credits	: int       = Field(default=0, alias='hc')
+    hero_bonus_exp		: int       = Field(default=0, alias='he')
+    hitpoints_left		: int       = Field(default=0, alias='hl')
+    hits_bounced		: int       = Field(default=0, alias='hb')
+    hits_pen			: int       = Field(default=0, alias='hp')
+    hits_received		: int       = Field(default=0, alias='hr')
+    hits_splash			: int       = Field(default=0, alias='hs')
+    killed_by			: int | None= Field(default=None, alias='ki')
+    shots_made			: int       = Field(default=0, alias='sm')
+    shots_hit			: int       = Field(default=0, alias='sh')
+    shots_pen			: int       = Field(default=0, alias='sp')
+    shots_splash		: int       = Field(default=0, alias='ss')
+    squad_index			: int | None= Field(default=None, alias='sq')
+    time_alive			: int       = Field(default=-1, alias='ta')  # is 't' in v1 !!!!
+    turret_id			: int | None= Field(default=None, alias='ti')
+    vehicle_descr		: int       = Field(default=0, alias='vi')
+    wp_points_earned	: int       = Field(default=0, alias='we')
+    wp_points_stolen	: int       = Field(default=0, alias='ws')
     # fmt: on
+
     model_config = ConfigDict(
         extra="allow", frozen=False, validate_assignment=True, populate_by_name=True
     )
+
+    @field_validator(
+        "vehicle_descr",
+        "base_capture_points",
+        "base_defend_points",
+        "credits",
+        "hero_bonus_credits",
+        "hero_bonus_exp",
+        "exp",
+        "exp_for_assist",
+        "exp_for_damage",
+        "exp_team_bonus",
+        "distance_travelled",
+        "gun_id",
+        "enemies_damaged",
+        "enemies_spotted",
+        "enemies_destroyed",
+        "damage_assisted",
+        "damage_assisted_track",
+        "damage_blocked",
+        "damage_made",
+        "damage_received",
+        "hitpoints_left",
+        "hits_bounced",
+        "hits_pen",
+        "hits_received",
+        "hits_splash",
+        "shots_hit",
+        "shots_made",
+        "shots_pen",
+        "shots_splash",
+        "wp_points_earned",
+        "wp_points_stolen",
+        mode="before",
+    )
+    @classmethod
+    def validate_none(cls, value: str | None) -> str:
+        if value is None:
+            return "0"
+        else:
+            return value
+
+    @field_validator("team", "time_alive", mode="before")
+    @classmethod
+    def validate_none_minus1(cls, value: str | None) -> str:
+        if value is None:
+            return "-1"
+        else:
+            return value
 
     _example = """
     {
@@ -294,7 +351,7 @@ class Replay(JSONExportable):
     # battle_result: int
     battle_result   : EnumBattleResult | None = Field(default=..., alias="br")
     # credits_base: int
-    credits_base    : int | None        = Field(default=None, alias="cb")
+    credits_base    : int               = Field(default=0, alias="cb")
     tags            : Sequence[int]     = Field(default_factory=list, alias="tgs") # not in v1
     # battle_type   : int
     battle_type     : int | None        = Field(default=None, alias="bt")
@@ -302,30 +359,75 @@ class Replay(JSONExportable):
     room_type       : int | None        = Field(default=None, alias="rt")
     last_accessed_time: AwareDatetime | None = Field(default=None)  # not in v1, not needed
     # winner_team: int
-    winner_team     : EnumWinnerTeam | None = Field(default=..., alias="wt")
+    winner_team     : EnumWinnerTeam | None = Field(default=None, alias="wt")
     finish_reason   : int               = Field(default=-1, alias="ft")  # not in v1, Enum??
     players_data    : Sequence[PlayerData] = Field(default_factory=list, alias="d") # in v1 ReplayDetail | list[ReplayDetail]
     # exp_total: int
-    exp_total       : int | None        = Field(default=None, alias="et")
+    exp_total       : int               = Field(default=0, alias="et")
     # credits_total : int
-    credits_total   : int | None        = Field(default=None, alias="ct")
+    credits_total   : int               = Field(default=0, alias="ct")
     # repair_cost: int
-    repair_cost     : int | None        = Field(default=None, alias="rc")
+    repair_cost     : int               = Field(default=0, alias="rc")
     # exp_free: int
-    exp_free        : int | None        = Field(default=None, alias="ef")
+    exp_free        : int               = Field(default=0, alias="ef")
     # exp_free_base: int
-    exp_free_base   : int | None        = Field(default=None, alias="efb")
+    exp_free_base   : int               = Field(default=0, alias="efb")
     # exp_penalty: int
-    exp_penalty     : int | None        = Field(default=None, alias="ep")
+    exp_penalty     : int               = Field(default=0, alias="ep")
     # credits_penalty: int
-    credits_penalty : int | None        = Field(default=None, alias="cp")
+    credits_penalty : int               = Field(default=0, alias="cp")
     # credits_contribution_in: int
-    credits_contribution_in: int | None = Field(default=None, alias="cci")
+    credits_contribution_in: int         = Field(default=0, alias="cci")
     # credits_contribution_out: int
-    credits_contribution_out: int | None= Field(default=None, alias="cco")
+    credits_contribution_out: int       = Field(default=0, alias="cco")
     camouflage_id   : int               = Field(default=-1, alias="cid")
-    # fmt: off
+    # fmt: on
 
+    @field_validator(
+        "mastery_badge",
+        "exp_base",
+        "exp_total",
+        "exp_free",
+        "exp_free_base",
+        "exp_penalty",
+        "enemies_spotted",
+        "enemies_destroyed",
+        "damage_assisted",
+        "damage_made",
+        "download_count",
+        "credits_base",
+        "credits_total",
+        "credits_penalty",
+        "credits_contribution_in",
+        "credits_contribution_out",
+        "repair_cost",
+        mode="before",
+    )
+    @classmethod
+    def validate_none(cls, value: str | None) -> str:
+        if value is None:
+            return "0"
+        else:
+            return value
+
+    @field_validator(
+        "finish_reason",
+        "data_version",
+        "camouflage_id",
+        "vehicle_descr",
+        "map_id",
+        mode="before",
+    )
+    @classmethod
+    def validate_none_minus1(cls, value: str | None) -> str:
+        if value is None:
+            return "-1"
+        else:
+            return value
+
+    @property
+    def is_complete(self) -> bool:
+        return self.winner_team is not None
 
     _example = """
     {
@@ -545,6 +647,22 @@ class ReplaySummary(JSONExportable):
     arena_unique_id     : str
     # fmt: on
 
+    @field_validator(
+        "exp_base",
+        "enemies_spotted",
+        "enemies_destroyed",
+        "damage_assisted",
+        "damage_made",
+        "mastery_badge",
+        mode="before",
+    )
+    @classmethod
+    def validate_none(cls, value: str | None) -> str:
+        if value is None:
+            return "0"
+        else:
+            return value
+
 
 class ReplayRequest(JSONExportable):
     model_config = ConfigDict(
@@ -659,7 +777,7 @@ class WotInspector:
         headers: Optional[dict[str, str]] = None
         if auth_token is not None:
             headers = dict()
-            headers["Authorization"] = f"Token {auth_token}"
+            headers["Api-Key"] = f"Token {auth_token}"
 
         self.session = ThrottledClientSession(
             rate_limit=rate_limit,
@@ -674,15 +792,15 @@ class WotInspector:
             debug("Closing aiohttp session")
             await self.session.close()
 
-    async def __aenter__(
+    async def __aenter__(self) -> Self:
+        return self
+
+    async def __aexit__(
         self,
         exc_type: Optional[Type[BaseException]],
         exc_value: Optional[BaseException],
         traceback: Optional[TracebackType],
-    ) -> Self:
-        return self
-
-    async def __aexit__(self) -> None:
+    ) -> None:
         await self.close()
 
     @classmethod
@@ -709,7 +827,9 @@ class WotInspector:
     ) -> List[ReplaySummary] | None:
         """Get list of replays"""
         debug(
-            f"starting: page={page}, {', '.join([ f'{k}={v}' for k,v in kwargs.items()])}"
+            "starting: page=%d, %s",
+            page,
+            ", ".join([f"{k}={v}" for k, v in kwargs.items()]),
         )
         paginated_list: PaginatedReplayList | None
         if (
@@ -720,7 +840,7 @@ class WotInspector:
             )
         ) is not None:
             return paginated_list.results
-        debug("could not retrieve valid replay list")
+        message("could not retrieve valid replay list")
         return None
 
     class AsyncReplayIterable(AsyncIterable[ReplaySummary]):
@@ -737,7 +857,7 @@ class WotInspector:
             self._page: int = page
             self._max_pages: int = max_pages
 
-        def __aiter__(self) -> AsyncIterator[ReplaySummary]:
+        def __aiter__(self) -> Self:
             return self
 
         async def __anext__(self) -> ReplaySummary:
@@ -757,7 +877,7 @@ class WotInspector:
                 self._replay_list = replay_list
                 self._page += 1
                 self._max_pages -= 1
-                self._index = 0
+                self._index = -1
             if self._replay_list is not None and self._index < len(self._replay_list):
                 return self._replay_list[self._index]
             raise StopAsyncIteration
@@ -765,4 +885,6 @@ class WotInspector:
     def list_replays(
         self, page: int = 1, max_pages: int = 10, **filter_args
     ) -> AsyncReplayIterable:
-        return AsyncReplayIterable(self, page=page, max_pages=max_pages, **filter_args)
+        return WotInspector.AsyncReplayIterable(
+            self, page=page, max_pages=max_pages, **filter_args
+        )
