@@ -125,7 +125,7 @@ class PlayerData(JSONExportable):
     # should this be List[Dict[str, int]] instead? 
     achievements        : Sequence[Mapping[str, int]] | None = Field(default=None, alias='a')
     team                : int       = Field(default=-1, alias="t")
-    name                : str       = Field(default="", alias="n")
+    name                : str | None= Field(default=None, alias="n")
     base_capture_points	: int       = Field(default=0, alias='bc')
     base_defend_points	: int       = Field(default=0, alias='bd')
     chassis_id			: int | None= Field(default=None, alias='ch')
@@ -438,14 +438,6 @@ class Replay(JSONExportable):
             return "-1"
         else:
             return value
-
-    @field_validator("vehicle_tier")
-    @classmethod
-    def check_tier(cls, v: int | None) -> int | None:
-        if v is not None:
-            if v > 10 or v < 0:
-                raise ValueError("Tier has to be within [1, 10]")
-        return v
 
     @property
     def is_complete(self) -> bool:
@@ -962,12 +954,16 @@ class WotInspector:
             if title == "":
                 title = f"{replay_file.meta.playerName}"
 
-            headers = {"Content-type": "multipart/form-data"}
             data = FormData()
             data.add_field(name="title", value=title)
-            data.add_field(name="private", value=priv)
+            data.add_field(name="private", value=str(priv))
             data.add_field(name="upload_file", value=replay_file.data)
 
+            # data = {
+            #     "title": title,
+            #     "private": str(priv),
+            #     "upload_file": replay_file.data,
+            # }
         except BadZipFile as err:
             error(f"corrupted replay file: {filename}")
             return None
@@ -980,7 +976,7 @@ class WotInspector:
                 res := await post_url(
                     self.session,
                     url=self.URL_REPLAYS,
-                    headers=headers,
+                    # headers=headers,
                     data=data,
                     retries=1,
                 )
