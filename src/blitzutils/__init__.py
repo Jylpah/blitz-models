@@ -34,6 +34,7 @@ from .wg_api import (
     WGApiTankString as WGApiTankString,
     add_args_wg as add_args_wg,
 )
+from .replay import ReplayFile as ReplayFile, ReplayFileMeta as ReplayFileMeta
 
 
 __all__ = [
@@ -42,6 +43,7 @@ __all__ = [
     "map",
     "release",
     "region",
+    "replay",
     "tank",
     "wg_api",
 ]
