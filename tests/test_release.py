@@ -35,7 +35,9 @@ from blitzutils import Release
 
 FIXTURE_DIR = Path(__file__).parent
 
-RELEASE_FILES = pytest.mark.datafiles(FIXTURE_DIR / "02_Releases.csv")
+RELEASE_FILES = pytest.mark.datafiles(
+    FIXTURE_DIR / "02_Releases.csv", on_duplicate="overwrite"
+)
 
 
 @pytest.fixture

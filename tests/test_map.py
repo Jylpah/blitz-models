@@ -43,6 +43,7 @@ MAPS = pytest.mark.datafiles(
     FIXTURE_DIR / MAPS_JSON,
     FIXTURE_DIR / MAPS_OLD_JSON,
     FIXTURE_DIR / MAPS_NEW_JSON,
+    on_duplicate="overwrite",
 )
 
 
@@ -128,7 +129,7 @@ async def test_2_update(
 
 
 @pytest.mark.asyncio
-@pytest.mark.datafiles(FIXTURE_DIR / MAPS_JSON)
+@pytest.mark.datafiles(FIXTURE_DIR / MAPS_JSON, on_duplicate="overwrite")
 async def test_3_mapmode(tmp_path: Path, datafiles: Path) -> None:
     maps_fn: Path = Path("__not_existing__")
     maps: Maps | None = None

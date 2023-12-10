@@ -56,6 +56,7 @@ REPLAY_JSON_FILES = pytest.mark.datafiles(
     FIXTURE_DIR / "20200301_0030__jylpah_E-50_rift.wotbreplay.json",
     FIXTURE_DIR / "20200301_0035__jylpah_E-50_rock.wotbreplay.json",
     FIXTURE_DIR / "20200301_0039__jylpah_E-50_desert_train.wotbreplay.json",
+    on_duplicate="overwrite",
 )
 
 REPLAY_FILES = pytest.mark.datafiles(
@@ -73,17 +74,18 @@ REPLAY_FILES = pytest.mark.datafiles(
     FIXTURE_DIR / "20200301_0030__jylpah_E-50_rift.wotbreplay",
     FIXTURE_DIR / "20200301_0035__jylpah_E-50_rock.wotbreplay",
     FIXTURE_DIR / "20200301_0039__jylpah_E-50_desert_train.wotbreplay",
+    on_duplicate="overwrite",
 )
 
 
 MAPS_JSON: str = "05_Maps_new.json"
 
-MAPS = pytest.mark.datafiles(
-    FIXTURE_DIR / MAPS_JSON,
-)
+MAPS = pytest.mark.datafiles(FIXTURE_DIR / MAPS_JSON, on_duplicate="overwrite")
 
 TANKOPEDIA_JSON: str = "01_Tankopedia.json"
-TANKOPEDIA = pytest.mark.datafiles(FIXTURE_DIR / TANKOPEDIA_JSON)
+TANKOPEDIA = pytest.mark.datafiles(
+    FIXTURE_DIR / TANKOPEDIA_JSON, on_duplicate="overwrite"
+)
 
 
 def get_player(fn: Path) -> str:

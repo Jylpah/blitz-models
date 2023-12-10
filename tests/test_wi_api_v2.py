@@ -23,7 +23,8 @@ from blitzutils.wotinspector.wi_apiv2 import (
     WotInspector,
 )
 
-from blitzutils import get_config_file
+from blitzutils import get_config_file, WGApiWoTBlitzTankopedia, Maps
+
 
 ########################################################
 #
@@ -42,6 +43,19 @@ from blitzutils import get_config_file
 ########################################################
 
 FIXTURE_DIR = Path(__file__).parent
+REPLAY_FILES = pytest.mark.datafiles(
+    FIXTURE_DIR / "20200229_2321__jylpah_E-50_fort.wotbreplay",
+    FIXTURE_DIR / "20200229_2324__jylpah_E-50_erlenberg.wotbreplay",
+    on_duplicate="overwrite",
+)
+
+MAPS_JSON: str = "05_Maps_new.json"
+MAPS = pytest.mark.datafiles(FIXTURE_DIR / MAPS_JSON, on_duplicate="overwrite")
+
+TANKOPEDIA_JSON: str = "01_Tankopedia.json"
+TANKOPEDIA = pytest.mark.datafiles(
+    FIXTURE_DIR / TANKOPEDIA_JSON, on_duplicate="overwrite"
+)
 
 
 @pytest.fixture
@@ -119,3 +133,45 @@ async def test_3_get_replay(
         ) is not None, f"could not retrieve replay_id={replay_id}"
         assert isinstance(r, Replay), f"replay_id={replay_id} is not type of 'Replay'"
     await wotinspector.close()
+
+
+@pytest.mark.asyncio
+@TANKOPEDIA
+@MAPS
+@REPLAY_FILES
+async def test_4_post_replay(
+    datafiles: Path,
+    tmp_path: Path,
+    wotinspector: WotInspector,
+    tankopedia_fn: Path = Path(TANKOPEDIA_JSON),
+    maps_fn: Path = Path(MAPS_JSON),
+) -> None:
+    tankopedia: WGApiWoTBlitzTankopedia | None
+    maps: Maps | None
+    max_replays: int = 2
+    if (
+        tankopedia := await WGApiWoTBlitzTankopedia.open_json(tmp_path / tankopedia_fn)
+    ) is None:
+        assert False, f"could not open tankopedia {tankopedia_fn}"
+    if (maps := await Maps.open_json(tmp_path / maps_fn)) is None:
+        assert False, f"could not open maps {maps_fn}"
+
+    try:
+        for replay_fn in datafiles.iterdir():
+            if replay_fn.suffix != ".wotbreplay":
+                continue
+            debug("replay: %s", replay_fn.name)
+            assert (
+                replay := await wotinspector.post_replay(
+                    replay_fn, tankopedia=tankopedia, maps=maps
+                )
+            ) is not None, f"could not POST replay: {replay_fn.name}"
+
+            assert (
+                len(replay.id) > 5
+            ), f"returned replay doesn't have proper id: {replay.id}"
+
+            if (max_replays := max_replays - 1) <= 0:
+                break
+    finally:
+        await wotinspector.close()

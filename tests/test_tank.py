@@ -86,8 +86,12 @@ def tankopedia_tanks() -> int:
 
 
 FIXTURE_DIR = Path(__file__).parent
-TANKS_JSON_FILES = pytest.mark.datafiles(FIXTURE_DIR / "01_WGTanks.json")
-TANKOPEDIA_FILES = pytest.mark.datafiles(FIXTURE_DIR / "01_Tankopedia.json")
+TANKS_JSON_FILES = pytest.mark.datafiles(
+    FIXTURE_DIR / "01_WGTanks.json", on_duplicate="overwrite"
+)
+TANKOPEDIA_FILES = pytest.mark.datafiles(
+    FIXTURE_DIR / "01_Tankopedia.json", on_duplicate="overwrite"
+)
 
 
 class TanksJsonList(RootModel):

@@ -46,11 +46,12 @@ ACCOUNTS = pytest.mark.datafiles(
     FIXTURE_DIR / "04_Accounts_EU.csv",
     FIXTURE_DIR / "04_Accounts_Com.csv",
     FIXTURE_DIR / "04_Accounts_Asia.csv",
+    on_duplicate="overwrite",
 )
 
 
 WGAPI_TANKSTR = pytest.mark.datafiles(
-    FIXTURE_DIR / "06_WGApiTankString.json",
+    FIXTURE_DIR / "06_WGApiTankString.json", on_duplicate="overwrite"
 )
 
 
