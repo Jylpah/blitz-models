@@ -14,17 +14,18 @@ from .wi_apiv2 import (
     ReplaySummary as ReplaySummary,
     ReplayRequest as ReplayRequest,
     Shot as Shot,
+    WotInspector as WoTinspectorV2,
 )
 
 from .wi_apiv1 import (
-    WoTinspector as WoTinspector,
+    WoTinspector as WoTinspectorV1,
     WoTInspectorAPIReplays as WoTInspectorAPIReplays,
     WIReplaysData as WIReplaysData,
     ReplayFile as ReplayFile,
     ReplayFileMeta as ReplayFileMeta,
     ReplayJSON as ReplayJSON,
     ReplayData as ReplayData,
-    ReplaySummary as ReplaySummary,
+    # ReplaySummary as ReplaySummary,
     ReplayDetail as ReplayDetail,
     ReplayAchievement as ReplayAchievement,
     WoTBlitzMaps as WoTBlitzMaps,
