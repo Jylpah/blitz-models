@@ -791,7 +791,7 @@ class PaginatedReplayList(JSONExportable):
     results: Optional[List[ReplaySummary]] = None
 
 
-class WotInspector:
+class WoTinspector:
     """WoTinspector.com API v2 client"""
 
     URL_BASE: str = "https://api.wotinspector.com/v2"
@@ -874,11 +874,11 @@ class WotInspector:
         """Async iterable ovar API v2' replays list"""
 
         def __init__(
-            self, wi: WotInspector, page: int = 1, max_pages: int = 10, **filter_args
+            self, wi: WoTinspector, page: int = 1, max_pages: int = 10, **filter_args
         ) -> None:
             super().__init__()
             self._filter_args: Dict[str, Any] = filter_args
-            self._wi: WotInspector = wi
+            self._wi: WoTinspector = wi
             self._replay_list: List[ReplaySummary] | None = None
             self._index: int = -1  # must be -1 to work during the first time
             self._page: int = page
@@ -912,7 +912,7 @@ class WotInspector:
     def list_replays(
         self, page: int = 1, max_pages: int = 10, **filter_args
     ) -> AsyncReplayIterable:
-        return WotInspector.AsyncReplayIterable(
+        return WoTinspector.AsyncReplayIterable(
             self, page=page, max_pages=max_pages, **filter_args
         )
 

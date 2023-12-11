@@ -14,7 +14,7 @@ from .wi_apiv2 import (
     ReplaySummary as ReplaySummary,
     ReplayRequest as ReplayRequest,
     Shot as Shot,
-    WotInspector as WoTinspectorV2,
+    WoTinspector as WoTinspector,
 )
 
 from .wi_apiv1 import (
@@ -23,7 +23,7 @@ from .wi_apiv1 import (
     WIReplaysData as WIReplaysData,
     ReplayJSON as ReplayJSON,
     ReplayData as ReplayData,
-    # ReplaySummary as ReplaySummary,
+    ReplaySummary as ReplaySummaryV1,
     ReplayDetail as ReplayDetail,
     ReplayAchievement as ReplayAchievement,
     WoTBlitzMaps as WoTBlitzMaps,

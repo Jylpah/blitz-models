@@ -20,7 +20,7 @@ from blitzmodels.wotinspector.wi_apiv2 import (
     Replay,
     PlayerData,
     ReplaySummary,
-    WotInspector,
+    WoTinspector,
 )
 
 from blitzmodels import get_config_file, WGApiWoTBlitzTankopedia, Maps
@@ -72,7 +72,7 @@ def replay_list_filters() -> Dict[str, Any]:
 
 
 @pytest_asyncio.fixture(scope="function")
-async def wotinspector() -> WotInspector:
+async def wotinspector() -> WoTinspector:
     WI_AUTH_TOKEN: str | None = None
     WI_RATE_LIMIT: float = 20 / 3600
     config_file: Path | None = get_config_file()
@@ -83,7 +83,7 @@ async def wotinspector() -> WotInspector:
     WI_RATE_LIMIT = config.getfloat(
         "WOTINSPECTOR", "rate_limit", fallback=WI_RATE_LIMIT
     )
-    return WotInspector(auth_token=WI_AUTH_TOKEN, rate_limit=WI_RATE_LIMIT)
+    return WoTinspector(auth_token=WI_AUTH_TOKEN, rate_limit=WI_RATE_LIMIT)
 
 
 ########################################################
@@ -106,7 +106,7 @@ async def test_1_models() -> None:
 
 @pytest.mark.asyncio
 async def test_2_get_replay_list(
-    wotinspector: WotInspector, replay_list_filters: Dict[str, Any]
+    wotinspector: WoTinspector, replay_list_filters: Dict[str, Any]
 ) -> None:
     """test /v2/blitz/replays/"""
     rl: ReplaySummary
@@ -114,7 +114,7 @@ async def test_2_get_replay_list(
     async for rl in wotinspector.list_replays(max_pages=2, **replay_list_filters):
         assert isinstance(
             rl, ReplaySummary
-        ), f"WotInspector.list_replays() did not return 'ReplaySummary', but {type(rl)}"
+        ), f"WoTinspector.list_replays() did not return 'ReplaySummary', but {type(rl)}"
         assert (
             isinstance(rl.id, str) and len(rl.id) > 5
         ), f"replay summary does not have proper id: {rl.id}"
@@ -123,7 +123,7 @@ async def test_2_get_replay_list(
 
 @pytest.mark.asyncio
 async def test_3_get_replay(
-    wotinspector: WotInspector, replay_ids_ok: List[str]
+    wotinspector: WoTinspector, replay_ids_ok: List[str]
 ) -> None:
     """test /v2/blitz/replays/{id}"""
     r: Replay | None
@@ -142,7 +142,7 @@ async def test_3_get_replay(
 async def test_4_post_replay(
     datafiles: Path,
     tmp_path: Path,
-    wotinspector: WotInspector,
+    wotinspector: WoTinspector,
     tankopedia_fn: Path = Path(TANKOPEDIA_JSON),
     maps_fn: Path = Path(MAPS_JSON),
 ) -> None:
