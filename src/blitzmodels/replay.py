@@ -48,19 +48,20 @@ class ReplayFileMeta(JSONExportable):
 
     def update_title(self, tankopedia: WGApiWoTBlitzTankopedia, maps: Maps) -> str:
         """Create 'title' based on replay meta"""
-        title: str = ""
+        tank_name: str = ""
+        map_name: str = ""
         if (
             tank := tankopedia.by_code(self.playerVehicleName)
         ) is not None and tank.name is not None:
-            title = tank.name
+            tank_name = tank.name
         else:
-            raise ValueError("could not find tank name from tankopedia")
-        try:
-            self.title = f"{title} @ {maps[self.mapName].name}"
-            return self.title
-        except KeyError as err:
-            debug(f"map not found with key: {self.mapName}")
-        raise ValueError(f"could not find map for code: {self.mapName}")
+            tank_name = self.playerVehicleName
+
+        if self.mapName in maps:
+            map_name = maps[self.mapName].name
+        else:
+            map_name = self.mapName
+        return f"{tank_name} @ {map_name} by {self.playerName}"
 
 
 class ReplayFile:
