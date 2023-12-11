@@ -36,8 +36,8 @@ from pathlib import Path
 
 path.insert(0, str(Path(__file__).parent.parent.resolve()))
 
-from blitzutils.region import Region
-from blitzutils.tank import Tank, EnumNation, EnumVehicleTypeStr, EnumVehicleTier
+from blitzmodels.region import Region
+from blitzmodels.tank import Tank, EnumNation, EnumVehicleTypeStr, EnumVehicleTier
 
 TYPE_CHECKING = True
 logger = logging.getLogger()

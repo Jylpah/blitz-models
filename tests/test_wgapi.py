@@ -13,8 +13,8 @@ debug = logger.debug
 
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / "src"))
 
-from blitzutils import Account, Region, WGApi
-from blitzutils import (
+from blitzmodels import Account, Region, WGApi
+from blitzmodels import (
     AccountInfo,
     PlayerAchievementsMaxSeries,
     TankStat,
