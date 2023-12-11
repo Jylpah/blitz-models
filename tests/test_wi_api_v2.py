@@ -16,14 +16,14 @@ debug = logger.debug
 
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / "src"))
 
-from blitzutils.wotinspector.wi_apiv2 import (
+from blitzmodels.wotinspector.wi_apiv2 import (
     Replay,
     PlayerData,
     ReplaySummary,
     WotInspector,
 )
 
-from blitzutils import get_config_file, WGApiWoTBlitzTankopedia, Maps
+from blitzmodels import get_config_file, WGApiWoTBlitzTankopedia, Maps
 
 
 ########################################################

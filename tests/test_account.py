@@ -13,7 +13,7 @@ debug = logger.debug
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / "src"))
 
 from pyutils import export, awrap
-from blitzutils import Account
+from blitzmodels import Account
 
 
 ########################################################

@@ -21,10 +21,10 @@ class Region(StrEnum):
         # RU removed 2023-04-28 since the app-id does not work anymore
         return {Region.eu, Region.com, Region.asia}
 
-    @classmethod
-    def has_stats(cls) -> set["Region"]:
-        # RU removed 2023-04-28 since the app-id does not work anymore
-        return {Region.eu, Region.com, Region.asia}
+    # @classmethod
+    # def has_stats(cls) -> set["Region"]:
+    #     # RU removed 2023-04-28 since the app-id does not work anymore
+    #     return {Region.eu, Region.com, Region.asia}
 
     @property
     def id_range(self) -> range:
@@ -35,7 +35,8 @@ class Region(StrEnum):
         elif self == Region.com:
             return range(int(10e8), int(20e8))
         elif self == Region.asia:
-            return range(int(20e8), int(31e8))
+            return range(int(20e8), int(30e8))
+            # return range(int(20e8), int(31e8))
         elif self == Region.china:
             return range(int(31e8), int(42e8))
         elif self == Region.bot:
@@ -43,26 +44,26 @@ class Region(StrEnum):
         else:
             raise ValueError(f"Unknown region: {self}")
 
-    @property
-    def id_range_players(self) -> range:
-        """Method needed for account_id farming fro WG ID
-        For some reasons Asia server has few account_ids
-        between  30e8 - 31e8. These could be press accounts.
-        These accounts do not have stats in the API
-        """
-        if self == Region.ru:
-            return range(0, int(5e8))
-        elif self == Region.eu:
-            return range(int(5e8), int(10e8))
-        elif self == Region.com:
-            return range(int(10e8), int(20e8))
-        elif self == Region.asia:
-            # note the range
-            return range(int(20e8), int(30e8))
-        elif self == Region.china:
-            return range(int(31e8), int(42e8))
-        else:
-            return range(int(42e8), MAX_UINT32 + 1)
+    # @property
+    # def id_range_players(self) -> range:
+    #     """Method needed for account_id farming fro WG ID
+    #     For some reasons Asia server has few account_ids
+    #     between  30e8 - 31e8. These could be press accounts.
+    #     These accounts do not have stats in the API
+    #     """
+    #     if self == Region.ru:
+    #         return range(0, int(5e8))
+    #     elif self == Region.eu:
+    #         return range(int(5e8), int(10e8))
+    #     elif self == Region.com:
+    #         return range(int(10e8), int(20e8))
+    #     elif self == Region.asia:
+    #         # note the range
+    #         return range(int(20e8), int(30e8))
+    #     elif self == Region.china:
+    #         return range(int(31e8), int(42e8))
+    #     else:
+    #         return range(int(42e8), MAX_UINT32 + 1)
 
     @classmethod
     def from_id(cls, account_id: int) -> "Region":
