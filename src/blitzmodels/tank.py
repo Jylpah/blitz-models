@@ -1,7 +1,5 @@
 import logging
-import json
-from warnings import warn
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar
 from enum import IntEnum, StrEnum
 from pydantic import field_validator, ConfigDict, Field
 
@@ -65,7 +63,7 @@ class EnumVehicleTypeStr(StrEnum):
 
 class EnumVehicleTier(IntEnum):
     # fmt: off
-    I 		= 1
+    I 		= 1   # noqa: E741
     II 		= 2
     III 	= 3
     IV 		= 4
@@ -128,7 +126,7 @@ class Tank(JSONExportable, CSVExportable, TXTExportable):
     type 	  	: EnumVehicleTypeStr| None	= Field(default=None)
     tier 		: EnumVehicleTier| None 	= Field(default=None)
     is_premium 	: bool 						= Field(default=False)
- 
+
 
     _example: ClassVar[str] = """{
                                     "_id": 2849,

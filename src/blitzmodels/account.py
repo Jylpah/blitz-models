@@ -1,4 +1,4 @@
-from typing import Any, Optional, Self, TypeVar, Annotated, Dict
+from typing import Any, Optional, Self, TypeVar, Dict
 import logging
 from bson.int64 import Int64
 from pydantic import (

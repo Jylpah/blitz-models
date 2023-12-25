@@ -18,12 +18,10 @@ from .wi_apiv2 import (
 )
 
 from .wi_apiv1 import (
-    WoTinspector as WoTinspectorV1,
     WoTInspectorAPIReplays as WoTInspectorAPIReplays,
     WIReplaysData as WIReplaysData,
     ReplayJSON as ReplayJSON,
     ReplayData as ReplayData,
-    ReplaySummary as ReplaySummaryV1,
     ReplayDetail as ReplayDetail,
     ReplayAchievement as ReplayAchievement,
     WoTBlitzMaps as WoTBlitzMaps,

@@ -1,8 +1,11 @@
 import sys
 import pytest  # type: ignore
-from os.path import dirname, realpath, basename
+from os.path import basename
 from pathlib import Path
 import logging
+
+from pyutils import awrap
+from pydantic_exportables import export
 
 logger = logging.getLogger()
 error = logger.error
@@ -10,12 +13,9 @@ message = logger.warning
 verbose = logger.info
 debug = logger.debug
 
-from pyutils import awrap
-from pydantic_exportables import export
-
 sys.path.insert(0, str((Path(__file__).parent.parent / "src").resolve()))
 
-from blitzmodels import Release
+from blitzmodels import Release  # noqa: E402
 
 
 ########################################################

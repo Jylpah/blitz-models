@@ -9,7 +9,7 @@ from pydantic_exportables import export
 
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / "src"))
 
-from blitzmodels import Account
+from blitzmodels import Account  # noqa: E402
 
 logger = logging.getLogger()
 error = logger.error

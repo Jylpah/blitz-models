@@ -1,12 +1,10 @@
 import sys
 import pytest  # type: ignore
 import pytest_asyncio
-from os.path import dirname, realpath, join as pjoin, basename
 from pathlib import Path
 import logging
 from typing import Dict, List, Any
 from configparser import ConfigParser
-import json
 
 logger = logging.getLogger()
 error = logger.error
@@ -16,14 +14,14 @@ debug = logger.debug
 
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / "src"))
 
-from blitzmodels.wotinspector.wi_apiv2 import (
+from blitzmodels.wotinspector.wi_apiv2 import (  # noqa: E402
     Replay,
     PlayerData,
     ReplaySummary,
     WoTinspector,
 )
 
-from blitzmodels import get_config_file, WGApiWoTBlitzTankopedia, Maps
+from blitzmodels import get_config_file, WGApiWoTBlitzTankopedia, Maps  # noqa: E402
 
 
 ########################################################
@@ -56,6 +54,15 @@ TANKOPEDIA_JSON: str = "01_Tankopedia.json"
 TANKOPEDIA = pytest.mark.datafiles(
     FIXTURE_DIR / TANKOPEDIA_JSON, on_duplicate="overwrite"
 )
+
+
+## set default WI auth token to None
+WI_AUTH_TOKEN: str | None = None
+config_file: Path | None = get_config_file()
+config = ConfigParser()
+if config_file is not None:
+    config.read(config_file)
+WI_AUTH_TOKEN = config.get("WOTINSPECTOR", "auth_token", fallback=WI_AUTH_TOKEN)
 
 
 @pytest.fixture
@@ -97,13 +104,17 @@ async def wotinspector() -> WoTinspector:
 async def test_1_models() -> None:
     """test for models"""
     assert (
-        r := Replay.example_instance()
+        _ := Replay.example_instance()
     ) is not None, "could not parse the Replay example instance"
     assert (
-        pd := PlayerData.example_instance()
+        _ := PlayerData.example_instance()
     ) is not None, "could not parse the PlayerData example instance"
 
 
+@pytest.mark.skipif(
+    WI_AUTH_TOKEN is None,
+    reason="no wotinspector API auth-token set, test is too slow without it",
+)
 @pytest.mark.asyncio
 async def test_2_get_replay_list(
     wotinspector: WoTinspector, replay_list_filters: Dict[str, Any]
@@ -121,6 +132,10 @@ async def test_2_get_replay_list(
     await wotinspector.close()
 
 
+@pytest.mark.skipif(
+    WI_AUTH_TOKEN is None,
+    reason="no wotinspector API auth-token set, test is too slow without it",
+)
 @pytest.mark.asyncio
 async def test_3_get_replay(
     wotinspector: WoTinspector, replay_ids_ok: List[str]
@@ -135,6 +150,10 @@ async def test_3_get_replay(
     await wotinspector.close()
 
 
+@pytest.mark.skipif(
+    WI_AUTH_TOKEN is None,
+    reason="no wotinspector API auth-token set, test is too slow without it",
+)
 @pytest.mark.asyncio
 @TANKOPEDIA
 @MAPS

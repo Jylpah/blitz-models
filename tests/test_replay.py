@@ -12,12 +12,12 @@ debug = logger.debug
 
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / "src"))
 
-from blitzmodels import (
+from blitzmodels import (  # noqa: E402
     WGApiWoTBlitzTankopedia,
     Maps,
 )
 
-from blitzmodels.wotinspector.wi_apiv1 import (
+from blitzmodels.wotinspector.wi_apiv1 import (  # noqa: E402
     ReplayJSON,
     ReplayFile,
     WoTinspector,
@@ -148,8 +148,8 @@ async def test_1_import_export_replays(datafiles: Path, tmp_path: Path) -> None:
 
         allied_platoons, enemy_platoons = replay.get_platoons()
         # this "should" always match in public games
-        assert len(allied_platoons) == len(
-            enemy_platoons
+        assert (
+            len(allied_platoons) == len(enemy_platoons)
         ), f"number of platoons does not match: allied={len(allied_platoons)}, enemy={len(enemy_platoons)}"
 
         if len(allied_platoons) > 0:
@@ -176,17 +176,17 @@ async def test_1_import_export_replays(datafiles: Path, tmp_path: Path) -> None:
         # imported_replay.store_id()
         assert (
             replay.id == imported_replay.index
-        ), f"re-imported replay's id does not match"
+        ), "re-imported replay's id does not match"
         assert (
             replay.data.summary.title == imported_replay.data.summary.title
-        ), f"re-imported replays data.summary.title does not match"
+        ), "re-imported replays data.summary.title does not match"
         assert (
             replay.data.summary.vehicle == imported_replay.data.summary.vehicle
-        ), f"re-imported replays data.summary.vehicle does not match"
+        ), "re-imported replays data.summary.vehicle does not match"
         assert (
             replay.data.summary.arena_unique_id
             == imported_replay.data.summary.arena_unique_id
-        ), f"re-imported replays data.summary.arena_unique_id does not match"
+        ), "re-imported replays data.summary.arena_unique_id does not match"
 
 
 @pytest.mark.asyncio
@@ -351,8 +351,8 @@ async def test_4_post_replay(
                 fetch_json=fetch_json,
             )
             assert replay_id is not None, f"could not post a replay: {replay_fn.name}"
-            assert not fetch_json or isinstance(
-                replay_json, ReplayJSON
+            assert (
+                not fetch_json or isinstance(replay_json, ReplayJSON)
             ), f"did not receive ReplayJSON: type={type(replay_json)}, replay_json={replay_json}"
             if (max_replays := max_replays - 1) <= 0:
                 break
@@ -362,7 +362,7 @@ async def test_4_post_replay(
 
 def test_5_replay_example_instance() -> None:
     try:
-        r = ReplayJSON.example_instance()
+        _ = ReplayJSON.example_instance()
     except Exception as err:
         assert (
             False

@@ -1,6 +1,6 @@
 import sys
 import pytest  # type: ignore
-from os.path import dirname, realpath, join as pjoin, basename
+from os.path import basename
 from pathlib import Path
 import aiofiles
 from pydantic import RootModel
@@ -16,14 +16,14 @@ debug = logger.debug
 
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / "src"))
 
-from blitzmodels import (
+from blitzmodels import (  # noqa: E402
     Tank,
     EnumNation,
     EnumVehicleTier,
     EnumVehicleTypeInt,
     EnumVehicleTypeStr,
 )
-from blitzmodels import WGApiWoTBlitzTankopedia
+from blitzmodels import WGApiWoTBlitzTankopedia  # noqa: E402
 
 
 ########################################################
@@ -121,7 +121,7 @@ def test_1_EnumVehicleTypeInt_create(enum_vehicle_type_names: list[str]) -> None
             assert (
                 EnumVehicleTypeInt(ndx) is EnumVehicleTypeInt[tank_type]
             ), f"Creation of EnumVehicleTypeInt.{tank_type} failed"
-        except Exception as err:
+        except Exception:
             assert False, f"Could not create EnumVehicleTypeInt of {tank_type}"
 
 
@@ -129,7 +129,7 @@ def test_2_EnumVehicleTypeInt_complete(enum_vehicle_type_names: list[str]) -> No
     tank_types = set(EnumVehicleTypeInt)
     assert len(tank_types) == len(
         enum_vehicle_type_names
-    ), f"EnumVehicleTypeInt has wrong number of tank types"
+    ), "EnumVehicleTypeInt has wrong number of tank types"
     for tank_type in enum_vehicle_type_names:
         tank_types.remove(EnumVehicleTypeInt[tank_type])
     assert (
@@ -147,7 +147,7 @@ def test_3_EnumVehicleTypeStr_create(
             assert (
                 EnumVehicleTypeStr(value) is EnumVehicleTypeStr[name]
             ), f"Creation of EnumVehicleTypeStr.{name} failed"
-        except Exception as err:
+        except Exception:
             assert False, f"Could not create EnumVehicleTypeStr.{name}"
 
 
@@ -155,7 +155,7 @@ def test_4_EnumVehicleTypestr_complete(enum_vehicle_type_names: list[str]) -> No
     tank_types = set(EnumVehicleTypeStr)
     assert len(tank_types) == len(
         enum_vehicle_type_names
-    ), f"EnumVehicleTypeStr has wrong number of tank types"
+    ), "EnumVehicleTypeStr has wrong number of tank types"
     for tank_type in enum_vehicle_type_names:
         tank_types.remove(EnumVehicleTypeStr[tank_type])
     assert (
@@ -217,7 +217,7 @@ async def test_8_Tank_import(datafiles: Path) -> None:
         async with aiofiles.open(tanks_json_fn) as file:
             try:
                 tanks_json = TanksJsonList.model_validate_json(await file.read())
-            except Exception as err:
+            except Exception:
                 assert (
                     False
                 ), f"Parsing test file List[Tank] failed: {basename(tanks_json_fn)}"
@@ -232,7 +232,7 @@ async def test_8_Tank_import(datafiles: Path) -> None:
 
 def test_9_tank_example_instance() -> None:
     try:
-        ts = Tank.example_instance()
+        _ = Tank.example_instance()
     except Exception as err:
         assert False, f"Could not validate Tank example instance : {type(err)}: {err}"
 
@@ -249,18 +249,18 @@ async def test_10_WGApiTankopedia(
         async with aiofiles.open(tanks_json_fn) as file:
             try:
                 tanks_json = TanksJsonList.model_validate_json(await file.read())
-            except Exception as err:
+            except Exception:
                 assert (
                     False
                 ), f"Parsing test file List[Tank] failed: {basename(tanks_json_fn)}"
     for tank in tanks_json:
         tankopedia.add(tank)
     debug("read %d tanks", len(tankopedia.data))
-    assert tankopedia.meta is not None, f"Failed to update meta"
-    assert tankopedia.meta["count"] == len(tanks_json), f"failed to update meta.count"
+    assert tankopedia.meta is not None, "Failed to update meta"
+    assert tankopedia.meta["count"] == len(tanks_json), "failed to update meta.count"
     assert len(tanks_json) == len(
         tankopedia.data
-    ), f"could not add all the tanks to tankopedia"
+    ), "could not add all the tanks to tankopedia"
     assert (
         len(tankopedia.data) == tanks_json_tanks
     ), f"could not import all the tanks: got {tankopedia.data}, should be {tanks_json_tanks}"
@@ -280,7 +280,7 @@ async def test_10_WGApiTankopedia(
         debug("imported tankopedia has %d tanks", len(tankopedia_imported.data))
         assert len(tankopedia.data) == len(
             tankopedia_imported.data
-        ), f"could not import all the tanks"
+        ), "could not import all the tanks"
 
     assert imported, "could not import anything"
 
@@ -299,23 +299,19 @@ async def test_11_WGApiTankopedia(
                 tankopedia = WGApiWoTBlitzTankopedia.model_validate_json(
                     await file.read()
                 )
-            except Exception as err:
-                assert (
-                    False
-                ), f"Parsing test file WGApiWoTBlitzTankopedia() failed: {basename(tankopedia_fn)}"
+            except Exception:
+                assert False, f"Parsing test file WGApiWoTBlitzTankopedia() failed: {basename(tankopedia_fn)}"
 
     debug("read %d tanks", len(tankopedia.data))
-    assert tankopedia.meta is not None, f"Failed to update meta"
+    assert tankopedia.meta is not None, "Failed to update meta"
     assert tankopedia.meta["count"] == len(
         tankopedia.data
-    ), f"failed to update meta.count"
+    ), "failed to update meta.count"
     assert (
         len(tankopedia.data) == tankopedia_tanks
     ), f"could not import all the tanks: got {tankopedia.data}, should be {tankopedia_tanks}"
 
-    assert (
-        tankopedia.has_codes
-    ), f"could not generate all the codes: tanks={len(tankopedia.data)}, codes={len(tankopedia.codes)}"
+    assert tankopedia.has_codes, f"could not generate all the codes: tanks={len(tankopedia.data)}, codes={len(tankopedia.codes)}"
     # test tankopedia export import
     tankopedia_file: str = f"{tmp_path.resolve()}/tankopedia.json"
     try:
@@ -331,7 +327,7 @@ async def test_11_WGApiTankopedia(
         debug("imported tankopedia has %d tanks", len(tankopedia_imported.data))
         assert len(tankopedia.data) == len(
             tankopedia_imported.data
-        ), f"could not import all the tanks"
+        ), "could not import all the tanks"
 
     assert imported, "could not import anything"
 
@@ -350,10 +346,8 @@ async def test_12_WGApiTankopedia_sorted(
                 tankopedia = WGApiWoTBlitzTankopedia.model_validate_json(
                     await file.read()
                 )
-            except Exception as err:
-                assert (
-                    False
-                ), f"Parsing test file WGApiWoTBlitzTankopedia() failed: {basename(tankopedia_fn)}"
+            except Exception:
+                assert False, f"Parsing test file WGApiWoTBlitzTankopedia() failed: {basename(tankopedia_fn)}"
 
     debug("read %d tanks", len(tankopedia.data))
     tanks: list[Tank] = list()
@@ -368,7 +362,7 @@ async def test_12_WGApiTankopedia_sorted(
 
     assert len(tankopedia) == len(
         tankopedia_shuffled
-    ), f"tankopedias has different number of tanks"
+    ), "tankopedias has different number of tanks"
     tanks = list()
     for tank in tankopedia:
         tanks.append(tank)
