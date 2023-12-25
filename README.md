@@ -1,3 +1,5 @@
+![CI](https://github.com/Jylpah/blitz-models/actions/workflows/python-package.yml/badge.svg)  [![codecov](https://codecov.io/gh/Jylpah/blitz-models/graph/badge.svg?token=E2G7U6KPKL)](https://codecov.io/gh/Jylpah/blitz-models)
+
 # blitz-models
 
 Python [Pydantic v2](https://pydantic.dev) modules for [World of Tanks Blitz](https://wotblitz.com) mobile game.
