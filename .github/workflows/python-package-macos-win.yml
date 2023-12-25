@@ -6,7 +6,7 @@ name: Python package MacOS & Windows
 on:
   workflow_dispatch:
   schedule:
-    - cron: '45 4 6 * *'
+    - cron: '45 4 * * 5'
 
 jobs:
   build:
