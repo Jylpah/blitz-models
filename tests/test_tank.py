@@ -16,14 +16,14 @@ debug = logger.debug
 
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / "src"))
 
-from blitzmodels import (
+from blitzmodels import (  # noqa: E402
     Tank,
     EnumNation,
     EnumVehicleTier,
     EnumVehicleTypeInt,
     EnumVehicleTypeStr,
 )
-from blitzmodels import WGApiWoTBlitzTankopedia
+from blitzmodels import WGApiWoTBlitzTankopedia  # noqa: E402
 
 
 ########################################################
@@ -232,7 +232,7 @@ async def test_8_Tank_import(datafiles: Path) -> None:
 
 def test_9_tank_example_instance() -> None:
     try:
-        ts = Tank.example_instance()
+        _ = Tank.example_instance()
     except Exception as err:
         assert False, f"Could not validate Tank example instance : {type(err)}: {err}"
 
