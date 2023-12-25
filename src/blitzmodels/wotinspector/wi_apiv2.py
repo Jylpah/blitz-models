@@ -8,7 +8,6 @@ from enum import Enum, IntEnum
 from typing import (
     Any,
     AsyncIterable,
-    AsyncIterator,
     ClassVar,
     Mapping,
     Optional,
@@ -20,20 +19,17 @@ from typing import (
 )
 from datetime import datetime
 from types import TracebackType
-from aiohttp import ClientSession, FormData
+from aiohttp import FormData
 from pydantic import (
     AnyUrl,
     AwareDatetime,
     ConfigDict,
     Field,
-    FieldSerializationInfo,
     field_validator,
     model_validator,
 )
 from zipfile import BadZipFile
 from pathlib import Path
-from urllib.parse import urlencode, quote
-from base64 import b64encode
 
 from pyutils import ThrottledClientSession
 from pyutils.utils import post_url
@@ -949,7 +945,7 @@ class WoTinspector:
                     debug("updated title=%s", replay_file.meta.title)
                 else:
                     debug("no tankopedia and maps give to update replay title")
-            except ValueError as err:
+            except ValueError:
                 pass
 
             if title is None:
@@ -967,7 +963,7 @@ class WoTinspector:
             #     "private": str(priv),
             #     "upload_file": replay_file.data,
             # }
-        except BadZipFile as err:
+        except BadZipFile:
             error(f"corrupted replay file: {filename}")
             return None
         except KeyError as err:
@@ -984,7 +980,7 @@ class WoTinspector:
                     retries=1,
                 )
             ) is None:
-                error(f"received NULL response")
+                error("received NULL response")
             else:
                 debug("response from %s: %s", self.URL_REPLAYS, res)
                 return Replay.parse_str(res)

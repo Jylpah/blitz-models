@@ -1,32 +1,21 @@
 import logging
 from typing import (
-    Annotated,
-    Dict,
-    Literal,
     Optional,
     cast,
     Any,
-    AsyncIterable,
-    Iterable,
-    List,
     Self,
     ClassVar,
     Tuple,
 )
 from aiohttp import ClientResponse
-import aiofiles
 from collections import defaultdict
 from datetime import datetime
 from enum import IntEnum, StrEnum
 from pathlib import Path
-from aiofiles import open
-from asyncio import sleep
 from pydantic import ConfigDict, Field
-from hashlib import md5
 from urllib.parse import urlencode, quote
 from base64 import b64encode
-from zipfile import BadZipFile, Path as ZipPath, is_zipfile, ZipFile
-from io import BytesIO
+from zipfile import BadZipFile
 from pydantic import field_validator, model_validator, HttpUrl
 
 from pyutils import ThrottledClientSession
@@ -36,7 +25,6 @@ from pydantic_exportables import (
     JSONExportable,
     DESCENDING,
     ASCENDING,
-    TEXT,
     Idx,
     BackendIndexType,
 )
@@ -1372,7 +1360,7 @@ class ReplayJSON(WoTinspectorAPI):
             else:
                 debug(f"player ({str(player)}) not in the battle")
                 return EnumBattleResult.incomplete
-        except Exception as err:
+        except Exception:
             raise Exception("Error reading replay")
 
 
@@ -1599,7 +1587,7 @@ class WoTinspector:
                     debug("updated title=%s", replay_file.meta.title)
                 else:
                     debug("no tankopedia and maps give to update replay title")
-            except ValueError as err:
+            except ValueError:
                 pass
 
             if title is None:
@@ -1626,7 +1614,7 @@ class WoTinspector:
             headers = {"Content-type": "application/x-www-form-urlencoded"}
             # Hack to fool aiohttp.FormData to send the data as application/x-www-form-urlencoded
             payload = {"file": (filename, b64encode(replay_file.data))}
-        except BadZipFile as err:
+        except BadZipFile:
             error(f"corrupted replay file: {filename}")
             return None, None
         except KeyError as err:

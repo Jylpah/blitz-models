@@ -1,12 +1,10 @@
 import sys
 import pytest  # type: ignore
 import pytest_asyncio
-from os.path import dirname, realpath, join as pjoin, basename
 from pathlib import Path
 import logging
 from typing import Dict, List, Any
 from configparser import ConfigParser
-import json
 
 logger = logging.getLogger()
 error = logger.error
@@ -16,14 +14,14 @@ debug = logger.debug
 
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / "src"))
 
-from blitzmodels.wotinspector.wi_apiv2 import (
+from blitzmodels.wotinspector.wi_apiv2 import (  # noqa: E402
     Replay,
     PlayerData,
     ReplaySummary,
     WoTinspector,
 )
 
-from blitzmodels import get_config_file, WGApiWoTBlitzTankopedia, Maps
+from blitzmodels import get_config_file, WGApiWoTBlitzTankopedia, Maps  # noqa: E402
 
 
 ########################################################
@@ -97,10 +95,10 @@ async def wotinspector() -> WoTinspector:
 async def test_1_models() -> None:
     """test for models"""
     assert (
-        r := Replay.example_instance()
+        _ := Replay.example_instance()
     ) is not None, "could not parse the Replay example instance"
     assert (
-        pd := PlayerData.example_instance()
+        _ := PlayerData.example_instance()
     ) is not None, "could not parse the PlayerData example instance"
 
 
