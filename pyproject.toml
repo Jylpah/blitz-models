@@ -63,6 +63,7 @@ mypy_path = "$MYPY_CONFIG_FILE_DIR/src"
 
 [tool.ruff]
 # line-length = 88
+include = ["pyproject.toml", "src/**/*.py", "tests/**/*.py"]
 indent-width = 4
 extend-include = ["*.ipynb"]
 fixable = ["ALL"]
