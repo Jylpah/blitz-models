@@ -335,7 +335,7 @@ class WGApiWoTBlitz(JSONExportable):
     status: str = Field(default="ok", alias="s")
     meta:   Optional[Dict[str, Any]] = Field(default=None, alias="m")
     error:  WGApiError | None = Field(default=None, alias="e")
-    
+
     _exclude_defaults   : ClassVar[bool] = False
     _exclude_none       : ClassVar[bool] = True
     _exclude_unset      : ClassVar[bool] = False

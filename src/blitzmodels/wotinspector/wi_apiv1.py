@@ -265,7 +265,7 @@ class ReplayData(JSONExportable):
     view_url    : HttpUrl | None        = Field(default=None, alias="v")
     download_url: HttpUrl | None        = Field(default=None, alias="d")
     summary     : ReplaySummary = Field(default=..., alias="s")
-    
+
     _ViewUrlBase: str = "https://replays.wotinspector.com/en/view/"
     _DLurlBase  : str = "https://replays.wotinspector.com/en/download/"
     # TODO[pydantic]: The following keys were removed: `allow_mutation`.

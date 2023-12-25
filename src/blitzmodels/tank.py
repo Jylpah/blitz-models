@@ -126,7 +126,7 @@ class Tank(JSONExportable, CSVExportable, TXTExportable):
     type 	  	: EnumVehicleTypeStr| None	= Field(default=None)
     tier 		: EnumVehicleTier| None 	= Field(default=None)
     is_premium 	: bool 						= Field(default=False)
- 
+
 
     _example: ClassVar[str] = """{
                                     "_id": 2849,

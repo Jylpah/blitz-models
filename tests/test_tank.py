@@ -300,9 +300,7 @@ async def test_11_WGApiTankopedia(
                     await file.read()
                 )
             except Exception:
-                assert (
-                    False
-                ), f"Parsing test file WGApiWoTBlitzTankopedia() failed: {basename(tankopedia_fn)}"
+                assert False, f"Parsing test file WGApiWoTBlitzTankopedia() failed: {basename(tankopedia_fn)}"
 
     debug("read %d tanks", len(tankopedia.data))
     assert tankopedia.meta is not None, "Failed to update meta"
@@ -313,9 +311,7 @@ async def test_11_WGApiTankopedia(
         len(tankopedia.data) == tankopedia_tanks
     ), f"could not import all the tanks: got {tankopedia.data}, should be {tankopedia_tanks}"
 
-    assert (
-        tankopedia.has_codes
-    ), f"could not generate all the codes: tanks={len(tankopedia.data)}, codes={len(tankopedia.codes)}"
+    assert tankopedia.has_codes, f"could not generate all the codes: tanks={len(tankopedia.data)}, codes={len(tankopedia.codes)}"
     # test tankopedia export import
     tankopedia_file: str = f"{tmp_path.resolve()}/tankopedia.json"
     try:
@@ -351,9 +347,7 @@ async def test_12_WGApiTankopedia_sorted(
                     await file.read()
                 )
             except Exception:
-                assert (
-                    False
-                ), f"Parsing test file WGApiWoTBlitzTankopedia() failed: {basename(tankopedia_fn)}"
+                assert False, f"Parsing test file WGApiWoTBlitzTankopedia() failed: {basename(tankopedia_fn)}"
 
     debug("read %d tanks", len(tankopedia.data))
     tanks: list[Tank] = list()

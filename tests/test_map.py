@@ -121,8 +121,8 @@ async def test_2_update(
         added
     ), f"could not import all maps: got {len(added)}, expected {maps_added_updated[0]}"
 
-    assert maps_added_updated[1] == len(
-        updated
+    assert (
+        maps_added_updated[1] == len(updated)
     ), f"could not import all maps: got {len(updated)}, expected {maps_added_updated[0]}"
 
 
