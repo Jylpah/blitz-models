@@ -150,6 +150,10 @@ async def test_3_get_replay(
     await wotinspector.close()
 
 
+@pytest.mark.skipif(
+    WI_AUTH_TOKEN is None,
+    reason="no wotinspector API auth-token set, test is too slow without it",
+)
 @pytest.mark.asyncio
 @TANKOPEDIA
 @MAPS
