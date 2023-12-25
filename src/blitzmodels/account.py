@@ -6,18 +6,15 @@ from pydantic import (
     model_validator,
     ConfigDict,
     BaseModel,
-    Extra,
     Field,
-    HttpUrl,
 )
 
-from pyutils import (
+from pydantic_exportables import (
     CSVExportable,
     TXTExportable,
     JSONExportable,
     TXTImportable,
     Importable,
-    TypeExcludeDict,
     Idx,
 )
 

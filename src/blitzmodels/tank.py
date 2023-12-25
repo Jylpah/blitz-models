@@ -3,18 +3,18 @@ import json
 from warnings import warn
 from typing import Any, ClassVar, Optional
 from enum import IntEnum, StrEnum
-from pydantic import field_validator, ConfigDict, root_validator, Field
+from pydantic import field_validator, ConfigDict, Field
 
-from pyutils import (
+from pydantic_exportables import (
     CSVExportable,
     TXTExportable,
     JSONExportable,
-    TXTImportable,
     Idx,
     BackendIndexType,
     BackendIndex,
+    ASCENDING,
+    TEXT,
 )
-from pyutils.exportable import DESCENDING, ASCENDING, TEXT
 
 logger = logging.getLogger()
 error = logger.error

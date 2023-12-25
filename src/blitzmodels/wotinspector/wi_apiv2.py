@@ -35,8 +35,11 @@ from pathlib import Path
 from urllib.parse import urlencode, quote
 from base64 import b64encode
 
-from pyutils import JSONExportable, ThrottledClientSession
-from pyutils.utils import get_url_model, post_url
+from pyutils import ThrottledClientSession
+from pyutils.utils import post_url
+from pydantic_exportables import JSONExportable
+from pydantic_exportables.utils import get_model
+
 
 from .wi_apiv1 import ReplayDetail, EnumWinnerTeam, EnumBattleResult
 
@@ -843,7 +846,7 @@ class WoTinspector:
 
     async def get_replay(self, id: str) -> Replay | None:
         """Get replay with id as Replay model"""
-        return await get_url_model(
+        return await get_model(
             self.session,
             self.get_url_replay(id),
             resp_model=Replay,
@@ -860,7 +863,7 @@ class WoTinspector:
         )
         paginated_list: PaginatedReplayList | None
         if (
-            paginated_list := await get_url_model(
+            paginated_list := await get_model(
                 self.session,
                 url=self.get_url_replay_list(page=page, **kwargs),
                 resp_model=PaginatedReplayList,
