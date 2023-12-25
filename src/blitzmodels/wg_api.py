@@ -20,16 +20,19 @@ from collections import defaultdict
 # from sortedcollections import SortedDict  # type: ignore
 from argparse import ArgumentParser
 from configparser import ConfigParser
-from pyutils import (
+from pydantic_exportables import (
     JSONExportable,
     TypeExcludeDict,
     Idx,
     BackendIndexType,
     BackendIndex,
-    ThrottledClientSession,
+    DESCENDING,
+    ASCENDING,
+    TEXT,
 )
-from pyutils.utils import epoch_now, get_url_model
-from pyutils.exportable import DESCENDING, ASCENDING, TEXT
+from pydantic_exportables.utils import get_model
+from pyutils.utils import epoch_now
+from pyutils import ThrottledClientSession
 
 # Fix relative imports
 from pathlib import Path
@@ -941,7 +944,7 @@ class WGApi:
             url: str = server_url[0]
             region = server_url[1]
 
-            return await get_url_model(
+            return await get_model(
                 self.session[region.value], url, resp_model=WGApiWoTBlitzTankStats
             )
 
@@ -1034,7 +1037,7 @@ class WGApi:
             ) is None:
                 raise ValueError(f"No account info available")
             debug(f"URL: {url}")
-            return await get_url_model(
+            return await get_model(
                 self.session[region.value], url, resp_model=WGApiWoTBlitzAccountInfo
             )
 
@@ -1117,7 +1120,7 @@ class WGApi:
             ) is None:
                 raise ValueError(f"No player achievements available")
             debug(f"URL: {url}")
-            return await get_url_model(
+            return await get_model(
                 self.session[region.value],
                 url,
                 resp_model=WGApiWoTBlitzPlayerAchievements,
@@ -1194,7 +1197,7 @@ class WGApi:
             if (url := self.get_tankopedia_url(region=region, fields=fields)) is None:
                 raise ValueError(f"No player achievements available")
             debug(f"URL: {url}")
-            return await get_url_model(
+            return await get_model(
                 self.session[region.value], url, resp_model=WGApiWoTBlitzTankopedia
             )
 
@@ -1221,7 +1224,7 @@ class WGApi:
         try:
             url: str = WGApiTankString.url(user_string=user_string, region=region)
             debug(f"URL: {url}")
-            return await get_url_model(
+            return await get_model(
                 self.session[region.value], url, resp_model=WGApiTankString
             )
         except Exception as err:

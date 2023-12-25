@@ -1,19 +1,21 @@
 import sys
 import pytest  # type: ignore
-from os.path import dirname, realpath, basename
+from os.path import basename
 from pathlib import Path
 import logging
+
+from pyutils import awrap
+from pydantic_exportables import export
+
+sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / "src"))
+
+from blitzmodels import Account
 
 logger = logging.getLogger()
 error = logger.error
 message = logger.warning
 verbose = logger.info
 debug = logger.debug
-
-sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / "src"))
-
-from pyutils import export, awrap
-from blitzmodels import Account
 
 
 ########################################################

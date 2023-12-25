@@ -1,6 +1,6 @@
 [project]
 name = "blitz-models"
-version = "1.0.3"
+version = "1.0.4"
 authors = [{ name = "Jylpah", email = "jylpah@gmail.com" }]
 description = "Pydantic models for Wargaming's World of Tanks Blitz game "
 readme = "README.md"
@@ -16,30 +16,29 @@ classifiers = [
     "Topic :: Games/Entertainment",
 ]
 dependencies = [
-    "aiofiles>=23.1.0",
-    "aiohttp>=3.8.4",
-    "aiosqlite>=0.19.0",
-    "isort>=5.12.0",
-    "pyarrow>=11.0.0",
-    "pydantic>=2.4.2",
-    "pymongo>=4.3.3",
-    "sortedcollections>=2.1.0",
-    "pyutils @ git+https://github.com/Jylpah/pyutils.git@pydantic-v2",
+    "aiofiles~=23.1.0",
+    "aiohttp~=3.8.4",
+    "aiosqlite~=0.19.0",
+    "isort~=5.12.0",
+    "pyarrow~=11.0.0",
+    "pydantic~=2.4.2",
+    "pymongo~=4.6.1",
+    "pyutils @ git+https://github.com/Jylpah/pyutils.git@main-1.0",
+    "pydantic-exportables @ git+https://github.com/Jylpah/pydantic-exportables.git",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "build>=0.10.0",
-    "mypy==1.3.0",
-    "pip-chill==1.0.3",
-    "pip-audit",
-    "pytest",
-    "pytest-asyncio",
-    "pytest-datafiles",
-    "pytest-cov>=4.1.0",
-    "pytest-timeout",
-    "types-aiofiles>=23.1.0.1",
-    "pyutils @ git+https://github.com/Jylpah/pyutils.git@dev-pydantic-v2",
+    "build~=0.10.0",
+    "mypy~=1.7.2",
+    "pip-chill~=1.0.3",
+    "pip-audit~=2.6.1",
+    "pytest~=2.2.0",
+    "pytest-asyncio~=0.23.2",
+    "pytest-datafiles~=3.0.0",
+    "pytest-cov~=4.1.0",
+    "pytest-timeout~=2.2.0",
+    "types-aiofiles~=23.1.0.1",
 ]
 
 [project.urls]

@@ -5,7 +5,7 @@ from zipfile import ZipFile
 from io import BytesIO
 import aiofiles
 
-from pyutils import JSONExportable
+from pydantic_exportables import JSONExportable
 from .release import Release
 from .wg_api import WGApiWoTBlitzTankopedia
 from .map import Maps

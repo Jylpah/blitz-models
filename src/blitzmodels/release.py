@@ -9,17 +9,17 @@ message = logger.warning
 verbose = logger.info
 debug = logger.debug
 
-from pyutils import (
+from pydantic_exportables import (
     CSVExportable,
     TXTExportable,
     JSONExportable,
-    TXTImportable,
     Importable,
     Idx,
     BackendIndexType,
     BackendIndex,
+    DESCENDING,
+    ASCENDING,
 )
-from pyutils.exportable import DESCENDING, ASCENDING
 
 ###########################################
 #

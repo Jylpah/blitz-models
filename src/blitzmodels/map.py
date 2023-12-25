@@ -4,7 +4,6 @@ from warnings import warn
 from typing import Any, Optional, Self, Tuple
 from enum import IntEnum, StrEnum
 from pydantic import (
-    field_validator,
     model_validator,
     ConfigDict,
     Field,
@@ -13,11 +12,10 @@ from pydantic import (
 )
 from aiofiles import open
 from pathlib import Path
-from pyutils.jsonexportable import Idx
 
 from re import Pattern, compile, match
 
-from pyutils import (
+from pydantic_exportables import (
     CSVExportable,
     TXTExportable,
     JSONExportable,
@@ -26,7 +24,6 @@ from pyutils import (
     BackendIndexType,
     BackendIndex,
 )
-from pyutils.exportable import DESCENDING, ASCENDING, TEXT
 
 logger = logging.getLogger()
 error = logger.error
