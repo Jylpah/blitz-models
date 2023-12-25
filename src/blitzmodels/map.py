@@ -1,7 +1,7 @@
 import logging
 import json
 from warnings import warn
-from typing import Any, Optional, Self, Tuple
+from typing import Any, Self, Tuple
 from enum import IntEnum, StrEnum
 from pydantic import (
     model_validator,
@@ -13,16 +13,11 @@ from pydantic import (
 from aiofiles import open
 from pathlib import Path
 
-from re import Pattern, compile, match
+from re import Pattern, compile
 
 from pydantic_exportables import (
-    CSVExportable,
-    TXTExportable,
     JSONExportable,
-    TXTImportable,
     Idx,
-    BackendIndexType,
-    BackendIndex,
 )
 
 logger = logging.getLogger()

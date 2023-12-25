@@ -1,6 +1,6 @@
 from datetime import datetime, date
-from typing import Any, TypeVar, Self
-from pydantic import field_validator, ConfigDict, Field, HttpUrl, field_serializer
+from typing import Self
+from pydantic import field_validator, ConfigDict, Field, field_serializer
 import logging
 
 logger = logging.getLogger()
@@ -9,7 +9,7 @@ message = logger.warning
 verbose = logger.info
 debug = logger.debug
 
-from pydantic_exportables import (
+from pydantic_exportables import (  # noqa: E402
     CSVExportable,
     TXTExportable,
     JSONExportable,

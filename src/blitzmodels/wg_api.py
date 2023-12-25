@@ -1,4 +1,3 @@
-from pyclbr import Class
 from typing import Any, Optional, ClassVar, TypeVar, Sequence, Tuple, Self, Type, Dict
 from types import TracebackType
 import logging
@@ -39,8 +38,13 @@ from pathlib import Path
 
 path.insert(0, str(Path(__file__).parent.parent.resolve()))
 
-from blitzmodels.region import Region
-from blitzmodels.tank import Tank, EnumNation, EnumVehicleTypeStr, EnumVehicleTier
+from blitzmodels.region import Region  # noqa: E402
+from blitzmodels.tank import (  # noqa: E402
+    Tank,
+    EnumNation,
+    EnumVehicleTypeStr,
+    EnumVehicleTier,
+)
 
 TYPE_CHECKING = True
 logger = logging.getLogger()
@@ -643,8 +647,8 @@ class WGApiWoTBlitzTankopedia(WGApiWoTBlitz):
         if tank.code is not None:
             try:
                 del self.codes[tank.code]
-            except:
-                debug(f"could not remove code for tank_id={tank.tank_id}")
+            except Exception as err:
+                debug(f"could not remove code for tank_id={tank.tank_id}: {err}")
                 pass
         return tank
 
@@ -653,7 +657,7 @@ class WGApiWoTBlitzTankopedia(WGApiWoTBlitz):
         try:
             return self.codes[code]
         except KeyError as err:
-            debug(f"no tank with short code: {code}")
+            debug(f"no tank with short code: {code}: {err}")
         return None
 
     @property
@@ -729,7 +733,7 @@ class WGApiTankString(JSONExportable):
                 is_premium=self.is_premium,
             )
         except Exception as err:
-            debug(f"could not transform WGApiTankString to Tank: {self.name}")
+            debug(f"could not transform WGApiTankString to Tank: {self.name}: {err}")
         return None
 
 
@@ -872,6 +876,7 @@ class WGApi:
             return cls.URL_SERVER[region.value]
         except Exception as err:
             error(f"Unknown region: {region.value}")
+            debug(str(err))
         return None
 
     ###########################################
@@ -887,9 +892,9 @@ class WGApi:
         tank_ids: list[int] = [],
         fields: list[str] = [],
     ) -> Tuple[str, Region] | None:
-        assert type(account_id) is int, "account_id must be int"
-        assert type(tank_ids) is list, "tank_ids must be a list"
-        assert type(fields) is list, "fields must be a list"
+        assert isinstance(account_id, int), "account_id must be int"
+        assert isinstance(tank_ids, list), "tank_ids must be a list"
+        assert isinstance(fields, list), "fields must be a list"
         try:
             URL_WG_TANK_STATS: str = "tanks/stats/"
 
@@ -940,7 +945,7 @@ class WGApi:
                 account_id=account_id, region=region, tank_ids=tank_ids, fields=fields
             )
             if server_url is None:
-                raise ValueError(f"No tank stats available")
+                raise ValueError("No tank stats available")
             url: str = server_url[0]
             region = server_url[1]
 
@@ -1035,7 +1040,7 @@ class WGApi:
                     account_ids=account_ids, region=region, fields=fields
                 )
             ) is None:
-                raise ValueError(f"No account info available")
+                raise ValueError("No account info available")
             debug(f"URL: {url}")
             return await get_model(
                 self.session[region.value], url, resp_model=WGApiWoTBlitzAccountInfo
@@ -1118,7 +1123,7 @@ class WGApi:
                     account_ids=account_ids, region=region, fields=fields
                 )
             ) is None:
-                raise ValueError(f"No player achievements available")
+                raise ValueError("No player achievements available")
             debug(f"URL: {url}")
             return await get_model(
                 self.session[region.value],
@@ -1195,7 +1200,7 @@ class WGApi:
             if region is None:
                 region = self.default_region
             if (url := self.get_tankopedia_url(region=region, fields=fields)) is None:
-                raise ValueError(f"No player achievements available")
+                raise ValueError("No player achievements available")
             debug(f"URL: {url}")
             return await get_model(
                 self.session[region.value], url, resp_model=WGApiWoTBlitzTankopedia

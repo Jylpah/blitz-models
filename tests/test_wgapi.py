@@ -1,6 +1,5 @@
 import sys
 import pytest  # type: ignore
-from os.path import dirname, realpath, join as pjoin, basename
 from pathlib import Path
 import logging
 import json
@@ -13,8 +12,8 @@ debug = logger.debug
 
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / "src"))
 
-from blitzmodels import Account, Region, WGApi
-from blitzmodels import (
+from blitzmodels import Account, Region, WGApi  # noqa: E402
+from blitzmodels import (  # noqa: E402
     AccountInfo,
     PlayerAchievementsMaxSeries,
     TankStat,
@@ -222,7 +221,7 @@ async def test_2_api_tank_stats(datafiles: Path) -> None:
 
 def test_3_tankstat_example_instance() -> None:
     try:
-        ts = TankStat.example_instance()
+        _ = TankStat.example_instance()
     except Exception as err:
         assert (
             False
@@ -256,7 +255,7 @@ async def test_4_api_player_achievements(datafiles: Path) -> None:
 
 def test_5_player_achievements_example_instance() -> None:
     try:
-        pa = PlayerAchievementsMaxSeries.example_instance()
+        _ = PlayerAchievementsMaxSeries.example_instance()
     except Exception as err:
         assert (
             False
