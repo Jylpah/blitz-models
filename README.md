@@ -1,6 +1,6 @@
 # blitz-models
 
-Python [Pydantic v2](https://pudantic.dev) modules for [World of Tanks Blitz](https://wotblitz.com) mobile game.
+Python [Pydantic v2](https://pydantic.dev) modules for [World of Tanks Blitz](https://wotblitz.com) mobile game.
 
 Requires Python 3.11 or later
 
