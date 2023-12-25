@@ -56,6 +56,15 @@ TANKOPEDIA = pytest.mark.datafiles(
 )
 
 
+## set default WI auth token to None
+WI_AUTH_TOKEN: str | None = None
+config_file: Path | None = get_config_file()
+config = ConfigParser()
+if config_file is not None:
+    config.read(config_file)
+WI_AUTH_TOKEN = config.get("WOTINSPECTOR", "auth_token", fallback=WI_AUTH_TOKEN)
+
+
 @pytest.fixture
 def replay_ids_ok() -> List[str]:
     return ["22a56c4be013915002b82403fa8cf375"]
@@ -102,6 +111,10 @@ async def test_1_models() -> None:
     ) is not None, "could not parse the PlayerData example instance"
 
 
+@pytest.mark.skipif(
+    WI_AUTH_TOKEN is None,
+    reason="no wotinspector API auth-token set, test is too slow without it",
+)
 @pytest.mark.asyncio
 async def test_2_get_replay_list(
     wotinspector: WoTinspector, replay_list_filters: Dict[str, Any]
@@ -119,6 +132,10 @@ async def test_2_get_replay_list(
     await wotinspector.close()
 
 
+@pytest.mark.skipif(
+    WI_AUTH_TOKEN is None,
+    reason="no wotinspector API auth-token set, test is too slow without it",
+)
 @pytest.mark.asyncio
 async def test_3_get_replay(
     wotinspector: WoTinspector, replay_ids_ok: List[str]
