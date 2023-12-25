@@ -61,9 +61,11 @@ allow-direct-references = true
 plugins = ["pydantic.mypy"]
 mypy_path = "$MYPY_CONFIG_FILE_DIR/src"
 
-[tool.black]
+[tool.ruff]
 # line-length = 88
-include = '\.pyi?$'
+indent-width = 4
+extend-include = ["*.ipynb"]
+fixable = ["ALL"]
 
 
 [tool.pyright]
