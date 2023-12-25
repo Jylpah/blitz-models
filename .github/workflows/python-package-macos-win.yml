@@ -6,7 +6,7 @@ name: Python package MacOS & Windows
 on:
   workflow_dispatch:
   schedule:
-    - cron: '45 4 6 * *'
+    - cron: '45 4 * * 5'
 
 jobs:
   build:
@@ -35,11 +35,7 @@ jobs:
         ruff check src tests
     - name: Test with mypy
       run: |
-        mypy -m pyutils
-    - name: Format with ruff
-      run: | 
-        ruff format src tests
-        ruff check --fix src tests
+        mypy src
     - name: Test with pytest
       run: |
         pytest --cov .
