@@ -809,7 +809,7 @@ class WoTinspector:
 
         self.session = ThrottledClientSession(
             rate_limit=rate_limit,
-            filters=[self.URL_REPLAYS],
+            filters=[("GET", self.URL_REPLAYS)],
             re_filter=False,
             limit_filtered=True,
             headers=headers,
