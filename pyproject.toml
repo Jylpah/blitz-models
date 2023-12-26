@@ -75,7 +75,7 @@ reportInvalidStringEscapeSequence = false
 
 
 [tool.pytest.ini_options]
-minversion = "7.0"
+minversion = "7.4"
 addopts = "-v --cov=src"
 filterwarnings = [
     'ignore:Inheritance class ThrottledClientSession from ClientSession is discouraged:DeprecationWarning',
