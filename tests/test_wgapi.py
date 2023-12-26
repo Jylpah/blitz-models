@@ -285,7 +285,7 @@ async def test_6_api_tankopedia(
         for wgtank in tanks_updated:
             tankopedia_new.add(wgtank)
 
-        (added, updated) = tankopedia.update(tankopedia_new)
+        (added, updated) = tankopedia.update_tanks(tankopedia_new)
 
         assert len(added) == len(
             tanks_remove

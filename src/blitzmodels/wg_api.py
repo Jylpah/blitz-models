@@ -628,8 +628,7 @@ class WGApiWoTBlitzTankopedia(WGApiWoTBlitz):
             self.meta = dict()
         self.meta["count"] = len(self.data)
 
-    @classmethod
-    def _code_add(cls, tank: Tank, codes: dict[str, Tank]) -> bool:
+    def _code_add(self, tank: Tank, codes: dict[str, Tank]) -> bool:
         if tank.code is not None:
             codes[tank.code] = tank
             return True
@@ -665,19 +664,19 @@ class WGApiWoTBlitzTankopedia(WGApiWoTBlitz):
         """Whether tankopedia has short codes dict"""
         return len(self.codes) > 0
 
-    @classmethod
-    def _update_codes(cls, data: dict[str, Tank]) -> dict[str, Tank]:
+    # @classmethod
+    def _update_codes(self, data: dict[str, Tank]) -> dict[str, Tank]:
         """Helper to update .codes"""
-        codes: dict[str, Tank] = dict()
+        codes: dict[str, Tank] = self.codes.copy()
         for tank in data.values():
-            cls._code_add(tank, codes)
+            self._code_add(tank, codes)
         return codes
 
     def update_codes(self) -> None:
         """update _code dict"""
         self._set_skip_validation("codes", self._update_codes(self.data))
 
-    def update(self, new: "WGApiWoTBlitzTankopedia") -> Tuple[set[int], set[int]]:
+    def update_tanks(self, new: "WGApiWoTBlitzTankopedia") -> Tuple[set[int], set[int]]:
         """update tankopedia with another one"""
         new_ids: set[int] = {tank.tank_id for tank in new}
         old_ids: set[int] = {tank.tank_id for tank in self}
@@ -685,10 +684,14 @@ class WGApiWoTBlitzTankopedia(WGApiWoTBlitz):
         updated: set[int] = new_ids & old_ids
         updated = {tank_id for tank_id in updated if new[tank_id] != self[tank_id]}
 
-        self.data.update({(str(tank_id), new[tank_id]) for tank_id in added | updated})
+        self.data.update({(str(tank_id), new[tank_id]) for tank_id in added})
+        updated_ids: set[int] = set()
+        for tank_id in updated:
+            if self.data[str(tank_id)].update(new[tank_id]):
+                updated_ids.add(tank_id)
         self.update_count()
         self.update_codes()
-        return (added, updated)
+        return (added, updated_ids)
 
 
 class WGApiTankString(JSONExportable):
