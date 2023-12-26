@@ -1,17 +1,7 @@
-import sys
 import pytest  # type: ignore
 from pathlib import Path
 from random import choice
 import logging
-
-logger = logging.getLogger()
-error = logger.error
-message = logger.warning
-verbose = logger.info
-debug = logger.debug
-
-sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / "src"))
-
 from blitzmodels import (  # noqa: E402
     WGApiWoTBlitzTankopedia,
     Maps,
@@ -22,6 +12,12 @@ from blitzmodels.wotinspector.wi_apiv1 import (  # noqa: E402
     ReplayFile,
     WoTinspector,
 )
+
+logger = logging.getLogger()
+error = logger.error
+message = logger.warning
+verbose = logger.info
+debug = logger.debug
 
 ########################################################
 #
@@ -148,8 +144,8 @@ async def test_1_import_export_replays(datafiles: Path, tmp_path: Path) -> None:
 
         allied_platoons, enemy_platoons = replay.get_platoons()
         # this "should" always match in public games
-        assert (
-            len(allied_platoons) == len(enemy_platoons)
+        assert len(allied_platoons) == len(
+            enemy_platoons
         ), f"number of platoons does not match: allied={len(allied_platoons)}, enemy={len(enemy_platoons)}"
 
         if len(allied_platoons) > 0:
@@ -351,8 +347,8 @@ async def test_4_post_replay(
                 fetch_json=fetch_json,
             )
             assert replay_id is not None, f"could not post a replay: {replay_fn.name}"
-            assert (
-                not fetch_json or isinstance(replay_json, ReplayJSON)
+            assert not fetch_json or isinstance(
+                replay_json, ReplayJSON
             ), f"did not receive ReplayJSON: type={type(replay_json)}, replay_json={replay_json}"
             if (max_replays := max_replays - 1) <= 0:
                 break

@@ -1,18 +1,14 @@
-import sys
 import pytest  # type: ignore
 from pathlib import Path
 from typing import Tuple
 import logging
+from blitzmodels import Maps, MapMode, MapModeStr
 
 logger = logging.getLogger()
 error = logger.error
 message = logger.warning
 verbose = logger.info
 debug = logger.debug
-
-sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / "src"))
-
-from blitzmodels import Maps, MapMode, MapModeStr  # noqa: E402
 
 
 ########################################################
@@ -121,8 +117,8 @@ async def test_2_update(
         added
     ), f"could not import all maps: got {len(added)}, expected {maps_added_updated[0]}"
 
-    assert (
-        maps_added_updated[1] == len(updated)
+    assert maps_added_updated[1] == len(
+        updated
     ), f"could not import all maps: got {len(updated)}, expected {maps_added_updated[0]}"
 
 

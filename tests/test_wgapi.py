@@ -1,20 +1,10 @@
-import sys
 import pytest  # type: ignore
 from pathlib import Path
 import logging
 import json
 
-logger = logging.getLogger()
-error = logger.error
-message = logger.warning
-verbose = logger.info
-debug = logger.debug
-
-sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / "src"))
-
-from blitzmodels import Account, Region, WGApi  # noqa: E402
-from blitzmodels import (  # noqa: E402
-    AccountInfo,
+from blitzmodels import Account, Region, WGApi, AccountInfo
+from blitzmodels import (
     PlayerAchievementsMaxSeries,
     TankStat,
     WGApiWoTBlitzTankopedia,
@@ -22,6 +12,11 @@ from blitzmodels import (  # noqa: E402
     WGApiTankString,
 )
 
+logger = logging.getLogger()
+error = logger.error
+message = logger.warning
+verbose = logger.info
+debug = logger.debug
 
 ########################################################
 #
@@ -257,7 +252,9 @@ def test_5_player_achievements_example_instance() -> None:
     try:
         _ = PlayerAchievementsMaxSeries.example_instance()
     except Exception as err:
-        assert False, f"Could not validate PlayerAchievementsMaxSeries example instance: {type(err)}: {err}"
+        assert (
+            False
+        ), f"Could not validate PlayerAchievementsMaxSeries example instance: {type(err)}: {err}"
 
 
 @pytest.mark.asyncio
@@ -274,8 +271,10 @@ async def test_6_api_tankopedia(
             assert len(tankopedia) > 0, "API returned empty tankopedia"
 
         assert (
-            (tankopedia := await wg.get_tankopedia()) is not None
-        ), "could not fetch tankopedia from WG API from (default server = eu)"
+            tankopedia := await wg.get_tankopedia()
+        ) is not None, (
+            "could not fetch tankopedia from WG API from (default server = eu)"
+        )
         for tank_id in tanks_remove:
             tankopedia.pop(tank_id)
 
@@ -288,11 +287,11 @@ async def test_6_api_tankopedia(
 
         (added, updated) = tankopedia.update(tankopedia_new)
 
-        assert (
-            len(added) == len(tanks_remove)
+        assert len(added) == len(
+            tanks_remove
         ), f"incorrect number of added tanks reported {len(added) } != {len(tanks_remove)}"
-        assert (
-            len(updated) == len(tanks_updated)
+        assert len(updated) == len(
+            tanks_updated
         ), f"incorrect number of updated tanks reported {len(updated) } != {len(tanks_updated)}"
 
 
@@ -314,7 +313,9 @@ async def test_7_api_tankstrs(
                 False
             ), f"failed to parse test file as WGApiTankString(): {fn.name}: {err}"
         if (tank := Tank.transform(tank_str)) is None:
-            assert False, f"could not transform WGApiTankString() to Tank(): {tank_str.user_string}"
+            assert (
+                False
+            ), f"could not transform WGApiTankString() to Tank(): {tank_str.user_string}"
 
     async with WGApi() as wg:
         for user_str in wgapi_tankstrs_user_strings:

@@ -1,4 +1,3 @@
-import sys
 import pytest  # type: ignore
 from os.path import basename
 from pathlib import Path
@@ -6,16 +5,13 @@ import logging
 
 from pyutils import awrap
 from pydantic_exportables import export
+from blitzmodels import Release
 
 logger = logging.getLogger()
 error = logger.error
 message = logger.warning
 verbose = logger.info
 debug = logger.debug
-
-sys.path.insert(0, str((Path(__file__).parent.parent / "src").resolve()))
-
-from blitzmodels import Release  # noqa: E402
 
 
 ########################################################

@@ -1,11 +1,6 @@
-import sys
 import pytest  # type: ignore
-from pathlib import Path
 from typing import List
-
-sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / "src"))
-
-from blitzmodels import Region  # noqa: E402
+from blitzmodels import Region
 
 
 ########################################################
