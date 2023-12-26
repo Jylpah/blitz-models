@@ -111,7 +111,7 @@ async def test_2_update(
         maps_new := await Maps.open_json(maps_new_fn)
     ) is not None, f"could not open maps from: {maps_new_fn.name}"
 
-    (added, updated) = maps_old.update(maps_new)
+    (added, updated) = maps_old.update_maps(maps_new)
 
     assert maps_added_updated[0] == len(
         added
