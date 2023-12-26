@@ -1,4 +1,3 @@
-import sys
 import pytest  # type: ignore
 import pytest_asyncio
 from pathlib import Path
@@ -6,22 +5,20 @@ import logging
 from typing import Dict, List, Any
 from configparser import ConfigParser
 
-logger = logging.getLogger()
-error = logger.error
-message = logger.warning
-verbose = logger.info
-debug = logger.debug
-
-sys.path.insert(0, str(Path(__file__).parent.parent.resolve() / "src"))
-
-from blitzmodels.wotinspector.wi_apiv2 import (  # noqa: E402
+from blitzmodels.wotinspector.wi_apiv2 import (
     Replay,
     PlayerData,
     ReplaySummary,
     WoTinspector,
 )
 
-from blitzmodels import get_config_file, WGApiWoTBlitzTankopedia, Maps  # noqa: E402
+from blitzmodels import get_config_file, WGApiWoTBlitzTankopedia, Maps
+
+logger = logging.getLogger()
+error = logger.error
+message = logger.warning
+verbose = logger.info
+debug = logger.debug
 
 
 ########################################################

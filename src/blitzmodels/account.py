@@ -157,7 +157,7 @@ class Account(JSONExportable, CSVExportable, TXTExportable, TXTImportable, Impor
             error(f"{err}")
         return None
 
-    def update(self, update: "AccountInfo") -> bool:
+    def update_info(self, update: "AccountInfo") -> bool:
         """Update Account() from WGACcountInfo i.e. from WG API"""
         updated: bool = False
         try:

@@ -1,6 +1,6 @@
 [project]
 name = "blitz-models"
-version = "1.0.6"
+version = "1.1.0"
 authors = [{ name = "Jylpah", email = "jylpah@gmail.com" }]
 description = "Pydantic models for Wargaming's World of Tanks Blitz game "
 readme = "README.md"
@@ -75,8 +75,9 @@ reportInvalidStringEscapeSequence = false
 
 
 [tool.pytest.ini_options]
-minversion = "7.0"
+minversion = "7.4"
 addopts = "-v --cov=src"
+pythonpath = "src" # avoid import path append in test files
 filterwarnings = [
     'ignore:Inheritance class ThrottledClientSession from ClientSession is discouraged:DeprecationWarning',
     'ignore:legacy JSON format is depreciated:DeprecationWarning',
