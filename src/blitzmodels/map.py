@@ -149,7 +149,7 @@ class Maps(RootModel, JSONExportable):
                 raise ValueError("map name and key given, but key is not a string")
         self.root[map.key] = map
 
-    def update(self, new: "Maps") -> Tuple[set[str], set[str]]:
+    def update_maps(self, new: "Maps") -> Tuple[set[str], set[str]]:
         """update Maps with another Maps instance"""
         # self.__root__.update(new.__root__)
 
@@ -157,7 +157,12 @@ class Maps(RootModel, JSONExportable):
         old_keys: set[str] = {map.key for map in self}
         added: set[str] = new_keys - old_keys
         updated: set[str] = new_keys & old_keys
-        updated = {key for key in updated if new[key] != self[key]}
 
-        self.root.update({(key, new[key]) for key in added | updated})
+        self.root.update({(key, new[key]) for key in added})
+
+        updated = {key for key in updated if new[key] != self[key]}
+        updated_ids: set[str] = set()
+        for key in updated:
+            if self[key].update(new[key]):
+                updated_ids.add(key)
         return (added, updated)
