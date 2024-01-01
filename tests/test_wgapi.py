@@ -2,7 +2,7 @@ import pytest  # type: ignore
 from pathlib import Path
 import logging
 import json
-
+from typing import Dict
 from blitzmodels import Account, Region, WGApi, AccountInfo
 from blitzmodels import (
     PlayerAchievementsMaxSeries,
@@ -164,26 +164,34 @@ def tanks_updated() -> list[Tank]:
 async def test_1_api_account_info(datafiles: Path) -> None:
     async with WGApi() as wg:
         for account_fn in datafiles.iterdir():
-            accounts: list[Account] = list()
+            accounts: Dict[int, Account] = dict()
             async for account in Account.import_file(str(account_fn.resolve())):
-                accounts.append(account)
+                accounts[account.id] = account
 
-            region: Region = accounts[0].region
-
-            account_ids: list[int] = list()
-            for account in accounts:
-                account_ids.append(account.id)
+            region: Region = next(iter(accounts.values())).region
 
             account_infos = await wg.get_account_info(
-                account_ids=account_ids, region=region
+                account_ids=[a.id for a in accounts.values()], region=region
             )
             assert (
                 account_infos is not None
             ), f"could no retrieve account infos for {region}"
+
             assert (
                 len(account_infos) > 0
             ), f"could no retrieve any account infos for {region}"
+
             assert type(account_infos[0]) is AccountInfo, "incorrect type returned"
+
+            updated: bool = False
+            for acc_info in account_infos:
+                if acc_info.account_id in accounts:
+                    if accounts[acc_info.account_id].update_info(acc_info):
+                        updated = True
+
+            assert (
+                updated
+            ), "did not manage to update any accounts with WG API account/info"
 
 
 @pytest.mark.asyncio
