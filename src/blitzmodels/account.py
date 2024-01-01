@@ -65,10 +65,7 @@ class Account(JSONExportable, CSVExportable, TXTExportable, TXTImportable, Impor
     @property
     def indexes(self) -> dict[str, Idx]:
         """return backend indexes"""
-        if self.region is None:
-            return {"region": "_none_", "account_id": self.id}
-        else:
-            return {"region": self.region.name, "account_id": self.id}
+        return {"region": self.region.name, "account_id": self.id}
 
     @field_validator("id")
     @classmethod
