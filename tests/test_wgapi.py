@@ -2,7 +2,7 @@ import pytest  # type: ignore
 from pathlib import Path
 import logging
 import json
-from typing import Dict
+from typing import Dict, List
 from blitzmodels import Account, Region, WGApi, AccountInfo
 from blitzmodels import (
     PlayerAchievementsMaxSeries,
@@ -184,11 +184,18 @@ async def test_1_api_account_info(datafiles: Path) -> None:
             assert type(account_infos[0]) is AccountInfo, "incorrect type returned"
 
             updated: bool = False
+            accounts_transformed: List[Account] = list()
             for acc_info in account_infos:
-                if acc_info.account_id in accounts:
-                    if accounts[acc_info.account_id].update_info(acc_info):
-                        updated = True
+                if acc_info.account_id in accounts and accounts[
+                    acc_info.account_id
+                ].update_info(acc_info):
+                    updated = True
+                if (acc := Account.transform(acc_info)) is not None:
+                    accounts_transformed.append(acc)
 
+            assert len(accounts_transformed) == len(
+                account_infos
+            ), "could not transform all account/infos"
             assert (
                 updated
             ), "did not manage to update any accounts with WG API account/info"
