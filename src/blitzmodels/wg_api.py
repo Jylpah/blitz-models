@@ -1,9 +1,20 @@
-from typing import Any, Optional, ClassVar, TypeVar, Sequence, Tuple, Self, Type, Dict
+from typing import (
+    Any,
+    Optional,
+    ClassVar,
+    TypeVar,
+    Sequence,
+    Tuple,
+    Self,
+    Type,
+    Dict,
+    Annotated,
+)
 from types import TracebackType
 import logging
 from sys import path
 import pyarrow  # type: ignore
-from bson.objectid import ObjectId
+from bson import ObjectId
 from pydantic import (
     field_validator,
     model_validator,
@@ -12,6 +23,7 @@ from pydantic import (
     field_serializer,
     Field,
 )
+
 from aiohttp import ClientTimeout
 from urllib.parse import quote
 from collections import defaultdict
@@ -21,6 +33,7 @@ from argparse import ArgumentParser
 from configparser import ConfigParser
 from pydantic_exportables import (
     JSONExportable,
+    PyObjectId,
     TypeExcludeDict,
     Idx,
     IndexSortOrder,
@@ -150,7 +163,7 @@ class WGTankStatAll(JSONExportable):
 
 class TankStat(JSONExportable):
     # fmt: off
-    id:                 ObjectId = Field(default=_NULL_OBJECT_ID, alias="_id")
+    id:                 Annotated[PyObjectId, Field(default=_NULL_OBJECT_ID, alias="_id")]
     region:             Region | None = Field(default=None, alias="r")
     all:                WGTankStatAll = Field(..., alias="s")
     last_battle_time:   int = Field(..., alias="lb")
@@ -391,7 +404,7 @@ class PlayerAchievements(JSONExportable):
 
 class PlayerAchievementsMaxSeries(JSONExportable):
     # fmt: off
-    id          : ObjectId | None = Field(default=None, alias="_id")
+    id          : Annotated[PyObjectId, Field(default=_NULL_OBJECT_ID, alias="_id")]
     jointVictory: int = Field(default=0, alias="jv")
     account_id  : int = Field(default=0, alias="a")
     region      : Region | None = Field(default=None, alias="r")
@@ -426,18 +439,18 @@ class PlayerAchievementsMaxSeries(JSONExportable):
     )
 
     @field_serializer("id", when_used="json")
-    def serialize_ObjectId(self, obj_id: ObjectId | None, _info) -> str | None:
-        if obj_id is None:
-            return None
+    def serialize_ObjectId(self, obj_id: ObjectId, _info) -> str:
         return str(obj_id)
 
     @property
     def index(self) -> Idx:
         """return backend index"""
-        if self.id is None:
-            return self.mk_index(self.account_id, self.region, self.added)
-        else:
-            return self.id
+        if self.id == _NULL_OBJECT_ID:
+            self._set_skip_validation(
+                "id",
+                self.mk_index(self.account_id, self.region, self.added),
+            )
+        return self.id
 
     @property
     def indexes(self) -> dict[str, Idx]:
@@ -449,7 +462,7 @@ class PlayerAchievementsMaxSeries(JSONExportable):
         }
 
     @classmethod
-    def backend_indexes(cls) -> list[list[tuple[str, BackendIndexType]]]:
+    def backend_indexes(cls) -> list[list[tuple[str, IndexSortOrder]]]:
         indexes: list[list[BackendIndex]] = list()
         indexes.append(
             [("region", ASCENDING), ("account_id", ASCENDING), ("added", DESCENDING)]
