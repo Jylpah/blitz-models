@@ -2,7 +2,8 @@ import pytest  # type: ignore
 from pathlib import Path
 import logging
 import json
-
+from bson import ObjectId
+from typing import Dict, List
 from blitzmodels import Account, Region, WGApi, AccountInfo
 from blitzmodels import (
     PlayerAchievementsMaxSeries,
@@ -164,26 +165,41 @@ def tanks_updated() -> list[Tank]:
 async def test_1_api_account_info(datafiles: Path) -> None:
     async with WGApi() as wg:
         for account_fn in datafiles.iterdir():
-            accounts: list[Account] = list()
+            accounts: Dict[int, Account] = dict()
             async for account in Account.import_file(str(account_fn.resolve())):
-                accounts.append(account)
+                accounts[account.id] = account
 
-            region: Region = accounts[0].region
-
-            account_ids: list[int] = list()
-            for account in accounts:
-                account_ids.append(account.id)
+            region: Region = next(iter(accounts.values())).region
 
             account_infos = await wg.get_account_info(
-                account_ids=account_ids, region=region
+                account_ids=[a.id for a in accounts.values()], region=region
             )
             assert (
                 account_infos is not None
             ), f"could no retrieve account infos for {region}"
+
             assert (
                 len(account_infos) > 0
             ), f"could no retrieve any account infos for {region}"
+
             assert type(account_infos[0]) is AccountInfo, "incorrect type returned"
+
+            updated: bool = False
+            accounts_transformed: List[Account] = list()
+            for acc_info in account_infos:
+                if acc_info.account_id in accounts and accounts[
+                    acc_info.account_id
+                ].update_info(acc_info):
+                    updated = True
+                if (acc := Account.transform(acc_info)) is not None:
+                    accounts_transformed.append(acc)
+
+            assert len(accounts_transformed) == len(
+                account_infos
+            ), "could not transform all account/infos"
+            assert (
+                updated
+            ), "did not manage to update any accounts with WG API account/info"
 
 
 @pytest.mark.asyncio
@@ -214,13 +230,24 @@ async def test_2_api_tank_stats(datafiles: Path) -> None:
             assert stats_ok, f"Could not find any stats for {region} region"
 
 
-def test_3_tankstat_example_instance() -> None:
+def test_3_tankstat() -> None:
     try:
-        _ = TankStat.example_instance()
+        ts = TankStat.example_instance()
+        assert ts.index == ObjectId(
+            "001f14d363000a4160a60b89"
+        ), "example instance has an invalid index"
+        assert ts.indexes["account_id"] == 521458531, "indexes @property failed"
+        assert "account_id" in f"{ts}", "'account_id' not found in str(TankStats)"
     except Exception as err:
         assert (
             False
         ), f"Could not validate TankStat example instance : {type(err)}: {err}"
+
+    assert (
+        len(TankStat.backend_indexes()) > 0
+    ), "could not get backend indexes for PlayerAchievementsMaxSeries"
+
+    assert len(TankStat.arrow_schema()) > 0, "could not get Arrow schema for TankStat"
 
 
 @pytest.mark.asyncio
@@ -248,13 +275,27 @@ async def test_4_api_player_achievements(datafiles: Path) -> None:
             ), "incorrect type returned"
 
 
-def test_5_player_achievements_example_instance() -> None:
+def test_5_player_achievements() -> None:
     try:
-        _ = PlayerAchievementsMaxSeries.example_instance()
+        pa = PlayerAchievementsMaxSeries.example_instance()
+        assert pa.index == ObjectId(
+            "001f14d36300000164de6341"
+        ), "example instance has an invalid index"
+        assert pa.indexes["account_id"] == 521458531, "indexes @property failed"
+        assert "account_id" in f"{pa}", "'account_id' not found in str(TankStats)"
     except Exception as err:
         assert (
             False
         ), f"Could not validate PlayerAchievementsMaxSeries example instance: {type(err)}: {err}"
+
+    assert (
+        len(PlayerAchievementsMaxSeries.backend_indexes()) > 0
+    ), "could not get backend indexes for PlayerAchievementsMaxSeries"
+
+    # arrow_schema() not implemented yet
+    # assert (
+    #     len(PlayerAchievementsMaxSeries.arrow_schema()) > 0
+    # ), "could not get Arrow schema for PlayerAchievementsMaxSeries"
 
 
 @pytest.mark.asyncio

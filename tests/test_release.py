@@ -105,3 +105,29 @@ async def test_1_import_export_releases(
         assert (
             len(set(imported_releases)) == releases_count
         ), "some releases imported as duplicate"
+
+        # export loaded replay as TXT
+        txt_filename: Path = tmp_path / "export_release.txt"
+        await export(awrap(releases), "txt", txt_filename)
+
+
+@pytest.mark.asyncio
+@RELEASE_FILES
+async def test_2_Release(
+    datafiles: Path,
+    tmp_path: Path,
+):
+    idxs = Release.backend_indexes()
+    assert len(idxs) > 0, f"could not retrieve backend indexes: {len(idxs)}"
+
+    release_file: Path = next(datafiles.iterdir())
+    releases: list[Release] = list()
+
+    debug("replay: %s", basename(release_file.name))
+    prev = Release(release="0.8")
+    count: int = 0
+    async for release in Release.import_csv(release_file):
+        releases.append(release)
+        if prev.next() == release:
+            count += 1
+        prev = release
