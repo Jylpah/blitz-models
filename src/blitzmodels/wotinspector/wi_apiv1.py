@@ -26,7 +26,7 @@ from pydantic_exportables import (
     DESCENDING,
     ASCENDING,
     Idx,
-    BackendIndexType,
+    IndexSortOrder,
 )
 from pydantic_exportables.utils import get_model
 
@@ -291,9 +291,9 @@ class ReplayData(JSONExportable):
         return {"id": self.index}
 
     @classmethod
-    def backend_indexes(cls) -> list[list[tuple[str, BackendIndexType]]]:
+    def backend_indexes(cls) -> list[list[tuple[str, IndexSortOrder]]]:
         """return backend search indexes"""
-        indexes: list[list[tuple[str, BackendIndexType]]] = list()
+        indexes: list[list[tuple[str, IndexSortOrder]]] = list()
         indexes.append(
             [
                 ("summary.protagonist", ASCENDING),

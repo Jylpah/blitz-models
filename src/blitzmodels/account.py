@@ -1,11 +1,10 @@
-from typing import Any, Optional, Self, TypeVar, Dict
+from typing import Any, Optional, Self, Dict
 import logging
 from bson.int64 import Int64
 from pydantic import (
     field_validator,
     model_validator,
     ConfigDict,
-    BaseModel,
     Field,
 )
 
@@ -28,8 +27,7 @@ verbose = logger.info
 debug = logger.debug
 
 
-B = TypeVar("B", bound="BaseModel")
-
+# B = TypeVar("B", bound="BaseModel")
 
 ###########################################
 #

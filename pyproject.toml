@@ -1,6 +1,6 @@
 [project]
 name = "blitz-models"
-version = "1.1.0"
+version = "1.1.1"
 authors = [{ name = "Jylpah", email = "jylpah@gmail.com" }]
 description = "Pydantic models for Wargaming's World of Tanks Blitz game "
 readme = "README.md"
@@ -66,6 +66,7 @@ mypy_path = "$MYPY_CONFIG_FILE_DIR/src"
 include = ["pyproject.toml", "src/**/*.py", "tests/**/*.py"]
 indent-width = 4
 extend-include = ["*.ipynb"]
+extend-exclude = [".venv", ".vscode" ] 
 fixable = ["ALL"]
 
 
