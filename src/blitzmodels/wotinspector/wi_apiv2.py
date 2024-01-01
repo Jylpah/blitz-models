@@ -36,6 +36,8 @@ from pyutils.utils import post_url
 from pydantic_exportables import JSONExportable
 from pydantic_exportables.utils import get_model
 
+import logging
+import re
 
 from .wi_apiv1 import ReplayDetail, EnumWinnerTeam, EnumBattleResult
 
@@ -43,7 +45,6 @@ from ..wg_api import WGApiWoTBlitzTankopedia
 from ..map import Maps
 from ..replay import ReplayFile
 
-import logging
 
 # Setup logging
 logger = logging.getLogger()
@@ -809,7 +810,7 @@ class WoTinspector:
 
         self.session = ThrottledClientSession(
             rate_limit=rate_limit,
-            filters=[("GET", self.URL_REPLAYS)],
+            filters=[("GET", re.compile(self.URL_REPLAYS + r"(\?.*)?$"))],
             re_filter=False,
             limit_filtered=True,
             headers=headers,
