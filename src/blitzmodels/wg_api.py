@@ -23,7 +23,7 @@ from pydantic_exportables import (
     JSONExportable,
     TypeExcludeDict,
     Idx,
-    BackendIndexType,
+    IndexSortOrder,
     BackendIndex,
     DESCENDING,
     ASCENDING,
@@ -228,7 +228,7 @@ class TankStat(JSONExportable):
         }
 
     @classmethod
-    def backend_indexes(cls) -> list[list[tuple[str, BackendIndexType]]]:
+    def backend_indexes(cls) -> list[list[tuple[str, IndexSortOrder]]]:
         indexes: list[list[BackendIndex]] = list()
         indexes.append(
             [
@@ -761,8 +761,8 @@ class WoTBlitzTankString(JSONExportable):
         return {"code": self.index}
 
     @classmethod
-    def backend_indexes(cls) -> list[list[tuple[str, BackendIndexType]]]:
-        indexes: list[list[tuple[str, BackendIndexType]]] = list()
+    def backend_indexes(cls) -> list[list[tuple[str, IndexSortOrder]]]:
+        indexes: list[list[tuple[str, IndexSortOrder]]] = list()
         indexes.append([("code", TEXT)])
         return indexes
 

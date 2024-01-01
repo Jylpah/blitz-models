@@ -3,23 +3,24 @@ from typing import Self
 from pydantic import field_validator, ConfigDict, Field, field_serializer
 import logging
 
-logger = logging.getLogger()
-error = logger.error
-message = logger.warning
-verbose = logger.info
-debug = logger.debug
-
-from pydantic_exportables import (  # noqa: E402
+from pydantic_exportables import (
     CSVExportable,
     TXTExportable,
     JSONExportable,
     Importable,
     Idx,
-    BackendIndexType,
     BackendIndex,
+    IndexSortOrder,
     DESCENDING,
     ASCENDING,
 )
+
+
+logger = logging.getLogger()
+error = logger.error
+message = logger.warning
+verbose = logger.info
+debug = logger.debug
 
 ###########################################
 #
@@ -67,7 +68,7 @@ class Release(JSONExportable,
         return {"release": self.index}
 
     @classmethod
-    def backend_indexes(cls) -> list[list[tuple[str, BackendIndexType]]]:
+    def backend_indexes(cls) -> list[list[tuple[str, IndexSortOrder]]]:
         indexes: list[list[BackendIndex]] = list()
         indexes.append([("name", ASCENDING), ("launch_date", DESCENDING)])
         return indexes

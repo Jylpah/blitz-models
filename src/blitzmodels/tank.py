@@ -8,7 +8,7 @@ from pydantic_exportables import (
     TXTExportable,
     JSONExportable,
     Idx,
-    BackendIndexType,
+    IndexSortOrder,
     BackendIndex,
     ASCENDING,
     TEXT,
@@ -152,7 +152,7 @@ class Tank(JSONExportable, CSVExportable, TXTExportable):
         return {"tank_id": self.index}
 
     @classmethod
-    def backend_indexes(cls) -> list[list[tuple[str, BackendIndexType]]]:
+    def backend_indexes(cls) -> list[list[tuple[str, IndexSortOrder]]]:
         indexes: list[list[BackendIndex]] = list()
         indexes.append([("tier", ASCENDING), ("type", ASCENDING)])
         indexes.append([("tier", ASCENDING), ("nation", ASCENDING)])
