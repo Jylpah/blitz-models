@@ -2,6 +2,7 @@ import pytest  # type: ignore
 from pathlib import Path
 import logging
 import json
+from bson import ObjectId
 from typing import Dict, List
 from blitzmodels import Account, Region, WGApi, AccountInfo
 from blitzmodels import (
@@ -229,13 +230,24 @@ async def test_2_api_tank_stats(datafiles: Path) -> None:
             assert stats_ok, f"Could not find any stats for {region} region"
 
 
-def test_3_tankstat_example_instance() -> None:
+def test_3_tankstat() -> None:
     try:
-        _ = TankStat.example_instance()
+        ts = TankStat.example_instance()
+        assert ts.index == ObjectId(
+            "001f14d363000a4160a60b89"
+        ), "example instance has an invalid index"
+        assert ts.indexes["account_id"] == 521458531, "indexes @property failed"
+        assert "account_id" in f"{ts}", "'account_id' not found in str(TankStats)"
     except Exception as err:
         assert (
             False
         ), f"Could not validate TankStat example instance : {type(err)}: {err}"
+
+    assert (
+        len(TankStat.backend_indexes()) > 0
+    ), "could not get backend indexes for PlayerAchievementsMaxSeries"
+
+    assert len(TankStat.arrow_schema()) > 0, "could not get Arrow schema for TankStat"
 
 
 @pytest.mark.asyncio
@@ -263,13 +275,27 @@ async def test_4_api_player_achievements(datafiles: Path) -> None:
             ), "incorrect type returned"
 
 
-def test_5_player_achievements_example_instance() -> None:
+def test_5_player_achievements() -> None:
     try:
-        _ = PlayerAchievementsMaxSeries.example_instance()
+        pa = PlayerAchievementsMaxSeries.example_instance()
+        assert pa.index == ObjectId(
+            "001f14d36300000164de6341"
+        ), "example instance has an invalid index"
+        assert pa.indexes["account_id"] == 521458531, "indexes @property failed"
+        assert "account_id" in f"{pa}", "'account_id' not found in str(TankStats)"
     except Exception as err:
         assert (
             False
         ), f"Could not validate PlayerAchievementsMaxSeries example instance: {type(err)}: {err}"
+
+    assert (
+        len(PlayerAchievementsMaxSeries.backend_indexes()) > 0
+    ), "could not get backend indexes for PlayerAchievementsMaxSeries"
+
+    # arrow_schema() not implemented yet
+    # assert (
+    #     len(PlayerAchievementsMaxSeries.arrow_schema()) > 0
+    # ), "could not get Arrow schema for PlayerAchievementsMaxSeries"
 
 
 @pytest.mark.asyncio
