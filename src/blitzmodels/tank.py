@@ -180,3 +180,16 @@ class Tank(JSONExportable, CSVExportable, TXTExportable):
             return f"({self.tank_id}) {self.name} tier {self.tier} {self.type} {self.nation}"
         else:
             return f"({self.tank_id}) {self.name}"
+
+    # def update(self, new: "Tank") -> bool:
+    #     """update Tank with a new info"""
+    #     if self.tank_id != new.tank_id:
+    #         error(f"tank_ids do not match: {self.tank_id} != {new.tank_id}")
+    #         return False
+    #     updated: bool = False
+    #     for name, info in new.model_fields.items():
+    #         new_value: Any = getattr(new, name)
+    #         if new_value != info.get_default():
+    #             self._set_skip_validation(name, new_value)
+    #             updated = True
+    #     return updated
