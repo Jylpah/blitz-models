@@ -435,7 +435,7 @@ class PlayerAchievementsMaxSeries(JSONExportable):
         validate_assignment=True,
         populate_by_name=True,
         arbitrary_types_allowed=True,
-        extra="allow",
+        extra="allow",  # TODO or 'ignore'?
     )
 
     @field_serializer("id", when_used="json")
