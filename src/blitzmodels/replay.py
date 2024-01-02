@@ -61,7 +61,8 @@ class ReplayFileMeta(JSONExportable):
             map_name = maps[self.mapName].name
         else:
             map_name = self.mapName
-        self.title = f"{tank_name} @ {map_name} by {self.playerName}"
+        # self.title = f"{tank_name} @ {map_name} by {self.playerName}"
+        self.title = f"{tank_name} @ {map_name}"
         return self.title
 
 
