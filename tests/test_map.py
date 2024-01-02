@@ -111,7 +111,7 @@ async def test_2_update(
         maps_new := await Maps.open_json(maps_new_fn)
     ) is not None, f"could not open maps from: {maps_new_fn.name}"
 
-    (added, updated) = maps_old.update_maps(maps_new)
+    (added, updated) = maps_old.update(maps_new)
 
     assert maps_added_updated[0] == len(
         added
@@ -136,7 +136,7 @@ async def test_3_mapmode(tmp_path: Path, datafiles: Path) -> None:
 
     map_mode: MapMode
     map_mode_str: MapModeStr
-    for map in maps:
+    for map in maps.values():
         map_mode = map.mode
         map_mode_str = map_mode.toMapModeStr
         assert map_mode.name == map_mode_str.name, "conversion to MapModeStr"
