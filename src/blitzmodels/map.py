@@ -1,13 +1,12 @@
 import logging
 import json
 from warnings import warn
-from typing import Any, Self, Tuple
+from typing import Any, Self
 from enum import IntEnum, StrEnum
 from pydantic import (
     model_validator,
     ConfigDict,
     Field,
-    RootModel,
     ValidationError,
 )
 from aiofiles import open
@@ -17,6 +16,7 @@ from re import Pattern, compile
 
 from pydantic_exportables import (
     JSONExportable,
+    JSONExportableRootDict,
     Idx,
 )
 
@@ -85,8 +85,8 @@ class Map(JSONExportable):
         return self.key
 
 
-class Maps(RootModel, JSONExportable):
-    root: dict[str, Map] = dict()
+class Maps(JSONExportableRootDict[Map]):
+    """Container model for Maps"""
 
     _exclude_unset = False
     _exclude_defaults = False
@@ -125,44 +125,20 @@ class Maps(RootModel, JSONExportable):
                 debug(f"Error parsing file: {filename}: {err}")
             return None
 
-    def __iter__(self):
-        return iter([v for k, v in sorted(self.root.items())])
+    # def update_maps(self, new: "Maps") -> Tuple[set[str], set[str]]:
+    #     """update Maps with another Maps instance"""
+    #     # self.__root__.update(new.__root__)
 
-    def __getitem__(self, key: str) -> Map:
-        return self.root[key]
+    #     new_keys: set[str] = {map.key for map in new}
+    #     old_keys: set[str] = {map.key for map in self}
+    #     added: set[str] = new_keys - old_keys
+    #     updated: set[str] = new_keys & old_keys
 
-    def __setitem__(self, key: str, map: Map) -> None:
-        if not isinstance(map, Map):
-            raise TypeError(f"map is not type 'Map()', but {type(map)}")
-        if not isinstance(key, str):
-            raise TypeError(f"key is not type 'str', but {type(key)}")
-        self.root[key] = map
+    #     self.root.update({(key, new[key]) for key in added})
 
-    def __len__(self) -> int:
-        return len(self.root)
-
-    def add(self, map: str | Map, key: str | None = None):
-        if isinstance(map, str):
-            if isinstance(key, str):
-                map = Map(key=key, name=map)
-            else:
-                raise ValueError("map name and key given, but key is not a string")
-        self.root[map.key] = map
-
-    def update_maps(self, new: "Maps") -> Tuple[set[str], set[str]]:
-        """update Maps with another Maps instance"""
-        # self.__root__.update(new.__root__)
-
-        new_keys: set[str] = {map.key for map in new}
-        old_keys: set[str] = {map.key for map in self}
-        added: set[str] = new_keys - old_keys
-        updated: set[str] = new_keys & old_keys
-
-        self.root.update({(key, new[key]) for key in added})
-
-        updated = {key for key in updated if new[key] != self[key]}
-        updated_ids: set[str] = set()
-        for key in updated:
-            if self[key].update(new[key]):
-                updated_ids.add(key)
-        return (added, updated)
+    #     updated = {key for key in updated if new[key] != self[key]}
+    #     updated_ids: set[str] = set()
+    #     for key in updated:
+    #         if self[key].update(new[key]):
+    #             updated_ids.add(key)
+    #     return (added, updated)
