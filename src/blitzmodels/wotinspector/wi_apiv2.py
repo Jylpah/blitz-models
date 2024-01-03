@@ -452,6 +452,8 @@ class Replay(JSONExportable):
                     self._TimestampFormat
                 ),
             )
+        if self.battle_result == EnumBattleResult.loss and self.winner_team == EnumWinnerTeam.draw:
+            self.battle_result = EnumBattleResult.draw
         return self
 
     # @property
