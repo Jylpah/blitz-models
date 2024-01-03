@@ -123,7 +123,7 @@ class PlayerData(JSONExportable):
     )
     # fmt: off
     # should this be List[Dict[str, int]] instead? 
-    achievements        : Sequence[Mapping[str, int]] | None = Field(default=None, alias='a')
+    achievements        : List[Dict[str, int]] | None = Field(default=None, alias='a')
     team                : int       = Field(default=-1, alias="t")
     name                : str | None= Field(default=None, alias="n")
     base_capture_points	: int       = Field(default=0, alias='bc')
@@ -137,7 +137,7 @@ class PlayerData(JSONExportable):
     damage_blocked		: int       = Field(default=0, alias='db')
     damage_made			: int       = Field(default=0, alias='dm')
     damage_received		: int       = Field(default=0, alias='dr')
-    dbid				: int  	 = Field(default=..., alias='id')   # is 'ai' in v1 !!
+    dbid				: int  	    = Field(default=..., alias='id')   # is 'ai' in v1 !!
     death_reason		: int | None= Field(default=None, alias='de')
     distance_travelled	: int       = Field(default=0, alias='dt')
     enemies_damaged		: int       = Field(default=0, alias='ed')
@@ -347,7 +347,7 @@ class Replay(JSONExportable):
     details_url     : AnyUrl | None     = Field(default=None, alias="deu") # ReplayData.view_url in v1
     # download_url: AnyUrl
     download_url    : AnyUrl | None     = Field(default=None, alias="dlu")
-    game_version    : Mapping[str, Any] = Field(default_factory=dict, alias="gv")  # not in v1
+    game_version    : Dict[str, Any] = Field(default_factory=dict, alias="gv")  # not in v1
     arena_unique_id : str               = Field(default=..., alias="aid") # was 'int' in v1
     download_count  : int               = Field(default=0, alias='dlc')    # not in v1
     data_version    : int               = Field(default=-1, alias='ver')    # not in v1
@@ -356,8 +356,8 @@ class Replay(JSONExportable):
     battle_start_time: AwareDatetime    = Field(alias="bts")                # is 'int' in v1 and has 'str' counterpart
     # upload_time: AwareDatetime
     upload_time     : AwareDatetime | None = Field(default=None, alias="uts") # not in v1
-    allies          : Sequence[int]     = Field(default_factory=list, alias="a")
-    enemies         : Sequence[int]     = Field(default_factory=list, alias="e")
+    allies          : List[int]     = Field(default_factory=list, alias="a")
+    enemies         : List[int]     = Field(default_factory=list, alias="e")
     # protagonist_clan    : int  
     protagonist_clan: int | None        = Field(default=None, alias='pc') # can be None
     # protagonist_team: int
@@ -366,7 +366,7 @@ class Replay(JSONExportable):
     battle_result   : EnumBattleResult | None = Field(default=..., alias="br")
     # credits_base: int
     credits_base    : int               = Field(default=0, alias="cb")
-    tags            : Sequence[int]     = Field(default_factory=list, alias="tgs") # not in v1
+    tags            : List[int]     = Field(default_factory=list, alias="tgs") # not in v1
     # battle_type   : int
     battle_type     : int | None        = Field(default=None, alias="bt")
     # room_type: int
@@ -375,7 +375,7 @@ class Replay(JSONExportable):
     # winner_team: int
     winner_team     : EnumWinnerTeam | None = Field(default=None, alias="wt")
     finish_reason   : int               = Field(default=-1, alias="ft")  # not in v1, Enum??
-    players_data    : Sequence[PlayerData] = Field(default_factory=list, alias="d") # in v1 ReplayDetail | list[ReplayDetail]
+    players_data    : List[PlayerData] = Field(default_factory=list, alias="d") # in v1 ReplayDetail | list[ReplayDetail]
     # exp_total: int
     exp_total       : int               = Field(default=0, alias="et")
     # credits_total : int
@@ -452,6 +452,8 @@ class Replay(JSONExportable):
                     self._TimestampFormat
                 ),
             )
+        if self.battle_result == EnumBattleResult.loss and self.winner_team == EnumWinnerTeam.draw:
+            self.battle_result = EnumBattleResult.draw
         return self
 
     # @property
