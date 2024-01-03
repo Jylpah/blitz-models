@@ -57,10 +57,9 @@ class EnumWinnerTeam(IntEnum):
 class EnumBattleResult(IntEnum):
     # fmt: off
     incomplete  = -1
-    not_win     = 0
+    loss        = 0
     win         = 1
-    loss        = 2  # EXPERIMENTAL: not in replays, might be dropped later
-    draw        = 3  # EXPERIMENTAL: not in replays, might be dropped later
+    draw        = 2  # EXPERIMENTAL: not in replays, might be dropped later
     # fmt: on
 
     def __str__(self) -> str:
