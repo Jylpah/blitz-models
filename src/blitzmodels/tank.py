@@ -119,13 +119,13 @@ class EnumNation(IntEnum):
 
 class Tank(JSONExportable, CSVExportable, TXTExportable):
     # fmt: off
-    tank_id 	: int 						= Field(default=..., alias = '_id')
-    name   		: str | None				= Field(default=None)
-    code        : str | None                 = Field(default=None)
-    nation   	: EnumNation | None	 		= Field(default=None)
-    type 	  	: EnumVehicleTypeStr| None	= Field(default=None)
-    tier 		: EnumVehicleTier| None 	= Field(default=None)
-    is_premium 	: bool 						= Field(default=False)
+    tank_id 	: int 				= Field(default=..., alias = '_id')
+    name   		: str 				= Field(default="")
+    code        : str | None        = Field(default=None)
+    nation   	: EnumNation  		= Field(default=EnumNation.european)
+    type 	  	: EnumVehicleTypeStr= Field(default=EnumVehicleTypeStr.heavy_tank)
+    tier 		: EnumVehicleTier 	= Field(default=EnumVehicleTier.I)
+    is_premium 	: bool 				= Field(default=False)
 
 
     _example: ClassVar[str] = """{
