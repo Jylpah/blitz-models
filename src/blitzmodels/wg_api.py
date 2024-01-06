@@ -333,7 +333,7 @@ class AccountInfo(JSONExportable):
     updated_at:         int = Field(default=0, alias="u")
     nickname:           str | None = Field(default=None, alias="n")
     last_battle_time:   int = Field(default=0, alias="l")
-    statistics:         Optional[Dict[str, AccountInfoStats]] = Field(default=None, alias="s")
+    statistics:         Optional[Dict[str, Optional[AccountInfoStats]]] = Field(default=None, alias="s")
     # fmt: on
 
     model_config = ConfigDict(
