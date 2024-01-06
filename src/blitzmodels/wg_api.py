@@ -93,53 +93,23 @@ class WGApiError(JSONExportable):
         return f"code: {self.code} {self.message}"
 
 
-###########################################
-#
-# AccountInfo()
-#
-###########################################
-
-
-class AccountInfo(JSONExportable):
-    # fmt: off
-    account_id:         int = Field(alias="id")
-    region:             Region | None = Field(default=None, alias="r")
-    created_at:         int = Field(default=0, alias="c")
-    updated_at:         int = Field(default=0, alias="u")
-    nickname:           str | None = Field(default=None, alias="n")
-    last_battle_time:   int = Field(default=0, alias="l")
-    # fmt: on
-
-    model_config = ConfigDict(
-        arbitrary_types_allowed=True,
-        frozen=False,
-        validate_assignment=True,
-        populate_by_name=True,
-        extra="allow",
-    )
-
-    @model_validator(mode="after")
-    def set_region(self) -> Self:
-        if self.region is None:
-            self._set_skip_validation("region", Region.from_id(self.account_id))
-        return self
 
 
 class WGTankStatAll(JSONExportable):
     # fmt: off
     battles:            int = Field(..., alias="b")
+    capture_points:     int = Field(default=-1, alias="cp")
     wins:               int = Field(default=-1, alias="w")
     losses:             int = Field(default=-1, alias="l")
     spotted:            int = Field(default=-1, alias="sp")
     hits:               int = Field(default=-1, alias="h")
     frags:              int = Field(default=-1, alias="k")
-    max_xp:             int | None = None
-    capture_points:     int = Field(default=-1, alias="cp")
+    frags8p:            int | None = None
     damage_dealt:       int = Field(default=-1, alias="dd")
     damage_received:    int = Field(default=-1, alias="dr")
     max_frags:          int = Field(default=-1, alias="mk")
+    max_xp:             int | None = None
     shots:              int = Field(default=-1, alias="sh")
-    frags8p:            int | None = None
     xp:                 int | None = None
     win_and_survived:   int = Field(default=-1, alias="ws")
     survived_battles:   int = Field(default=-1, alias="sb")
@@ -150,15 +120,20 @@ class WGTankStatAll(JSONExportable):
         frozen=False, validate_assignment=True, populate_by_name=True
     )
 
-    @field_validator("frags8p", "xp", "max_xp")
-    @classmethod
-    def unset(cls, v: int | bool | None) -> None:
-        return None
+    # @field_validator("frags8p", "xp", "max_xp")
+    # @classmethod
+    # def unset(cls, v: int | bool | None) -> None:
+    #     return None
 
 
 # def lateinit_object_id() -> ObjectId:
 #     """Required for initializing a model w/o a '_id' field"""
 #     raise RuntimeError("lateinit_object_id(): should never be called")
+
+
+class AccountInfoStats(WGTankStatAll):
+    max_frags_tank_id   : int = Field(default=0, alias="mft")
+    max_xp_tank_id      : int = Field(default=0, alias="mxt")
 
 
 class TankStat(JSONExportable):
@@ -342,6 +317,93 @@ class TankStat(JSONExportable):
                     tank_id={self.tank_id} \
                     last_battle_time={self.last_battle_time}"
 
+###########################################
+#
+# AccountInfo()
+#
+###########################################
+
+
+
+class AccountInfo(JSONExportable):
+    # fmt: off
+    account_id:         int = Field(alias="id")
+    region:             Region | None = Field(default=None, alias="r")
+    created_at:         int = Field(default=0, alias="c")
+    updated_at:         int = Field(default=0, alias="u")
+    nickname:           str | None = Field(default=None, alias="n")
+    last_battle_time:   int = Field(default=0, alias="l")
+    statistics:         Optional[Dict[str, AccountInfoStats]] = Field(default=None, alias="s")
+    # fmt: on
+
+    model_config = ConfigDict(
+        # arbitrary_types_allowed=True,  # should this be removed? 
+        frozen=False,
+        validate_assignment=True,
+        populate_by_name=True,
+        extra="allow",
+    )
+
+    @model_validator(mode="after")
+    def set_region(self) -> Self:
+        if self.region is None:
+            self._set_skip_validation("region", Region.from_id(self.account_id))
+        return self
+
+    _example = """
+                {
+                "statistics": {
+                    "clan": {
+                        "spotted": 0,
+                        "max_frags_tank_id": 0,
+                        "hits": 0,
+                        "frags": 0,
+                        "max_xp": 0,
+                        "max_xp_tank_id": 0,
+                        "wins": 0,
+                        "losses": 0,
+                        "capture_points": 0,
+                        "battles": 0,
+                        "damage_dealt": 0,
+                        "damage_received": 0,
+                        "max_frags": 0,
+                        "shots": 0,
+                        "frags8p": 0,
+                        "xp": 0,
+                        "win_and_survived": 0,
+                        "survived_battles": 0,
+                        "dropped_capture_points": 0
+                    },
+                    "all": {
+                        "spotted": 43706,
+                        "max_frags_tank_id": 19025,
+                        "hits": 269922,
+                        "frags": 42016,
+                        "max_xp": 2628,
+                        "max_xp_tank_id": 6145,
+                        "wins": 23280,
+                        "losses": 15830,
+                        "capture_points": 14713,
+                        "battles": 39495,
+                        "damage_dealt": 66326446,
+                        "damage_received": 43773129,
+                        "max_frags": 7,
+                        "shots": 319045,
+                        "frags8p": 28114,
+                        "xp": 35144185,
+                        "win_and_survived": 17499,
+                        "survived_battles": 18157,
+                        "dropped_capture_points": 33297
+                    },
+                    "frags": null
+                },
+                "account_id": 521458531,
+                "created_at": 1407265587,
+                "updated_at": 1704554148,
+                "private": null,
+                "last_battle_time": 1704553843,
+                "nickname": "jylpah"
+            }"""
 
 class WGApiWoTBlitz(JSONExportable):
     # fmt: off
