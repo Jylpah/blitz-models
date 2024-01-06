@@ -163,6 +163,7 @@ def tanks_updated() -> list[Tank]:
 @pytest.mark.asyncio
 @ACCOUNTS
 async def test_1_api_account_info(datafiles: Path) -> None:
+    assert (acc_info := AccountInfo.example_instance()) is not None, "AccountInfo.example_instance() failed"
     async with WGApi() as wg:
         for account_fn in datafiles.iterdir():
             accounts: Dict[int, Account] = dict()
