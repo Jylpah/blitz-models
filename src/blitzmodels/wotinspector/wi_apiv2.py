@@ -125,7 +125,7 @@ class PlayerData(JSONExportable):
     # should this be List[Dict[str, int]] instead? 
     achievements        : List[Dict[str, int]] | None = Field(default=None, alias='a')
     team                : int       = Field(default=-1, alias="t")
-    name                : str | None= Field(default=None, alias="n")
+    name                : str | None= Field(default=None, alias="n") # not in V1
     base_capture_points	: int       = Field(default=0, alias='bc')
     base_defend_points	: int       = Field(default=0, alias='bd')
     chassis_id			: int | None= Field(default=None, alias='ch')
@@ -143,7 +143,7 @@ class PlayerData(JSONExportable):
     enemies_damaged		: int       = Field(default=0, alias='ed')
     enemies_destroyed	: int       = Field(default=0, alias='ek')
     enemies_spotted		: int       = Field(default=0, alias='es')
-    entity_id           : int | None= Field(default=None, alias="ei")
+    entity_id           : int | None= Field(default=None, alias="ei")  # not in V1
     exp					: int       = Field(default=0, alias='ex')
     exp_for_assist		: int       = Field(default=0, alias='exa')
     exp_for_damage		: int       = Field(default=0, alias='exd')
