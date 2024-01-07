@@ -966,7 +966,7 @@ class WGApi:
     def get_tank_stats_url(
         self,
         account_id: int,
-        region: Region,
+        region: Region | None = None,
         tank_ids: list[int] = [],
         fields: list[str] = [],
     ) -> Tuple[str, Region] | None:
@@ -976,11 +976,9 @@ class WGApi:
         try:
             URL_WG_TANK_STATS: str = "tanks/stats/"
 
-            account_region: Region | None = Region.from_id(account_id)
+            account_region: Region = Region.from_id(account_id)
 
-            if account_region is None:
-                raise ValueError("Could not determine region for account_id")
-            if account_region != region:
+            if region is not None and account_region != region:
                 raise ValueError(
                     f"account_id {account_id} does not match region {region.name}"
                 )
@@ -1013,12 +1011,14 @@ class WGApi:
     async def get_tank_stats_full(
         self,
         account_id: int,
-        region: Region,
+        region: Region | None = None,
         tank_ids: list[int] = [],
         fields: list[str] = [],
     ) -> WGApiWoTBlitzTankStats | None:
         assert isinstance(region, Region), "region must be type of Region"
         try:
+            if region is None:
+                region = Region.from_id(account_id)
             server_url: Tuple[str, Region] | None = self.get_tank_stats_url(
                 account_id=account_id, region=region, tank_ids=tank_ids, fields=fields
             )
@@ -1038,7 +1038,7 @@ class WGApi:
     async def get_tank_stats(
         self,
         account_id: int,
-        region: Region,
+        region: Region | None = None,
         tank_ids: list[int] = [],
         fields: list[str] = [],
     ) -> list[TankStat] | None:
@@ -1048,7 +1048,7 @@ class WGApi:
             )
             if resp is None or resp.data is None:
                 verbose(
-                    f"could not fetch tank stats for account_id={account_id}:{region}"
+                    f"could not fetch tank stats for account_id={account_id}:{Region.from_id(account_id)}"
                 )
                 return None
             else:
