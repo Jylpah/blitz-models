@@ -4,14 +4,18 @@ import logging
 import json
 from bson import ObjectId
 from typing import Dict, List
-from blitzmodels import Account, Region, WGApi, AccountInfo
 from blitzmodels import (
+    Account,
+    Region,
+    WGApi,
+    AccountInfo,
     PlayerAchievementsMaxSeries,
     TankStat,
     WGApiWoTBlitzTankopedia,
     Tank,
     WGApiTankString,
 )
+
 
 logger = logging.getLogger()
 error = logger.error
@@ -163,7 +167,9 @@ def tanks_updated() -> list[Tank]:
 @pytest.mark.asyncio
 @ACCOUNTS
 async def test_1_api_account_info(datafiles: Path) -> None:
-    assert (acc_info := AccountInfo.example_instance()) is not None, "AccountInfo.example_instance() failed"
+    assert (
+        acc_info := AccountInfo.example_instance()
+    ) is not None, "AccountInfo.example_instance() failed"
     async with WGApi() as wg:
         for account_fn in datafiles.iterdir():
             accounts: Dict[int, Account] = dict()
@@ -285,9 +291,7 @@ def test_5_player_achievements() -> None:
         assert pa.indexes["account_id"] == 521458531, "indexes @property failed"
         assert "account_id" in f"{pa}", "'account_id' not found in str(TankStats)"
     except Exception as err:
-        assert (
-            False
-        ), f"Could not validate PlayerAchievementsMaxSeries example instance: {type(err)}: {err}"
+        assert False, f"Could not validate PlayerAchievementsMaxSeries example instance: {type(err)}: {err}"
 
     assert (
         len(PlayerAchievementsMaxSeries.backend_indexes()) > 0
@@ -313,10 +317,8 @@ async def test_6_api_tankopedia(
             assert len(tankopedia) > 0, "API returned empty tankopedia"
 
         assert (
-            tankopedia := await wg.get_tankopedia()
-        ) is not None, (
-            "could not fetch tankopedia from WG API from (default server = eu)"
-        )
+            (tankopedia := await wg.get_tankopedia()) is not None
+        ), "could not fetch tankopedia from WG API from (default server = eu)"
         for tank_id in tanks_remove:
             tankopedia.pop(tank_id)
 
@@ -329,11 +331,11 @@ async def test_6_api_tankopedia(
 
         (added, updated) = tankopedia.update_tanks(tankopedia_new)
 
-        assert len(added) == len(
-            tanks_remove
+        assert (
+            len(added) == len(tanks_remove)
         ), f"incorrect number of added tanks reported {len(added) } != {len(tanks_remove)}"
-        assert len(updated) == len(
-            tanks_updated
+        assert (
+            len(updated) == len(tanks_updated)
         ), f"incorrect number of updated tanks reported {len(updated) } != {len(tanks_updated)}"
 
 
@@ -355,9 +357,7 @@ async def test_7_api_tankstrs(
                 False
             ), f"failed to parse test file as WGApiTankString(): {fn.name}: {err}"
         if (tank := Tank.transform(tank_str)) is None:
-            assert (
-                False
-            ), f"could not transform WGApiTankString() to Tank(): {tank_str.user_string}"
+            assert False, f"could not transform WGApiTankString() to Tank(): {tank_str.user_string}"
 
     async with WGApi() as wg:
         for user_str in wgapi_tankstrs_user_strings:
