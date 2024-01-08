@@ -353,7 +353,7 @@ class WoTinspectorAPI(JSONExportable):
     status: str = Field(default="ok", alias="s")
     error: dict[str, Any] = Field(default={}, alias="e")
     model_config = ConfigDict(
-        arbitrary_types_allowed=True,
+        # arbitrary_types_allowed=True,
         frozen=False,
         validate_assignment=True,
         populate_by_name=True,
@@ -389,7 +389,7 @@ class ReplayJSON(WoTinspectorAPI):
 
     # fmt: on
     model_config = ConfigDict(
-        arbitrary_types_allowed=True,
+        # arbitrary_types_allowed=True,
         frozen=False,
         validate_assignment=True,
         populate_by_name=True,
