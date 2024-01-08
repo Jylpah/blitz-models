@@ -5,6 +5,7 @@ from typing import (
     TypeVar,
     Sequence,
     Tuple,
+    Set,
     Self,
     Type,
     Dict,
@@ -666,6 +667,9 @@ class WGApiWoTBlitzTankopedia(WGApiWoTBlitz):
     data: Dict[str, Tank] = Field(default=dict(), alias="d")
     codes: Dict[str, Tank] = Field(default=dict(), alias="c")
 
+    # TODO: Implement tier cache
+    _tier_cache: Dict[int, Set[TankId]] = dict()
+
     _exclude_export_DB_fields = {"codes": True}
     _exclude_export_src_fields = {"codes": True}
 
@@ -677,6 +681,8 @@ class WGApiWoTBlitzTankopedia(WGApiWoTBlitz):
     def _validate_code(self) -> Self:
         if len(self.codes) == 0:
             self._set_skip_validation("codes", self._update_codes(data=self.data))
+        if len(self._tier_cache) == 0:
+            self._set_skip_validation("_tier_cache", self._update_tier_cache())
         return self
 
     def __len__(self) -> int:
@@ -696,6 +702,15 @@ class WGApiWoTBlitzTankopedia(WGApiWoTBlitz):
             self.meta = dict()
         self.meta["count"] = len(self.data)
 
+    def _update_tier_cache(self) -> Dict[int, Set[TankId]]:
+        """Update tier cache and return new cache"""
+        res: Dict[int, Set[TankId]] = dict()
+        for tier in range(1, 11):
+            res[tier] = set()
+        for tank in self.data.values():
+            res[tank.tier].add(tank.tank_id)
+        return res
+
     def _code_add(self, tank: Tank, codes: dict[str, Tank]) -> bool:
         if tank.code is not None:
             codes[tank.code] = tank
@@ -704,6 +719,7 @@ class WGApiWoTBlitzTankopedia(WGApiWoTBlitz):
 
     def add(self, tank: Tank) -> None:
         self.data[str(tank.tank_id)] = tank
+        self._tier_cache[tank.tier].add(tank.tank_id)
         self._code_add(tank, self.codes)
         self.update_count()
 
@@ -714,6 +730,7 @@ class WGApiWoTBlitzTankopedia(WGApiWoTBlitz):
         if tank.code is not None:
             try:
                 del self.codes[tank.code]
+                self._tier_cache[tank.tier].remove(tank.tank_id)
             except Exception as err:
                 debug(f"could not remove code for tank_id={tank.tank_id}: {err}")
                 pass
@@ -762,6 +779,11 @@ class WGApiWoTBlitzTankopedia(WGApiWoTBlitz):
         self.update_count()
         self.update_codes()
         return (added, updated_ids)
+
+    def get_tank_ids_by_tier(self, tier: int) -> Set[TankId]:
+        if tier < 1 or tier > 10:
+            raise ValueError(f"tier must be between 1-10: {tier}")
+        return self._tier_cache[tier]
 
 
 class WGApiTankString(JSONExportable):
