@@ -12,7 +12,6 @@ from typing import (
 )
 from types import TracebackType
 import logging
-from sys import path
 import pyarrow  # type: ignore
 from bson import ObjectId
 from pydantic import (
@@ -80,16 +79,13 @@ class WGApiError(JSONExportable):
     message: str | None
     field: str | None
     value: str | None
-    # TODO[pydantic]: The following keys were removed: `allow_mutation`.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+
     model_config = ConfigDict(
         frozen=False, validate_assignment=True, populate_by_name=True
     )
 
     def str(self) -> str:
         return f"code: {self.code} {self.message}"
-
-
 
 
 class WGTankStatAll(JSONExportable):
@@ -129,8 +125,8 @@ class WGTankStatAll(JSONExportable):
 
 
 class AccountInfoStats(WGTankStatAll):
-    max_frags_tank_id   : int = Field(default=0, alias="mft")
-    max_xp_tank_id      : int = Field(default=0, alias="mxt")
+    max_frags_tank_id: int = Field(default=0, alias="mft")
+    max_xp_tank_id: int = Field(default=0, alias="mxt")
 
 
 class TankStat(JSONExportable):
@@ -139,8 +135,8 @@ class TankStat(JSONExportable):
     region:             Region | None = Field(default=None, alias="r")
     all:                WGTankStatAll = Field(..., alias="s")
     last_battle_time:   int = Field(..., alias="lb")
-    account_id:         int = Field(..., alias="a")
-    tank_id:            int = Field(..., alias="t")
+    account_id:         TankId = Field(..., alias="a")
+    tank_id:            TankId = Field(..., alias="t")
     mark_of_mastery:    int = Field(default=0, alias="m")
     battle_life_time:   int = Field(default=0, alias="l")
     release:            str | None = Field(default=None, alias="u")
@@ -271,7 +267,7 @@ class TankStat(JSONExportable):
 
     @classmethod
     def mk_id(
-        cls, account_id: int, last_battle_time: int, tank_id: int = 0
+        cls, account_id: AccountId, last_battle_time: int, tank_id: TankId = 0
     ) -> ObjectId:
         return ObjectId(
             hex(account_id)[2:].zfill(10)
@@ -314,12 +310,12 @@ class TankStat(JSONExportable):
                     tank_id={self.tank_id} \
                     last_battle_time={self.last_battle_time}"
 
+
 ###########################################
 #
 # AccountInfo()
 #
 ###########################################
-
 
 
 class AccountInfo(JSONExportable):
@@ -334,7 +330,7 @@ class AccountInfo(JSONExportable):
     # fmt: on
 
     model_config = ConfigDict(
-        # arbitrary_types_allowed=True,  # should this be removed? 
+        # arbitrary_types_allowed=True,  # should this be removed?
         frozen=False,
         validate_assignment=True,
         populate_by_name=True,
@@ -401,6 +397,7 @@ class AccountInfo(JSONExportable):
                 "last_battle_time": 1704553843,
                 "nickname": "jylpah"
             }"""
+
 
 class WGApiWoTBlitz(JSONExportable):
     # fmt: off
@@ -591,8 +588,7 @@ class PlayerAchievementsMain(JSONExportable):
     max_series: PlayerAchievementsMaxSeries | None = Field(default=None, alias="m")
     account_id: int | None = Field(default=None)
     updated: int | None = Field(default=None)
-    # TODO[pydantic]: The following keys were removed: `allow_mutation`.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+
     model_config = ConfigDict(
         frozen=False, validate_assignment=True, populate_by_name=True
     )
@@ -606,8 +602,7 @@ PlayerAchievementsMaxSeries.register_transformation(
 
 class WGApiWoTBlitzPlayerAchievements(WGApiWoTBlitz):
     data: dict[str, PlayerAchievementsMain] | None = Field(default=None, alias="d")
-    # TODO[pydantic]: The following keys were removed: `allow_mutation`.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+
     model_config = ConfigDict(
         frozen=False, validate_assignment=True, populate_by_name=True
     )
@@ -673,6 +668,7 @@ class WGApiWoTBlitzTankopedia(WGApiWoTBlitz):
 
     _exclude_export_DB_fields = {"codes": True}
     _exclude_export_src_fields = {"codes": True}
+
     model_config = ConfigDict(
         frozen=False, validate_assignment=True, populate_by_name=True
     )
@@ -686,7 +682,7 @@ class WGApiWoTBlitzTankopedia(WGApiWoTBlitz):
     def __len__(self) -> int:
         return len(self.data)
 
-    def __getitem__(self, key: str | int) -> Tank:
+    def __getitem__(self, key: str | TankId) -> Tank:
         if isinstance(key, int):
             key = str(key)
         return self.data[key]
@@ -711,7 +707,7 @@ class WGApiWoTBlitzTankopedia(WGApiWoTBlitz):
         self._code_add(tank, self.codes)
         self.update_count()
 
-    def pop(self, tank_id: int) -> Tank:
+    def pop(self, tank_id: TankId) -> Tank:
         """Raises KeyError if tank_id is not found in self.data"""
         tank: Tank = self.data.pop(str(tank_id))
         self.update_count()
@@ -748,16 +744,18 @@ class WGApiWoTBlitzTankopedia(WGApiWoTBlitz):
         """update _code dict"""
         self._set_skip_validation("codes", self._update_codes(self.data))
 
-    def update_tanks(self, new: "WGApiWoTBlitzTankopedia") -> Tuple[set[int], set[int]]:
+    def update_tanks(
+        self, new: "WGApiWoTBlitzTankopedia"
+    ) -> Tuple[set[TankId], set[TankId]]:
         """update tankopedia with another one"""
-        new_ids: set[int] = {tank.tank_id for tank in new}
-        old_ids: set[int] = {tank.tank_id for tank in self}
-        added: set[int] = new_ids - old_ids
-        updated: set[int] = new_ids & old_ids
+        new_ids: set[TankId] = {tank.tank_id for tank in new}
+        old_ids: set[TankId] = {tank.tank_id for tank in self}
+        added: set[TankId] = new_ids - old_ids
+        updated: set[TankId] = new_ids & old_ids
         updated = {tank_id for tank_id in updated if new[tank_id] != self[tank_id]}
 
         self.data.update({(str(tank_id), new[tank_id]) for tank_id in added})
-        updated_ids: set[int] = set()
+        updated_ids: set[TankId] = set()
         for tank_id in updated:
             if self.data[str(tank_id)].update(new[tank_id]):
                 updated_ids.add(tank_id)
