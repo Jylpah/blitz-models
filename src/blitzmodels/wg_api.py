@@ -136,7 +136,7 @@ class TankStat(JSONExportable):
     region:             Region | None = Field(default=None, alias="r")
     all:                WGTankStatAll = Field(..., alias="s")
     last_battle_time:   int = Field(..., alias="lb")
-    account_id:         TankId = Field(..., alias="a")
+    account_id:         AccountId = Field(..., alias="a")
     tank_id:            TankId = Field(..., alias="t")
     mark_of_mastery:    int = Field(default=0, alias="m")
     battle_life_time:   int = Field(default=0, alias="l")
