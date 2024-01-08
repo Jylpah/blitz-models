@@ -46,18 +46,15 @@ from pydantic_exportables.utils import get_model
 from pyutils.utils import epoch_now
 from pyutils import ThrottledClientSession
 
-# Fix relative imports
-from pathlib import Path
-
-path.insert(0, str(Path(__file__).parent.parent.resolve()))
-
-from blitzmodels.region import Region  # noqa: E402
-from blitzmodels.tank import (  # noqa: E402
+from .region import Region
+from .tank import (
     Tank,
     EnumNation,
     EnumVehicleTypeStr,
     EnumVehicleTier,
 )
+from .types import AccountId, TankId
+
 
 TYPE_CHECKING = True
 logger = logging.getLogger()
