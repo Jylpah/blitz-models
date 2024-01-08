@@ -185,7 +185,7 @@ class TankStat(JSONExportable):
                                 }"""
     # fmt: on
     model_config = ConfigDict(
-        arbitrary_types_allowed=True,
+        # arbitrary_types_allowed=True,
         frozen=False,
         validate_assignment=True,
         populate_by_name=True,
@@ -491,7 +491,7 @@ class PlayerAchievementsMaxSeries(JSONExportable):
         frozen=False,
         validate_assignment=True,
         populate_by_name=True,
-        arbitrary_types_allowed=True,
+        # arbitrary_types_allowed=True,
         extra="allow",  # TODO or 'ignore'?
     )
 
