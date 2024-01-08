@@ -14,6 +14,8 @@ from pydantic_exportables import (
     TEXT,
 )
 
+from .types import TankId
+
 logger = logging.getLogger()
 error = logger.error
 message = logger.warning
@@ -119,7 +121,7 @@ class EnumNation(IntEnum):
 
 class Tank(JSONExportable, CSVExportable, TXTExportable):
     # fmt: off
-    tank_id 	: int 				= Field(default=..., alias = '_id')
+    tank_id 	: TankId			= Field(default=..., alias = '_id')
     name   		: str 				= Field(default="")
     code        : str | None        = Field(default=None)
     nation   	: EnumNation  		= Field(default=EnumNation.european)

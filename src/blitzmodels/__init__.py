@@ -1,5 +1,5 @@
 from .config import get_config_file as get_config_file
-
+from .types import AccountId as AccountId, TankId as TankId
 from .region import Region as Region
 from .release import Release as Release
 from .account import Account as Account
@@ -38,6 +38,7 @@ from .replay import ReplayFile as ReplayFile, ReplayFileMeta as ReplayFileMeta
 
 
 __all__ = [
+    "types",
     "account",
     "config",
     "map",

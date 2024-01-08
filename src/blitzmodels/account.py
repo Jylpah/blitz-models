@@ -19,6 +19,7 @@ from pydantic_exportables import (
 
 from .region import Region
 from .wg_api import AccountInfo
+from .types import AccountId
 
 logger = logging.getLogger()
 error = logger.error
@@ -37,7 +38,6 @@ debug = logger.debug
 
 TypeAccountDict = dict[str, int | bool | Region | None]
 
-
 # def lateinit_region() -> Region:
 #     """Required for initializing a model w/o a 'region' field"""
 #     raise RuntimeError("lateinit_region(): should never be called")
@@ -45,7 +45,7 @@ TypeAccountDict = dict[str, int | bool | Region | None]
 
 class Account(JSONExportable, CSVExportable, TXTExportable, TXTImportable, Importable):
     # fmt: off
-    id              : int       = Field(alias="_id")
+    id              : AccountId = Field(alias="_id")
     # lateinit is a trick to fool mypy since region is set in root_validator
     region          : Region    = Field(default=Region.bot, alias="r")
     last_battle_time: int       = Field(default=0, alias="l")
