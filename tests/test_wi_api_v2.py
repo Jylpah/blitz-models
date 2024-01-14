@@ -44,7 +44,7 @@ REPLAY_FILES = pytest.mark.datafiles(
     on_duplicate="overwrite",
 )
 
-MAPS_JSON: str = "05_Maps_new.json"
+MAPS_JSON: str = "05_maps.json"
 MAPS = pytest.mark.datafiles(FIXTURE_DIR / MAPS_JSON, on_duplicate="overwrite")
 
 TANKOPEDIA_JSON: str = "01_Tankopedia.json"

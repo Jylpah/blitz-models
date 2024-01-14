@@ -1,6 +1,6 @@
 [project]
 name = "blitz-models"
-version = "1.2.2"
+version = "1.2.3"
 authors = [{ name = "Jylpah", email = "jylpah@gmail.com" }]
 description = "Pydantic models for Wargaming's World of Tanks Blitz game "
 readme = "README.md"
@@ -23,6 +23,7 @@ dependencies = [
     "pyarrow>=14.0.1",
     "pydantic>=2.4",
     "pymongo>=4.6",
+    "PyYAML>=6.0.1",
     "pyutils @ git+https://github.com/Jylpah/pyutils.git@main-1.0",
     "pydantic-exportables @ git+https://github.com/Jylpah/pydantic-exportables.git",
 ]

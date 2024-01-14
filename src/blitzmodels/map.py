@@ -1,18 +1,19 @@
 import logging
-import json
-from warnings import warn
-from typing import Any, Self
+
+# import json
+# from warnings import warn
+from typing import List, ClassVar, Self, Dict
 from enum import IntEnum, StrEnum
 from pydantic import (
-    model_validator,
+    # model_validator,
     ConfigDict,
     Field,
-    ValidationError,
+    # ValidationError,
 )
 from aiofiles import open
 from pathlib import Path
-
-from re import Pattern, compile
+from re import Pattern, compile, Match
+from yaml import safe_load  # type: ignore
 
 from pydantic_exportables import (
     JSONExportable,
@@ -52,37 +53,55 @@ class MapModeStr(StrEnum):
 
 
 class Map(JSONExportable):
-    key: str = Field(default=..., alias="_id")
-    name: str = Field(default=..., alias="n")
-    id: int = Field(default=-1)
-    mode: MapMode = Field(default=MapMode.normal, alias="m")
-
+    # fmt: off
+    id:     int             = Field(default=..., alias="_id")
+    key:    str             = Field(default=..., alias="k")
+    name:   str             = Field(default="", alias="n")
+    localization_code: str  = Field(default="", alias="lc")
+    modes:  List[MapMode]   = Field(default_factory=list, alias="m")
+    # fmt: on
     _exclude_unset = False
     _exclude_defaults = False
 
     # _re_partial_name: Pattern = compile(r" - ")
-    _re_partial_key: Pattern = compile(r'_\d{2}$')  # fmt: skip
+    # _re_partial_key: Pattern = compile(r'_\d{2}$')  # fmt: skip
+    _re_localization: ClassVar[Pattern] = compile(r"^#maps:(\w+):(.+?\/.+)$")
 
-    @model_validator(mode="after")
-    def _map_mode(self) -> Self:
-        """Set map's type/mode"""
-        if self.mode != MapMode.normal:
-            return self
-        if self._re_partial_key.search(self.key):
-            self.mode = MapMode.partial
-        elif self.key in {"test", "moon", "iceworld", "Wasteland"}:
-            self.mode = MapMode.special
-        elif self.key in {"tutorial"}:
-            self.mode = MapMode.training
-        return self
+    # @model_validator(mode="after")
+    # def _map_mode(self) -> Self:
+    #     """Set map's type/mode"""
+    #     if self.mode != MapMode.normal:
+    #         return self
+    #     if self._re_partial_key.search(self.key):
+    #         self.mode = MapMode.partial
+    #     elif self.key in {"test", "moon", "iceworld", "Wasteland"}:
+    #         self.mode = MapMode.special
+    #     elif self.key in {"tutorial"}:
+    #         self.mode = MapMode.training
+    #     return self
 
     model_config = ConfigDict(
         frozen=False, validate_assignment=True, populate_by_name=True
     )
 
+    def read_localization_str(self, localization: str) -> bool:
+        """
+        Read 'key' and 'localization_code' from Blitz localization string
+        """
+        match: Match | None
+        if (
+            (match := self._re_localization.match(localization)) is None
+            or (key := match.group(1)) is None
+            or (loc_code := match.group(2)) is None
+        ):
+            return False
+        self._set_skip_validation("key", key)
+        self._set_skip_validation("localization_code", loc_code)
+        return True
+
     @property
     def index(self) -> Idx:
-        return self.key
+        return self.id
 
 
 class Maps(JSONExportableRootDict[Map]):
@@ -90,6 +109,9 @@ class Maps(JSONExportableRootDict[Map]):
 
     _exclude_unset = False
     _exclude_defaults = False
+
+    _re_localization: ClassVar[Pattern] = compile(r"^#maps:(\w+):(.+?\/.+)$")
+
     model_config = ConfigDict(
         frozen=False,
         validate_assignment=True,
@@ -98,32 +120,96 @@ class Maps(JSONExportableRootDict[Map]):
     )
 
     @classmethod
-    async def open_json(
+    async def open_yaml(
         cls, filename: Path | str, exceptions: bool = False
     ) -> Self | None:
-        """Open replay JSON file and return class instance"""
-        if (
-            res := await super().open_json(filename, exceptions=exceptions)
-        ) is not None:
-            return res
-        else:
-            warn("legacy JSON format is depreciated", category=DeprecationWarning)
+        """
+        Read Maps from Blitz game maps.yaml file
+        """
+        try:
+            maps: Self = cls()
+            async with open(file=filename, mode="r", encoding="utf-8") as file:
+                debug(f"yaml file opened: {str(filename)}")
+                maps_yaml = safe_load(await file.read())
+                for key, map_cfg in maps_yaml["maps"].items():
+                    try:
+                        map_id: int = map_cfg["id"]
+                        modes: List[int] = map_cfg["availableModes"]
+                        localization_code: str = map_cfg["localName"]
+                        maps.add(
+                            Map(
+                                id=map_id,
+                                key=key,
+                                modes=modes,
+                                localization_code=localization_code,
+                            )
+                        )
+                    except KeyError as err:
+                        error(f"could not read map config for map_key={key}: {err}")
+            if len(maps) > 0:
+                return maps
+        except KeyError:
+            error(f"no YAML root key 'maps' found in {str(filename)}")
+        except OSError as err:
+            debug(f"Error reading file: {filename}: {err}")
+        return None
+
+    def get_by_key(self, key: str) -> Map | None:
+        """A brute-force map search by key"""
+        for map in self.root.values():
+            if map.key == key:
+                return map
+        return None
+
+    def add_names(self, localization_strs: Dict[str, str]) -> int:
+        """Update maps from Blitz game localization strings 'en.yaml'"""
+        updated: int = 0
+        names: Dict[str, str] = dict()
+
+        for loc_key, name in localization_strs.items():
+            # some Halloween map variants have the same short name
+            if (
+                (match := self._re_localization.match(loc_key))
+                and (key := match.group(1))
+                and (loc_str := match.group(2))
+            ):
+                names[f"{key}:{loc_str}"] = name
+
+        for map in self.root.values():
             try:
-                res = cls()
-                async with open(filename, "r", encoding="utf8") as f:
-                    objs: dict[str, Any] = json.loads(await f.read())
-                    for key, obj in objs.items():
-                        try:
-                            res.add(Map(key=key, name=obj))
-                            debug(f"new Map(key={key}, name={obj})")
-                        except ValidationError as err:
-                            debug(f"could not validate key={key}, map={obj}: {err}")
-                return res
-            except OSError as err:
-                debug(f"Error reading file: {filename}: {err}")
-            except ValidationError as err:
-                debug(f"Error parsing file: {filename}: {err}")
-            return None
+                map.name = names[f"{map.key}:{map.localization_code}"]
+                updated += 1
+            except KeyError:
+                debug(f"no name found for map id={map.id}, key={map.key}")
+        return updated
+
+    # @classmethod
+    # async def open_json(
+    #     cls, filename: Path | str, exceptions: bool = False
+    # ) -> Self | None:
+    #     """Open replay JSON file and return class instance"""
+    #     if (
+    #         res := await super().open_json(filename, exceptions=exceptions)
+    #     ) is not None:
+    #         return res
+    #     else:
+    #         warn("legacy JSON format is depreciated", category=DeprecationWarning)
+    #         try:
+    #             res = cls()
+    #             async with open(filename, "r", encoding="utf8") as f:
+    #                 objs: dict[str, Any] = json.loads(await f.read())
+    #                 for key, obj in objs.items():
+    #                     try:
+    #                         res.add(Map(key=key, name=obj))
+    #                         debug(f"new Map(key={key}, name={obj})")
+    #                     except ValidationError as err:
+    #                         debug(f"could not validate key={key}, map={obj}: {err}")
+    #             return res
+    #         except OSError as err:
+    #             debug(f"Error reading file: {filename}: {err}")
+    #         except ValidationError as err:
+    #             debug(f"Error parsing file: {filename}: {err}")
+    #         return None
 
     # def update_maps(self, new: "Maps") -> Tuple[set[str], set[str]]:
     #     """update Maps with another Maps instance"""
