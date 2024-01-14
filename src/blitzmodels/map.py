@@ -127,31 +127,40 @@ class Maps(JSONExportableRootDict[Map]):
         Read Maps from Blitz game maps.yaml file
         """
         try:
-            maps: Self = cls()
             async with open(file=filename, mode="r", encoding="utf-8") as file:
                 debug(f"yaml file opened: {str(filename)}")
-                maps_yaml = safe_load(await file.read())
-                for key, map_cfg in maps_yaml["maps"].items():
-                    try:
-                        map_id: int = map_cfg["id"]
-                        modes: List[int] = map_cfg["availableModes"]
-                        localization_code: str = map_cfg["localName"]
-                        maps.add(
-                            Map(
-                                id=map_id,
-                                key=key,
-                                modes=modes,
-                                localization_code=localization_code,
-                            )
+                return cls.load_yaml(await file.read())
+        except OSError as err:
+            debug(f"Error reading file: {filename}: {err}")
+        return None
+
+    @classmethod
+    def load_yaml(cls, yaml_doc: str) -> Self | None:
+        """
+        Read Maps from Blitz game maps.yaml input
+        """
+        try:
+            maps: Self = cls()
+            maps_yaml = safe_load(yaml_doc)
+            for key, map_cfg in maps_yaml["maps"].items():
+                try:
+                    map_id: int = map_cfg["id"]
+                    modes: List[int] = map_cfg["availableModes"]
+                    localization_code: str = map_cfg["localName"]
+                    maps.add(
+                        Map(
+                            id=map_id,
+                            key=key,
+                            modes=modes,
+                            localization_code=localization_code,
                         )
-                    except KeyError as err:
-                        error(f"could not read map config for map_key={key}: {err}")
+                    )
+                except KeyError as err:
+                    error(f"could not read map config for map_key={key}: {err}")
             if len(maps) > 0:
                 return maps
         except KeyError:
-            error(f"no YAML root key 'maps' found in {str(filename)}")
-        except OSError as err:
-            debug(f"Error reading file: {filename}: {err}")
+            error("no YAML root key 'maps' found in input")
         return None
 
     def get_by_key(self, key: str) -> Map | None:
