@@ -104,7 +104,7 @@ class Map(JSONExportable):
         return self.id
 
 
-class Maps(JSONExportableRootDict[Map]):
+class Maps(JSONExportableRootDict[int, Map]):
     """Container model for Maps"""
 
     _exclude_unset = False
@@ -144,7 +144,7 @@ class Maps(JSONExportableRootDict[Map]):
             maps_yaml = safe_load(yaml_doc)
             for key, map_cfg in maps_yaml["maps"].items():
                 try:
-                    map_id: int = map_cfg["id"]
+                    map_id: int = int(map_cfg["id"])
                     modes: List[int] = map_cfg["availableModes"]
                     localization_code: str = map_cfg["localName"]
                     maps.add(
