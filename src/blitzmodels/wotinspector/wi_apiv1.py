@@ -163,8 +163,7 @@ class ReplayDetail(JSONExportable):
     vehicle_descr		: int | None = Field(default=None, alias='vi')
     wp_points_earned	: int | None = Field(default=None, alias='we')
     wp_points_stolen	: int | None = Field(default=None, alias='ws')
-    # TODO[pydantic]: The following keys were removed: `allow_mutation`.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+
     model_config = ConfigDict(extra="allow", frozen=False, validate_assignment=True, populate_by_name=True)
 
 
@@ -267,9 +266,12 @@ class ReplayData(JSONExportable):
 
     _ViewUrlBase: str = "https://replays.wotinspector.com/en/view/"
     _DLurlBase  : str = "https://replays.wotinspector.com/en/download/"
-    # TODO[pydantic]: The following keys were removed: `allow_mutation`.
-    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
-    model_config = ConfigDict(arbitrary_types_allowed=True, frozen=False, validate_assignment=True, populate_by_name=True)
+
+    model_config = ConfigDict(
+                            # arbitrary_types_allowed=True, 
+                              frozen=False, 
+                              validate_assignment=True, 
+                              populate_by_name=True)
 
     _exclude_export_DB_fields = {
         "view_url": True,
@@ -1409,8 +1411,7 @@ ReplayData.register_transformation(ReplayJSON, ReplayData.transform_ReplayJSON)
 #     enemies         : list[int]                 = Field(default=..., alias="e")
 #     mastery_badge   : int | None                = Field(default=None, alias="mb")
 #     details         : ReplayDetail | list[ReplayDetail] = Field(default=..., alias="d")
-#     # TODO[pydantic]: The following keys were removed: `allow_mutation`.
-#     # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+
 #     model_config = ConfigDict(extra="allow", frozen=False, validate_assignment=True, populate_by_name=True)
 
 #     @field_validator("vehicle_tier")

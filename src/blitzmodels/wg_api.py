@@ -667,7 +667,6 @@ class WGApiWoTBlitzTankopedia(WGApiWoTBlitz):
     data: Dict[str, Tank] = Field(default=dict(), alias="d")
     codes: Dict[str, Tank] = Field(default=dict(), alias="c")
 
-    # TODO: Implement tier cache
     _tier_cache: Dict[int, Set[TankId]] = dict()
 
     _exclude_export_DB_fields = {"codes": True}
