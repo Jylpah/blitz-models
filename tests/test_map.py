@@ -173,6 +173,12 @@ async def test_1_import_export(
         len(maps) == count
     ), f"could not import all maps: got {len(maps)}, expected {count}"
 
+    for key, map in maps.items():
+        assert isinstance(key, int), f"imported map keys are not int, but {type(key)}"
+        assert isinstance(
+            map.id, int
+        ), f"imported map.id are not int, but {type(map.id)}"
+
 
 @pytest.mark.asyncio
 @MAPS
@@ -229,6 +235,13 @@ async def test_4_open_yaml(
     assert (
         maps := await Maps.open_yaml(maps_yaml)
     ) is not None, f"could not open maps from YAML file: {maps_yaml.name}"
+
+    for key, map in maps.items():
+        assert isinstance(key, int), f"imported map keys are not int, but {type(key)}"
+        assert isinstance(
+            map.id, int
+        ), f"imported map.id are not int, but {type(map.id)}"
+
     assert (
         len(maps) == maps_new
     ), f"incorrect number of maps read from a YAML file: {len(maps)} != {maps_new}"
