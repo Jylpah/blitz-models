@@ -25,9 +25,9 @@ from .wi_apiv1 import (
     ReplayDetail as ReplayDetail,
     ReplayAchievement as ReplayAchievement,
     WoTBlitzMaps as WoTBlitzMaps,
-    EnumWinnerTeam as EnumWinnerTeam, 
-    EnumBattleResult as EnumBattleResult, 
-    EnumVehicleTypeInt as EnumVehicleTypeInt, 
+    EnumWinnerTeam as EnumWinnerTeam,
+    EnumBattleResult as EnumBattleResult,
+    EnumVehicleTypeInt as EnumVehicleTypeInt,
 )
 
 __all__ = [
