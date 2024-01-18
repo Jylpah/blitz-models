@@ -986,22 +986,18 @@ class WGApi:
         tank_ids: list[int] = [],
         fields: list[str] = [],
     ) -> Tuple[str, Region] | None:
-        assert isinstance(account_id, int), "account_id must be int"
-        assert isinstance(tank_ids, list), "tank_ids must be a list"
-        assert isinstance(fields, list), "fields must be a list"
+        # assert isinstance(account_id, int), "account_id must be int"
+        # assert isinstance(tank_ids, list), "tank_ids must be a list"
+        # assert isinstance(fields, list), "fields must be a list"
         try:
             URL_WG_TANK_STATS: str = "tanks/stats/"
 
-            account_region: Region = Region.from_id(account_id)
+            if region is None:
+                region = Region.from_id(account_id)
 
-            if region is not None and account_region != region:
-                raise ValueError(
-                    f"account_id {account_id} does not match region {region.name}"
-                )
-
-            server: str | None = self.get_server_url(account_region)
+            server: str | None = self.get_server_url(region)
             if server is None:
-                raise ValueError(f"No API server for region {account_region.value}")
+                raise ValueError(f"No API server for region {region.value}")
 
             tank_id_str: str = ""
             if len(tank_ids) > 0:
@@ -1018,7 +1014,7 @@ class WGApi:
             # else:
             return (
                 f"{server}{URL_WG_TANK_STATS}?application_id={self.app_id}&account_id={account_id}{tank_id_str}{field_str}",
-                account_region,
+                region,
             )
         except Exception as err:
             debug(f"Failed to form url for account_id: {account_id}: {err}")
@@ -1031,7 +1027,7 @@ class WGApi:
         tank_ids: list[int] = [],
         fields: list[str] = [],
     ) -> WGApiWoTBlitzTankStats | None:
-        assert isinstance(region, Region), "region must be type of Region"
+        # assert isinstance(region, Region), "region must be type of Region"
         try:
             if region is None:
                 region = Region.from_id(account_id)
@@ -1209,7 +1205,7 @@ class WGApi:
         region: Region,
         fields: list[str] = list(),
     ) -> WGApiWoTBlitzPlayerAchievements | None:
-        assert isinstance(region, Region), "region must be type of Region"
+        # assert isinstance(region, Region), "region must be type of Region"
         try:
             url: str | None
             if (
