@@ -214,7 +214,7 @@ class PlayerData(JSONExportable):
         else:
             return value
 
-    @field_validator("team", "time_alive", mode="before")
+    @field_validator("team", "time_alive", "death_reason", mode="before")
     @classmethod
     def validate_none_minus1(cls, value: str | None) -> str:
         if value is None:
