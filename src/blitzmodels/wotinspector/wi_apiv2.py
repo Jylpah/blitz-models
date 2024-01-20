@@ -138,7 +138,7 @@ class PlayerData(JSONExportable):
     damage_made			: int       = Field(default=0, alias='dm')
     damage_received		: int       = Field(default=0, alias='dr')
     dbid				: int  	    = Field(default=..., alias='id')   # is 'ai' in v1 !!
-    death_reason		: int | None= Field(default=None, alias='de')
+    death_reason		: int       = Field(default=-1, alias='de') # None option removed 1.2.8
     distance_travelled	: int       = Field(default=0, alias='dt')
     enemies_damaged		: int       = Field(default=0, alias='ed')
     enemies_destroyed	: int       = Field(default=0, alias='ek')
