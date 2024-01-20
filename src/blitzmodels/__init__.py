@@ -18,6 +18,7 @@ from .map import (
 )
 from .wg_api import (
     AccountInfo as AccountInfo,
+    AccountInfoStats as AccountInfoStats,
     WGApiError as WGApiError,
     WGApiWoTBlitz as WGApiWoTBlitz,
     WGApiWoTBlitzTankopedia as WGApiWoTBlitzTankopedia,
