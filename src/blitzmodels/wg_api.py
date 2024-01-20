@@ -441,14 +441,31 @@ class WGApiWoTBlitzAccountInfo(WGApiWoTBlitz):
         frozen=False, validate_assignment=True, populate_by_name=True
     )
 
+    def __len__(self) -> int:
+        res: int = 0
+        if self.data is not None:
+            for v in self.data.values():
+                if v is not None:
+                    res += 1
+        return res
+
 
 class WGApiWoTBlitzTankStats(WGApiWoTBlitz):
     """Model for WG API /wotb/tanks/stats/"""
 
     data: Dict[str, Optional[list[TankStat]]] | None = Field(default=None, alias="d")
+
     model_config = ConfigDict(
         frozen=False, validate_assignment=True, populate_by_name=True
     )
+
+    def __len__(self) -> int:
+        if self.data is not None:
+            for v in self.data.values():
+                if v is not None:
+                    return len(v)
+                break
+        return 0
 
 
 class PlayerAchievements(JSONExportable):
@@ -621,6 +638,11 @@ class WGApiWoTBlitzPlayerAchievements(WGApiWoTBlitz):
             res: dict[str, PlayerAchievementsMain]
             res = {key: value for key, value in v.items() if value is not None}
             return res
+
+    def __len__(self) -> int:
+        if self.data is not None:
+            return len(self.data)
+        return 0
 
     def get_max_series(self) -> list[PlayerAchievementsMaxSeries]:
         res: list[PlayerAchievementsMaxSeries] = list()
