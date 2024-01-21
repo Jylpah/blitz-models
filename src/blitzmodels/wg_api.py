@@ -23,6 +23,7 @@ from pydantic import (
     field_serializer,
     Field,
 )
+from pathlib import Path
 from importlib.resources.abc import Traversable
 from importlib.resources import as_file
 import importlib
@@ -710,15 +711,22 @@ class WGApiWoTBlitzTankopedia(WGApiWoTBlitz):
         return self
 
     @classmethod
-    async def open_default(cls) -> Optional[Self]:
+    def default_path(cls) -> Path:
         """
-        Open Tankopedia shipped with the package
+        Return Path of the Tankopedia shipped with the package
         """
         packaged_tankopedia: Traversable = importlib.resources.files(
             "blitzmodels"
         ).joinpath("tanks.json")  # REFACTOR in Python 3.12
         with as_file(packaged_tankopedia) as tankopedia_fn:
-            return await cls.open_json(tankopedia_fn)
+            return tankopedia_fn
+
+    @classmethod
+    async def open_default(cls) -> Optional[Self]:
+        """
+        Open Tankopedia shipped with the package
+        """
+        return await cls.open_json(cls.default_path())
 
     def __len__(self) -> int:
         return len(self.data)

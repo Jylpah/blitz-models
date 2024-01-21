@@ -167,15 +167,22 @@ class Maps(JSONExportableRootDict[int, Map]):
         return None
 
     @classmethod
-    async def open_default(cls) -> Optional[Self]:
+    def default_path(cls) -> Path:
         """
-        Open maps shipped with the package
+        Return Path of the Tankopedia shipped with the package
         """
         packaged_maps: Traversable = importlib.resources.files("blitzmodels").joinpath(
             "maps.json"
         )  # REFACTOR in Python 3.12
         with as_file(packaged_maps) as maps_fn:
-            return await cls.open_json(maps_fn)
+            return maps_fn
+
+    @classmethod
+    async def open_default(cls) -> Optional[Self]:
+        """
+        Open maps shipped with the package
+        """
+        return await cls.open_json(cls.default_path())
 
     def get_by_key(self, key: str) -> Map | None:
         """A brute-force map search by key"""
