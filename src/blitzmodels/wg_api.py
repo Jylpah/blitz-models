@@ -91,23 +91,23 @@ class WGApiError(JSONExportable):
 
 class WGTankStatAll(JSONExportable):
     # fmt: off
-    battles:            int = Field(..., alias="b")
-    capture_points:     int = Field(default=-1, alias="cp")
-    wins:               int = Field(default=-1, alias="w")
-    losses:             int = Field(default=-1, alias="l")
-    spotted:            int = Field(default=-1, alias="sp")
-    hits:               int = Field(default=-1, alias="h")
-    frags:              int = Field(default=-1, alias="k")
+    battles:            int = Field(default=0, alias="b")
+    capture_points:     int = Field(default=0, alias="cp")
+    wins:               int = Field(default=0, alias="w")
+    losses:             int = Field(default=0, alias="l")
+    spotted:            int = Field(default=0, alias="sp")
+    hits:               int = Field(default=0, alias="h")
+    frags:              int = Field(default=0, alias="k")
     frags8p:            int | None = None
-    damage_dealt:       int = Field(default=-1, alias="dd")
-    damage_received:    int = Field(default=-1, alias="dr")
-    max_frags:          int = Field(default=-1, alias="mk")
+    damage_dealt:       int = Field(default=0, alias="dd")
+    damage_received:    int = Field(default=0, alias="dr")
+    max_frags:          int = Field(default=0, alias="mk")
     max_xp:             int | None = None
-    shots:              int = Field(default=-1, alias="sh")
-    xp:                 int | None = None
-    win_and_survived:   int = Field(default=-1, alias="ws")
-    survived_battles:   int = Field(default=-1, alias="sb")
-    dropped_capture_points: int = Field(default=-1, alias="dp")
+    shots:              int = Field(default=0, alias="sh")
+    xp:                 int | None = Field(default=0, alias="xp")
+    win_and_survived:   int = Field(default=0, alias="ws")
+    survived_battles:   int = Field(default=0, alias="sb")
+    dropped_capture_points: int = Field(default=0, alias="dp")
     # fmt: on
 
     model_config = ConfigDict(
