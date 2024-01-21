@@ -324,13 +324,13 @@ class Replay(JSONExportable):
     # id: str
     id              : str               = Field(default=..., alias="_id")
     # map_id: int
-    map_id          : int               = Field(default=-1, alias="mi")  # not in v1
+    map_id          : int               = Field(default=0, alias="mi")  # not in v1
     # battle_duration: float
     battle_duration : float             = Field(default=..., alias="bd")
     title           : Optional[str]     = Field(default=None, alias="t")
     player_name     : str               = Field(default=..., alias="pn")
     protagonist     : int               = Field(default=..., alias="p")
-    vehicle_descr   : int               = Field(default=-1, alias='vi')    # not in v1
+    vehicle_descr   : int               = Field(default=0, alias='vi')    # not in v1
     # mastery_badge: int
     mastery_badge   : MasteryBadge      = Field(default=MasteryBadge.no, alias="mb")  # can be None
     # exp_base: int
@@ -394,7 +394,7 @@ class Replay(JSONExportable):
     credits_contribution_in: int         = Field(default=0, alias="cci")
     # credits_contribution_out: int
     credits_contribution_out: int       = Field(default=0, alias="cco")
-    camouflage_id   : int               = Field(default=-1, alias="cid")
+    camouflage_id   : int               = Field(default=0, alias="cid")
     # fmt: on
 
     @field_validator(
