@@ -23,6 +23,9 @@ from pydantic import (
     field_serializer,
     Field,
 )
+from importlib.resources.abc import Traversable
+from importlib.resources import as_file
+import importlib
 
 from aiohttp import ClientTimeout
 from urllib.parse import quote
@@ -705,6 +708,17 @@ class WGApiWoTBlitzTankopedia(WGApiWoTBlitz):
         if len(self._tier_cache) == 0:
             self._set_skip_validation("_tier_cache", self._update_tier_cache())
         return self
+
+    @classmethod
+    async def open_default(cls) -> Optional[Self]:
+        """
+        Open Tankopedia shipped with the package
+        """
+        packaged_tankopedia: Traversable = importlib.resources.files(
+            "blitzmodels"
+        ).joinpath("tanks.json")  # REFACTOR in Python 3.12
+        with as_file(packaged_tankopedia) as tankopedia_fn:
+            return await cls.open_json(tankopedia_fn)
 
     def __len__(self) -> int:
         return len(self.data)
