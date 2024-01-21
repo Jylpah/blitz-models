@@ -252,10 +252,7 @@ async def test_4_open_yaml(
     ), f"incorrect number of names updated:  {updated} != {maps_names_updated}"
 
 
-@pytest.mark.asyncio
-async def test_5_Maps_default() -> None:
-    assert (
-        maps := await Maps.open_default()
-    ) is not None, "could not open packaged maps"
+def test_5_Maps_default() -> None:
+    assert (maps := Maps.open_default()) is not None, "could not open packaged maps"
     assert len(maps) > 0, "packaged maps file is empty"
     assert len(maps) > 30, "packaged maps file does not have enough maps"

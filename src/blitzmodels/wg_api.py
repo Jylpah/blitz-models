@@ -722,11 +722,12 @@ class WGApiWoTBlitzTankopedia(WGApiWoTBlitz):
             return tankopedia_fn
 
     @classmethod
-    async def open_default(cls) -> Optional[Self]:
+    def open_default(cls) -> Optional[Self]:
         """
         Open Tankopedia shipped with the package
         """
-        return await cls.open_json(cls.default_path())
+        with open(cls.default_path(), "r", encoding="utf-8") as file:
+            return cls.parse_str(file.read())
 
     def __len__(self) -> int:
         return len(self.data)

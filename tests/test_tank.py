@@ -378,10 +378,9 @@ async def test_12_WGApiTankopedia_sorted(
     ), f"tankopedia does not keep tanks sorted: {type(tankopedia.data)}, {type(tankopedia_shuffled.data)}"
 
 
-@pytest.mark.asyncio
-async def test_13_WGApiTankopedia_default() -> None:
+def test_13_WGApiTankopedia_default() -> None:
     assert (
-        tankopedia := await WGApiWoTBlitzTankopedia.open_default()
+        tankopedia := WGApiWoTBlitzTankopedia.open_default()
     ) is not None, "could not open packaged tankopedia"
     assert len(tankopedia) > 0, "packaged tankopedia is empty"
     assert len(tankopedia) > 500, "packaged tankopedia does not have enough tanks"
