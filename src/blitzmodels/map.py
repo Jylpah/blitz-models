@@ -10,7 +10,7 @@ from pydantic import (
     Field,
     # ValidationError,
 )
-from aiofiles import open
+import aiofiles
 from pathlib import Path
 from re import Pattern, compile, Match
 from yaml import safe_load  # type: ignore
@@ -130,7 +130,7 @@ class Maps(JSONExportableRootDict[int, Map]):
         Read Maps from Blitz game maps.yaml file
         """
         try:
-            async with open(file=filename, mode="r", encoding="utf-8") as file:
+            async with aiofiles.open(file=filename, mode="r", encoding="utf-8") as file:
                 debug(f"yaml file opened: {str(filename)}")
                 return cls.load_yaml(await file.read())
         except OSError as err:
@@ -178,11 +178,12 @@ class Maps(JSONExportableRootDict[int, Map]):
             return maps_fn
 
     @classmethod
-    async def open_default(cls) -> Optional[Self]:
+    def open_default(cls) -> Optional[Self]:
         """
         Open maps shipped with the package
         """
-        return await cls.open_json(cls.default_path())
+        with open(cls.default_path(), "r", encoding="utf-8") as file:
+            return cls.parse_str(file.read())
 
     def get_by_key(self, key: str) -> Map | None:
         """A brute-force map search by key"""
@@ -226,7 +227,7 @@ class Maps(JSONExportableRootDict[int, Map]):
     #         warn("legacy JSON format is depreciated", category=DeprecationWarning)
     #         try:
     #             res = cls()
-    #             async with open(filename, "r", encoding="utf8") as f:
+    #             async with aiofiles.open(filename, "r", encoding="utf8") as f:
     #                 objs: dict[str, Any] = json.loads(await f.read())
     #                 for key, obj in objs.items():
     #                     try:
