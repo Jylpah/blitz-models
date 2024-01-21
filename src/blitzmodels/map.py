@@ -2,7 +2,7 @@ import logging
 
 # import json
 # from warnings import warn
-from typing import List, ClassVar, Self, Dict
+from typing import List, ClassVar, Self, Dict, Optional
 from enum import IntEnum, StrEnum
 from pydantic import (
     # model_validator,
@@ -14,6 +14,9 @@ from aiofiles import open
 from pathlib import Path
 from re import Pattern, compile, Match
 from yaml import safe_load  # type: ignore
+from importlib.resources.abc import Traversable
+from importlib.resources import as_file
+import importlib
 
 from pydantic_exportables import (
     JSONExportable,
@@ -162,6 +165,17 @@ class Maps(JSONExportableRootDict[int, Map]):
         except KeyError:
             error("no YAML root key 'maps' found in input")
         return None
+
+    @classmethod
+    async def open_default(cls) -> Optional[Self]:
+        """
+        Open maps shipped with the package
+        """
+        packaged_maps: Traversable = importlib.resources.files("blitzmodels").joinpath(
+            "maps.json"
+        )  # REFACTOR in Python 3.12
+        with as_file(packaged_maps) as maps_fn:
+            return await cls.open_json(maps_fn)
 
     def get_by_key(self, key: str) -> Map | None:
         """A brute-force map search by key"""
