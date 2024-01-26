@@ -8,6 +8,8 @@ CONFIG_FILES: list[Path] = [
     Path.home() / f".{CONFIG_FILE}",
     Path.home() / ".config" / CONFIG_FILE,
     Path.home() / ".config/blitzstats/config",
+    Path.home() / ".config/blitz-stats/config",
+    Path.home() / ".config/blitz-replays/config",
 ]
 
 
