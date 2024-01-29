@@ -156,12 +156,12 @@ class PlayerData(JSONExportable):
     hits_pen			: int       = Field(default=0, alias='hp')
     hits_received		: int       = Field(default=0, alias='hr')
     hits_splash			: int       = Field(default=0, alias='hs')
-    killed_by			: int | None= Field(default=None, alias='ki')
+    killed_by			: int       = Field(default=0, alias='ki')  # 0 == not killed
     shots_made			: int       = Field(default=0, alias='sm')
     shots_hit			: int       = Field(default=0, alias='sh')
     shots_pen			: int       = Field(default=0, alias='sp')
     shots_splash		: int       = Field(default=0, alias='ss')
-    squad_index			: int | None= Field(default=None, alias='sq')
+    squad_index			: int       = Field(default=0, alias='sq')  # 0 == solo
     time_alive			: int       = Field(default=-1, alias='ta')  # is 't' in v1 !!!!
     turret_id			: int | None= Field(default=None, alias='ti')
     vehicle_descr		: int       = Field(default=0, alias='vi')
