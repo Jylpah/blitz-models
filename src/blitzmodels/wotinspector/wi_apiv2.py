@@ -161,7 +161,7 @@ class PlayerData(JSONExportable):
     shots_hit			: int       = Field(default=0, alias='sh')
     shots_pen			: int       = Field(default=0, alias='sp')
     shots_splash		: int       = Field(default=0, alias='ss')
-    squad_index			: int       = Field(default=0, alias='sq')  # 0 == solo
+    squad_index			: int | None= Field(default=None, alias='sq')  # 0 == solo
     time_alive			: int       = Field(default=-1, alias='ta')  # is 't' in v1 !!!!
     turret_id			: int | None= Field(default=None, alias='ti')
     vehicle_descr		: int       = Field(default=0, alias='vi')
