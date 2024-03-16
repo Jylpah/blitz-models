@@ -159,8 +159,7 @@ class Tank(JSONExportable, CSVExportable, TXTExportable):
         indexes: list[list[BackendIndex]] = list()
         indexes.append([("tier", ASCENDING), ("type", ASCENDING)])
         indexes.append([("tier", ASCENDING), ("nation", ASCENDING)])
-        indexes.append([("name", TEXT)])
-        indexes.append([("code", TEXT)])
+        indexes.append([("name", TEXT), ("code", TEXT)])
         return indexes
 
     @field_validator("tank_id")
