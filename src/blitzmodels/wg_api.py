@@ -273,8 +273,8 @@ class TankStat(JSONExportable):
     @classmethod
     def mk_id(
         cls, account_id: AccountId, last_battle_time: int, tank_id: TankId = 0
-    ) -> ObjectId:
-        return ObjectId(
+    ) -> PyObjectId:
+        return PyObjectId(
             hex(account_id)[2:].zfill(10)
             + hex(tank_id)[2:].zfill(6)
             + hex(last_battle_time)[2:].zfill(8)
@@ -517,7 +517,7 @@ class PlayerAchievementsMaxSeries(JSONExportable):
     )
 
     @field_serializer("id", when_used="json")
-    def serialize_ObjectId(self, obj_id: ObjectId, _info) -> str:
+    def serialize_ObjectId(self, obj_id: PyObjectId, _info) -> str:
         return str(obj_id)
 
     @property
@@ -556,11 +556,11 @@ class PlayerAchievementsMaxSeries(JSONExportable):
         return indexes
 
     @classmethod
-    def mk_index(cls, account_id: int, region: Region | None, added: int) -> ObjectId:
+    def mk_index(cls, account_id: int, region: Region | None, added: int) -> PyObjectId:
         r: int = 0
         if region is not None:
             r = list(Region).index(region)
-        return ObjectId(
+        return PyObjectId(
             hex(account_id)[2:].zfill(10)
             + hex(r)[2:].zfill(6)
             + hex(added)[2:].zfill(8)
