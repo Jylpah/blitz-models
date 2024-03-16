@@ -133,6 +133,7 @@ class Tank(JSONExportable, CSVExportable, TXTExportable):
     _example: ClassVar[str] = """{
                                     "_id": 2849,
                                     "name": "T34",
+                                    "code": "T34_hvy",
                                     "nation": 2,
                                     "type": "mediumTank",
                                     "tier": 8,
@@ -140,7 +141,7 @@ class Tank(JSONExportable, CSVExportable, TXTExportable):
                                 }"""
     # fmt: on
     model_config = ConfigDict(
-        frozen=False, validate_assignment=True, populate_by_name=True, extra="allow"
+        validate_assignment=True, populate_by_name=True, extra="allow"
     )
 
     @property
@@ -159,6 +160,7 @@ class Tank(JSONExportable, CSVExportable, TXTExportable):
         indexes.append([("tier", ASCENDING), ("type", ASCENDING)])
         indexes.append([("tier", ASCENDING), ("nation", ASCENDING)])
         indexes.append([("name", TEXT)])
+        indexes.append([("code", TEXT)])
         return indexes
 
     @field_validator("tank_id")
