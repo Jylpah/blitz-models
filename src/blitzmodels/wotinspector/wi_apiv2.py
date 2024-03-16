@@ -33,7 +33,14 @@ from pathlib import Path
 
 from pyutils import ThrottledClientSession
 from pyutils.utils import post_url
-from pydantic_exportables import JSONExportable
+from pydantic_exportables import (
+    JSONExportable,
+    Idx,
+    BackendIndex,
+    IndexSortOrder,
+    ASCENDING,
+    DESCENDING,
+)
 from pydantic_exportables.utils import get_model
 
 import logging
@@ -653,8 +660,37 @@ class Replay(JSONExportable):
     "credits_contribution_out": 0,
     "camouflage_id": -1
     }
-
     """
+
+    @property
+    def index(self) -> Idx:
+        return self.id
+
+    @property
+    def indexes(self) -> dict[str, Idx]:
+        """return backend indexes"""
+        return {"id": self.index}
+
+    @classmethod
+    def backend_indexes(cls) -> list[list[tuple[str, IndexSortOrder]]]:
+        """return backend search indexes"""
+        indexes: list[list[BackendIndex]] = list()
+        indexes.append(
+            [
+                ("protagonist", ASCENDING),
+                ("room_type", ASCENDING),
+                ("vehicle_tier", ASCENDING),
+                ("battle_start_timestamp", DESCENDING),
+            ]
+        )
+        indexes.append(
+            [
+                ("room_type", ASCENDING),
+                ("vehicle_tier", ASCENDING),
+                ("battle_start_timestamp", DESCENDING),
+            ]
+        )
+        return indexes
 
 
 class ReplaySummary(JSONExportable):
