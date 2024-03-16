@@ -679,13 +679,13 @@ class Replay(JSONExportable):
             [
                 ("protagonist", ASCENDING),
                 ("room_type", ASCENDING),
-                ("battle_start_timestamp", DESCENDING),
+                ("battle_start_time", DESCENDING),
             ]
         )
         indexes.append(
             [
                 ("room_type", ASCENDING),
-                ("battle_start_timestamp", DESCENDING),
+                ("battle_start_time", DESCENDING),
             ]
         )
         return indexes
