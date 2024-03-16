@@ -70,7 +70,7 @@ class Release(JSONExportable,
     @classmethod
     def backend_indexes(cls) -> list[list[tuple[str, IndexSortOrder]]]:
         indexes: list[list[BackendIndex]] = list()
-        indexes.append([("name", ASCENDING), ("launch_date", DESCENDING)])
+        indexes.append([("release", ASCENDING), ("launch_date", DESCENDING)])
         return indexes
     
  
