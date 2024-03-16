@@ -73,12 +73,19 @@ class Release(JSONExportable,
         indexes.append([("name", ASCENDING), ("launch_date", DESCENDING)])
         return indexes
     
-    @field_validator("release")
+ 
     @classmethod
     def validate_release(cls, v: str) -> str:
         """Blitz release is format X.Y[.Z]"""
         rel: list[int] = cls._release_number(v)
         return cls._release_str(rel)
+
+
+    @field_validator("release")
+    @classmethod
+    def _validate_release(cls, v: str) -> str:
+        return cls.validate_release(v=v)
+
 
     @field_validator("launch_date", mode="before")
     @classmethod
