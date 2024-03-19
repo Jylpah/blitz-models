@@ -432,7 +432,8 @@ class Replay(JSONExportable):
             return value
 
     @field_validator("last_accessed_time", "download_url", "details_url")
-    def _set_none(self, value: Any) -> None:
+    @classmethod
+    def _set_none(cls, value: Any) -> None:
         return None
 
     @field_validator(
