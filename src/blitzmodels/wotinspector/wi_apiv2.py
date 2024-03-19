@@ -378,7 +378,7 @@ class Replay(JSONExportable):
     battle_type     : int | None        = Field(default=None, alias="bt")
     # room_type: int
     room_type       : int | None        = Field(default=None, alias="rt")
-    last_accessed_time: datetime | None = Field(default=None)  # not in v1, not needed
+    last_accessed_time: datetime | None = Field(default=None, alias="lat")  # not in v1, not needed
     # winner_team: int
     winner_team     : EnumWinnerTeam | None = Field(default=None, alias="wt")
     finish_reason   : int               = Field(default=-1, alias="ft")  # not in v1, Enum??
@@ -430,6 +430,10 @@ class Replay(JSONExportable):
             return "0"
         else:
             return value
+
+    @field_validator("last_accessed_time", "download_url", "details_url")
+    def _set_none(self, value: Any) -> None:
+        return None
 
     @field_validator(
         "finish_reason",
