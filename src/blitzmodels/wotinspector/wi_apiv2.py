@@ -26,6 +26,7 @@ from pydantic import (
     ConfigDict,
     Field,
     field_validator,
+    field_serializer,
     model_validator,
 )
 from zipfile import BadZipFile
@@ -445,6 +446,10 @@ class Replay(JSONExportable):
             return "-1"
         else:
             return value
+
+    @field_serializer("details_url", "download_url")
+    def _url2str(self, url: AnyUrl) -> str:
+        return str(url)
 
     @property
     def is_complete(self) -> bool:
