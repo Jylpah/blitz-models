@@ -853,7 +853,9 @@ class WoTinspector:
 
         self.session = ThrottledClientSession(
             rate_limit=rate_limit,
-            filters=[("GET", re.compile(self.URL_REPLAYS + r"(\?.*)?$"))],
+            filters=[
+                ("GET", re.compile(self.URL_BASE + self.URL_REPLAYS + r"[a-f0-9]{32}/"))
+            ],
             limit_filtered=True,
             headers=headers,
         )
