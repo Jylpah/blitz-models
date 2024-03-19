@@ -22,7 +22,6 @@ from types import TracebackType
 from aiohttp import FormData
 from pydantic import (
     AnyUrl,
-    AwareDatetime,
     ConfigDict,
     Field,
     field_validator,
@@ -90,7 +89,7 @@ class GameVersion(JSONExportable):
     )
     name: str
     package: str
-    created_at: AwareDatetime
+    created_at: datetime
 
 
 class MapEntry(JSONExportable):
@@ -361,9 +360,9 @@ class Replay(JSONExportable):
     data_version    : int               = Field(default=-1, alias='ver')    # not in v1
     private         : Optional[bool]    = Field(default=False, alias="priv") # not in v1
     private_clan    : bool              = Field(default=False, alias="pric") # not in v1
-    battle_start_time: AwareDatetime    = Field(alias="bts")                # is 'int' in v1 and has 'str' counterpart
-    # upload_time: AwareDatetime
-    upload_time     : AwareDatetime | None = Field(default=None, alias="uts") # not in v1
+    battle_start_time: datetime    = Field(alias="bts")                # is 'int' in v1 and has 'str' counterpart
+    # upload_time: datetime
+    upload_time     : datetime | None = Field(default=None, alias="uts") # not in v1
     allies          : List[int]     = Field(default_factory=list, alias="a")
     enemies         : List[int]     = Field(default_factory=list, alias="e")
     # protagonist_clan    : int  
@@ -379,7 +378,7 @@ class Replay(JSONExportable):
     battle_type     : int | None        = Field(default=None, alias="bt")
     # room_type: int
     room_type       : int | None        = Field(default=None, alias="rt")
-    last_accessed_time: AwareDatetime | None = Field(default=None)  # not in v1, not needed
+    last_accessed_time: datetime | None = Field(default=None)  # not in v1, not needed
     # winner_team: int
     winner_team     : EnumWinnerTeam | None = Field(default=None, alias="wt")
     finish_reason   : int               = Field(default=-1, alias="ft")  # not in v1, Enum??
@@ -782,11 +781,11 @@ class BattleDetails(JSONExportable):
     data_version: int
     game_version: Mapping[str, Any]
     winner_team: int
-    battle_start_time: AwareDatetime
+    battle_start_time: datetime
     tier: int
     has_team1: bool
     has_team2: bool
-    last_accessed_time: AwareDatetime
+    last_accessed_time: datetime
     chat: Sequence[ChatMessage]
     shots: Sequence[Shot]
     properties_json: Mapping[str, Any]
