@@ -104,9 +104,9 @@ class WGTankStatAll(JSONExportable):
     damage_received:    int = Field(default=0, alias="dr")
     hits:               int = Field(default=0, alias="h")
     frags:              int = Field(default=0, alias="k")
-    frags8p:            int | None = None
+    frags8p:            int | None = Field(default=0, alias="k8")
     max_frags:          int = Field(default=0, alias="mk")
-    max_xp:             int | None = None
+    max_xp:             int | None = Field(default=0, alias="mxp")
     shots:              int = Field(default=0, alias="sh")
     spotted:            int = Field(default=0, alias="sp")
     xp:                 int | None = Field(default=0, alias="xp")
