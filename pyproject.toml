@@ -1,6 +1,6 @@
 [project]
 name = "blitz-models"
-version = "1.2.19a4"
+version = "1.2.19a5"
 authors = [{ name = "Jylpah", email = "jylpah@gmail.com" }]
 description = "Pydantic models for Wargaming's World of Tanks Blitz game "
 readme = "README.md"
