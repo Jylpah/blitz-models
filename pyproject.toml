@@ -1,6 +1,6 @@
 [project]
 name = "blitz-models"
-version = "1.2.15"
+version = "1.2.19a5"
 authors = [{ name = "Jylpah", email = "jylpah@gmail.com" }]
 description = "Pydantic models for Wargaming's World of Tanks Blitz game "
 readme = "README.md"
@@ -68,12 +68,12 @@ include = ["pyproject.toml", "src/**/*.py", "tests/**/*.py"]
 indent-width = 4
 extend-include = ["*.ipynb"]
 extend-exclude = [".venv", ".vscode" ] 
-fixable = ["ALL"]
+lint.fixable = ["ALL"]
 
 
-[tool.pyright]
-reportGeneralTypeIssues = false
-reportInvalidStringEscapeSequence = false
+# [tool.pyright]
+# reportGeneralTypeIssues = false
+# reportInvalidStringEscapeSequence = false
 
 
 [tool.pytest.ini_options]

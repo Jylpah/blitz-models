@@ -96,22 +96,22 @@ class WGApiError(JSONExportable):
 class WGTankStatAll(JSONExportable):
     # fmt: off
     battles:            int = Field(default=0, alias="b")
-    capture_points:     int = Field(default=0, alias="cp")
     wins:               int = Field(default=0, alias="w")
     losses:             int = Field(default=0, alias="l")
-    spotted:            int = Field(default=0, alias="sp")
-    hits:               int = Field(default=0, alias="h")
-    frags:              int = Field(default=0, alias="k")
-    frags8p:            int | None = None
+    capture_points:     int = Field(default=0, alias="cp")
+    dropped_capture_points: int = Field(default=0, alias="dp")
     damage_dealt:       int = Field(default=0, alias="dd")
     damage_received:    int = Field(default=0, alias="dr")
+    hits:               int = Field(default=0, alias="h")
+    frags:              int = Field(default=0, alias="k")
+    frags8p:            int | None = Field(default=0, alias="k8")
     max_frags:          int = Field(default=0, alias="mk")
-    max_xp:             int | None = None
+    max_xp:             int | None = Field(default=0, alias="mxp")
     shots:              int = Field(default=0, alias="sh")
+    spotted:            int = Field(default=0, alias="sp")
     xp:                 int | None = Field(default=0, alias="xp")
     win_and_survived:   int = Field(default=0, alias="ws")
     survived_battles:   int = Field(default=0, alias="sb")
-    dropped_capture_points: int = Field(default=0, alias="dp")
     # fmt: on
 
     model_config = ConfigDict(
@@ -273,8 +273,8 @@ class TankStat(JSONExportable):
     @classmethod
     def mk_id(
         cls, account_id: AccountId, last_battle_time: int, tank_id: TankId = 0
-    ) -> ObjectId:
-        return ObjectId(
+    ) -> PyObjectId:
+        return PyObjectId(
             hex(account_id)[2:].zfill(10)
             + hex(tank_id)[2:].zfill(6)
             + hex(last_battle_time)[2:].zfill(8)
@@ -517,7 +517,7 @@ class PlayerAchievementsMaxSeries(JSONExportable):
     )
 
     @field_serializer("id", when_used="json")
-    def serialize_ObjectId(self, obj_id: ObjectId, _info) -> str:
+    def serialize_ObjectId(self, obj_id: PyObjectId, _info) -> str:
         return str(obj_id)
 
     @property
@@ -556,11 +556,11 @@ class PlayerAchievementsMaxSeries(JSONExportable):
         return indexes
 
     @classmethod
-    def mk_index(cls, account_id: int, region: Region | None, added: int) -> ObjectId:
+    def mk_index(cls, account_id: int, region: Region | None, added: int) -> PyObjectId:
         r: int = 0
         if region is not None:
             r = list(Region).index(region)
-        return ObjectId(
+        return PyObjectId(
             hex(account_id)[2:].zfill(10)
             + hex(r)[2:].zfill(6)
             + hex(added)[2:].zfill(8)

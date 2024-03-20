@@ -22,10 +22,10 @@ from types import TracebackType
 from aiohttp import FormData
 from pydantic import (
     AnyUrl,
-    AwareDatetime,
     ConfigDict,
     Field,
     field_validator,
+    field_serializer,
     model_validator,
 )
 from zipfile import BadZipFile
@@ -33,7 +33,14 @@ from pathlib import Path
 
 from pyutils import ThrottledClientSession
 from pyutils.utils import post_url
-from pydantic_exportables import JSONExportable
+from pydantic_exportables import (
+    JSONExportable,
+    Idx,
+    BackendIndex,
+    IndexSortOrder,
+    ASCENDING,
+    DESCENDING,
+)
 from pydantic_exportables.utils import get_model
 
 import logging
@@ -82,7 +89,7 @@ class GameVersion(JSONExportable):
     )
     name: str
     package: str
-    created_at: AwareDatetime
+    created_at: datetime
 
 
 class MapEntry(JSONExportable):
@@ -347,17 +354,17 @@ class Replay(JSONExportable):
     details_url     : AnyUrl | None     = Field(default=None, alias="deu") # ReplayData.view_url in v1
     # download_url: AnyUrl
     download_url    : AnyUrl | None     = Field(default=None, alias="dlu")
-    game_version    : Dict[str, Any] = Field(default_factory=dict, alias="gv")  # not in v1
+    game_version    : Dict[str, Any]    = Field(default_factory=dict, alias="gv")  # not in v1
     arena_unique_id : str               = Field(default=..., alias="aid") # was 'int' in v1
     download_count  : int               = Field(default=0, alias='dlc')    # not in v1
     data_version    : int               = Field(default=-1, alias='ver')    # not in v1
     private         : Optional[bool]    = Field(default=False, alias="priv") # not in v1
     private_clan    : bool              = Field(default=False, alias="pric") # not in v1
-    battle_start_time: AwareDatetime    = Field(alias="bts")                # is 'int' in v1 and has 'str' counterpart
-    # upload_time: AwareDatetime
-    upload_time     : AwareDatetime | None = Field(default=None, alias="uts") # not in v1
-    allies          : List[int]     = Field(default_factory=list, alias="a")
-    enemies         : List[int]     = Field(default_factory=list, alias="e")
+    battle_start_time: datetime         = Field(alias="bts")   # is 'int' in v1 and has 'str' counterpart
+    # upload_time: datetime
+    upload_time     : datetime | None = Field(default=None, alias="uts") # not in v1
+    allies          : List[int]         = Field(default_factory=list, alias="a")
+    enemies         : List[int]         = Field(default_factory=list, alias="e")
     # protagonist_clan    : int  
     protagonist_clan: int | None        = Field(default=None, alias='pc') # can be None
     # protagonist_team: int
@@ -366,16 +373,16 @@ class Replay(JSONExportable):
     battle_result   : EnumBattleResult | None = Field(default=..., alias="br")
     # credits_base: int
     credits_base    : int               = Field(default=0, alias="cb")
-    tags            : List[int]     = Field(default_factory=list, alias="tgs") # not in v1
+    tags            : List[int]         = Field(default_factory=list, alias="tgs") # not in v1
     # battle_type   : int
     battle_type     : int | None        = Field(default=None, alias="bt")
     # room_type: int
     room_type       : int | None        = Field(default=None, alias="rt")
-    last_accessed_time: AwareDatetime | None = Field(default=None)  # not in v1, not needed
+    last_accessed_time: datetime | None = Field(default=None, alias="lat")  # not in v1, not needed
     # winner_team: int
     winner_team     : EnumWinnerTeam | None = Field(default=None, alias="wt")
     finish_reason   : int               = Field(default=-1, alias="ft")  # not in v1, Enum??
-    players_data    : List[PlayerData] = Field(default_factory=list, alias="d") # in v1 ReplayDetail | list[ReplayDetail]
+    players_data    : List[PlayerData]  = Field(default_factory=list, alias="d") # in v1 ReplayDetail | list[ReplayDetail]
     # exp_total: int
     exp_total       : int               = Field(default=0, alias="et")
     # credits_total : int
@@ -439,19 +446,23 @@ class Replay(JSONExportable):
         else:
             return value
 
+    @field_serializer("details_url", "download_url")
+    def _url2str(self, url: AnyUrl) -> str:
+        return str(url)
+
     @property
     def is_complete(self) -> bool:
         return self.winner_team is not None
 
     @model_validator(mode="after")
-    def root(self) -> Self:
-        if self.battle_start_time is None:
-            self._set_skip_validation(
-                "battle_start_time",
-                datetime.fromtimestamp(self.battle_start_timestamp).strftime(
-                    self._TimestampFormat
-                ),
-            )
+    def set_winner_team(self) -> Self:
+        # if self.battle_start_time is None:
+        #     self._set_skip_validation(
+        #         "battle_start_time",
+        #         datetime.fromtimestamp(self.battle_start_timestamp).strftime(
+        #             self._TimestampFormat
+        #         ),
+        #     )
         if (
             self.battle_result == EnumBattleResult.loss
             and self.winner_team == EnumWinnerTeam.draw
@@ -653,8 +664,35 @@ class Replay(JSONExportable):
     "credits_contribution_out": 0,
     "camouflage_id": -1
     }
-
     """
+
+    @property
+    def index(self) -> Idx:
+        return self.id
+
+    @property
+    def indexes(self) -> dict[str, Idx]:
+        """return backend indexes"""
+        return {"id": self.index}
+
+    @classmethod
+    def backend_indexes(cls) -> list[list[tuple[str, IndexSortOrder]]]:
+        """return backend search indexes"""
+        indexes: list[list[BackendIndex]] = list()
+        indexes.append(
+            [
+                ("protagonist", ASCENDING),
+                ("room_type", ASCENDING),
+                ("battle_start_time", DESCENDING),
+            ]
+        )
+        indexes.append(
+            [
+                ("room_type", ASCENDING),
+                ("battle_start_time", DESCENDING),
+            ]
+        )
+        return indexes
 
 
 class ReplaySummary(JSONExportable):
@@ -743,11 +781,11 @@ class BattleDetails(JSONExportable):
     data_version: int
     game_version: Mapping[str, Any]
     winner_team: int
-    battle_start_time: AwareDatetime
+    battle_start_time: datetime
     tier: int
     has_team1: bool
     has_team2: bool
-    last_accessed_time: AwareDatetime
+    last_accessed_time: datetime
     chat: Sequence[ChatMessage]
     shots: Sequence[Shot]
     properties_json: Mapping[str, Any]
@@ -815,7 +853,9 @@ class WoTinspector:
 
         self.session = ThrottledClientSession(
             rate_limit=rate_limit,
-            filters=[("GET", re.compile(self.URL_REPLAYS + r"(\?.*)?$"))],
+            filters=[
+                ("GET", re.compile(self.URL_BASE + self.URL_REPLAYS + r"[a-f0-9]{32}/"))
+            ],
             limit_filtered=True,
             headers=headers,
         )

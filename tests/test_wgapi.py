@@ -54,19 +54,18 @@ WGAPI_TANKSTR = pytest.mark.datafiles(
 )
 
 
-@pytest.mark.asyncio
-@pytest.fixture
-@ACCOUNTS
-async def accounts(datafiles: Path) -> dict[Region, list[Account]]:
-    res: dict[Region, list[Account]] = dict()
-    for account_fn in datafiles.iterdir():
-        region_accounts: list[Account] = list()
-        async for account in Account.import_file(str(account_fn.resolve())):
-            region_accounts.append(account)
+# @pytest.fixture
+# # @ACCOUNTS
+# async def accounts(datafiles: Path) -> dict[Region, list[Account]]:
+#     res: dict[Region, list[Account]] = dict()
+#     for account_fn in datafiles.iterdir():
+#         region_accounts: list[Account] = list()
+#         async for account in Account.import_file(str(account_fn.resolve())):
+#             region_accounts.append(account)
 
-        region: Region = region_accounts[0].region
-        res[region] = region_accounts
-    return res
+#         region: Region = region_accounts[0].region
+#         res[region] = region_accounts
+#     return res
 
 
 # @pytest.fixture
