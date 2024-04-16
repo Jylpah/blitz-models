@@ -446,23 +446,23 @@ class Replay(JSONExportable):
         else:
             return value
 
-    @field_validator(
-        "details_url",
-        "download_url",
-        mode="before",
-    )
-    @classmethod
-    def _url_validate(cls, value: str | None) -> AnyUrl | None:
-        if value is None:
-            return None
-        else:
-            return AnyUrl(value)
+    # @field_validator(
+    #     "details_url",
+    #     "download_url",
+    #     mode="before",
+    # )
+    # @classmethod
+    # def _url_validate(cls, value: str | None) -> AnyUrl | None:
+    #     if value is None:
+    #         return None
+    #     else:
+    #         return AnyUrl(value)
 
-    @field_serializer("details_url", "download_url")
-    def _url2str(self, url: AnyUrl | None) -> str | None:
-        if url is None:
-            return None
-        return str(url)
+    # @field_serializer("details_url", "download_url")
+    # def _url2str(self, url: AnyUrl | None) -> str | None:
+    #     if url is None:
+    #         return None
+    #     return str(url)
 
     @property
     def is_complete(self) -> bool:
