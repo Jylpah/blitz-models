@@ -25,7 +25,7 @@ from pydantic import (
     ConfigDict,
     Field,
     field_validator,
-    field_serializer,
+    # field_serializer,
     model_validator,
 )
 from zipfile import BadZipFile
