@@ -216,14 +216,14 @@ class TankStat(JSONExportable):
     @classmethod
     def backend_indexes(cls) -> list[list[tuple[str, IndexSortOrder]]]:
         indexes: list[list[BackendIndex]] = list()
-        indexes.append(
-            [
-                ("region", ASCENDING),
-                ("account_id", ASCENDING),
-                ("tank_id", ASCENDING),
-                ("last_battle_time", DESCENDING),
-            ]
-        )
+        # indexes.append(
+        #     [
+        #         ("region", ASCENDING),
+        #         ("account_id", ASCENDING),
+        #         ("tank_id", ASCENDING),
+        #         ("last_battle_time", DESCENDING),
+        #     ]
+        # )
         indexes.append(
             [
                 ("region", ASCENDING),
