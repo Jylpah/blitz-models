@@ -1203,12 +1203,12 @@ class WGApi:
                 account_ids=account_ids, region=region, fields=fields
             )
             if resp is None or resp.data is None:
-                error("No stats found")
+                verbose("No stats found")
                 return None
             else:
                 return [info for info in resp.data.values() if info is not None]
         except Exception as err:
-            error(f"Failed to fetch player achievements: {err}")
+            debug(f"Failed to fetch player achievements: {err}")
         return None
 
     ###########################################
@@ -1282,13 +1282,13 @@ class WGApi:
                 account_ids=account_ids, region=region, fields=fields
             )
             if resp is None or resp.data is None:
-                error("No stats found")
+                verbose("No stats found")
                 return None
             else:
                 resp.set_regions(region)
                 return resp.get_max_series()
         except Exception as err:
-            error(f"Failed to fetch player achievements: {err}")
+            debug(f"Failed to fetch player achievements: {err}")
         return None
 
     ###########################################
@@ -1335,14 +1335,13 @@ class WGApi:
             if region is None:
                 region = self.default_region
             if (url := self.get_tankopedia_url(region=region, fields=fields)) is None:
-                raise ValueError("No player achievements available")
-            debug(f"URL: {url}")
+                raise ValueError("Could not create tankopedia URL")
             return await get_model(
                 self.session[region.value], url, resp_model=WGApiWoTBlitzTankopedia
             )
 
         except Exception as err:
-            error(f"Failed to fetch player achievements: {err}")
+            error(f"Failed to fetch tankopedia: {err}")
         return None
 
     ###########################################
