@@ -862,7 +862,8 @@ class WoTinspector:
         headers: Optional[dict[str, str]] = None
         if auth_token is not None:
             headers = dict()
-            headers["Api-Key"] = f"Token {auth_token}"
+            headers["Authorization"] = f"{auth_token}"
+            headers["accept"] = "application/json"
 
         self.session = ThrottledClientSession(
             rate_limit=rate_limit,
