@@ -902,6 +902,10 @@ class WoTBlitzTankString(JSONExportable):
 
 
 class WGApi:
+    """ "
+    class for retrieving data from WG API
+    """
+
     # constants
     DEFAULT_WG_APP_ID: str = "81381d3f45fa4aa75b78a7198eb216ad"
     # DEFAULT_LESTA_APP_ID: str = ""
@@ -918,23 +922,15 @@ class WGApi:
     def __init__(
         self,
         app_id: str = DEFAULT_WG_APP_ID,
-        # ru_app_id: str = DEFAULT_LESTA_APP_ID,
-        # tankopedia_fn : str = 'tanks.json',
-        # maps_fn 		: str = 'maps.json',
         rate_limit: float = 10,
-        # ru_rate_limit: float = -1,
         default_region: Region = Region.eu,
     ):
         assert app_id is not None, "WG App ID must not be None"
         assert rate_limit is not None, "rate_limit must not be None"
         debug(f"rate_limit: {rate_limit}")
         self.app_id: str = app_id
-        # self.ru_app_id: str = ru_app_id
         self.session: dict[str, ThrottledClientSession] = dict()
         self.default_region: Region = default_region
-
-        # if ru_rate_limit < 0:
-        #     ru_rate_limit = rate_limit
 
         headers = {"Accept-Encoding": "gzip, deflate"}
 
@@ -943,11 +939,6 @@ class WGApi:
             self.session[region.value] = ThrottledClientSession(
                 rate_limit=rate_limit, headers=headers, timeout=timeout
             )
-        # for region in [Region.ru]:
-        #     timeout = ClientTimeout(total=10)
-        #     self.session[region.value] = ThrottledClientSession(
-        #         rate_limit=ru_rate_limit, headers=headers, timeout=timeout
-        #     )
         debug("WG aiohttp session initiated")
 
     async def __aenter__(self) -> Self:
@@ -1006,6 +997,7 @@ class WGApi:
         except Exception as err:
             error(f"{err}")
 
+    # TODO: refactor to use Result
     @classmethod
     def get_server_url(cls, region: Region = Region.eu) -> str | None:
         assert isinstance(region, Region), "region must be type of Region"
@@ -1022,6 +1014,7 @@ class WGApi:
     #
     ###########################################
 
+    # TODO: refactor to use Result
     def get_tank_stats_url(
         self,
         account_id: int,
@@ -1049,12 +1042,7 @@ class WGApi:
             field_str: str = ""
             if len(fields) > 0:
                 field_str = "&fields=" + quote(",".join(fields))
-            # if region == Region.ru:
-            #     return (
-            #         f"{server}{URL_WG_TANK_STATS}?application_id={self.ru_app_id}&account_id={account_id}{tank_id_str}{field_str}",
-            #         account_region,
-            #     )
-            # else:
+
             return (
                 f"{server}{URL_WG_TANK_STATS}?application_id={self.app_id}&account_id={account_id}{tank_id_str}{field_str}",
                 region,
@@ -1063,6 +1051,7 @@ class WGApi:
             debug(f"Failed to form url for account_id: {account_id}: {err}")
         return None
 
+    # TODO: refactor to use Result
     async def get_tank_stats_full(
         self,
         account_id: int,
@@ -1090,6 +1079,7 @@ class WGApi:
             error(f"Failed to fetch tank stats for account_id: {account_id}: {err}")
         return None
 
+    # TODO: refactor to use Result
     async def get_tank_stats(
         self,
         account_id: int,
@@ -1118,6 +1108,7 @@ class WGApi:
     #
     ###########################################
 
+    # TODO: refactor to use Result
     def get_account_info_url(
         self,
         account_ids: Sequence[int],
@@ -1144,14 +1135,12 @@ class WGApi:
             field_str: str = ""
             if len(fields) > 0:
                 field_str = "&fields=" + quote(",".join(fields))
-            # if region == Region.ru:
-            #     return f"{server}{URL_WG_ACCOUNT_INFO}?application_id={self.ru_app_id}&account_id={account_str}{field_str}"
-            # else:
             return f"{server}{URL_WG_ACCOUNT_INFO}?application_id={self.app_id}&account_id={account_str}{field_str}"
         except Exception as err:
             debug(f"Failed to form url: {err}")
         return None
 
+    # TODO: refactor to use Result
     async def get_account_info_full(
         self,
         account_ids: Sequence[int],
@@ -1183,6 +1172,7 @@ class WGApi:
             error(f"Failed to fetch account info: {err}")
         return None
 
+    # TODO: refactor to use Result
     async def get_account_info(
         self,
         account_ids: Sequence[int],
@@ -1215,6 +1205,7 @@ class WGApi:
     #
     ###########################################
 
+    # TODO: refactor to use Result
     def get_player_achievements_url(
         self,
         account_ids: Sequence[int],
@@ -1242,6 +1233,7 @@ class WGApi:
             debug(f"Failed to form url: {err}")
         return None
 
+    # TODO: refactor to use Result
     async def get_player_achievements_full(
         self,
         account_ids: list[int],
@@ -1268,6 +1260,7 @@ class WGApi:
             error(f"Failed to fetch player achievements: {err}")
         return None
 
+    # TODO: refactor to use Result
     async def get_player_achievements(
         self,
         account_ids: list[int],
@@ -1294,7 +1287,7 @@ class WGApi:
     # get_tankopedia()
     #
     ###########################################
-
+    # TODO: refactor to use Result
     def get_tankopedia_url(
         self,
         region: Region | None = None,
@@ -1323,6 +1316,7 @@ class WGApi:
             debug(f"Failed to form url: {err}")
         return None
 
+    # TODO: refactor to use Result
     async def get_tankopedia(
         self,
         region: Region | None = None,
@@ -1347,7 +1341,7 @@ class WGApi:
     # get_tank_str()
     #
     ###########################################
-
+    # TODO: refactor to use Result
     async def get_tank_str(
         self,
         user_string: str,
@@ -1377,11 +1371,6 @@ def add_args_wg(parser: ArgumentParser, config: Optional[ConfigParser] = None) -
         WG_WORKERS: int = 10
         WG_APP_ID: str = WGApi.DEFAULT_WG_APP_ID
         WG_DEFAULT_REGION: str = Region.eu.name
-        # # Lesta / RU
-        # LESTA_RATE_LIMIT: float = 10
-        # LESTA_WORKERS: int = 10
-        # LESTA_APP_ID: str = WGApi.DEFAULT_LESTA_APP_ID
-        # # NULL_RESPONSES 	: int 	= 20
 
         if config is not None and "WG" in config.sections():
             configWG = config["WG"]
@@ -1389,12 +1378,6 @@ def add_args_wg(parser: ArgumentParser, config: Optional[ConfigParser] = None) -
             WG_WORKERS = configWG.getint("api_workers", WG_WORKERS)
             WG_APP_ID = configWG.get("app_id", WG_APP_ID)
             WG_DEFAULT_REGION = configWG.get("default_region", WG_DEFAULT_REGION)
-
-        # if config is not None and "LESTA" in config.sections():
-        #     configRU = config["LESTA"]
-        #     LESTA_RATE_LIMIT = configRU.getfloat("rate_limit", LESTA_RATE_LIMIT)
-        #     LESTA_WORKERS = configRU.getint("api_workers", LESTA_WORKERS)
-        #     LESTA_APP_ID = configRU.get("app_id", LESTA_APP_ID)
 
         parser.add_argument(
             "--wg-workers",
@@ -1427,20 +1410,6 @@ def add_args_wg(parser: ArgumentParser, config: Optional[ConfigParser] = None) -
             help=f"default API region (default: {WG_DEFAULT_REGION})",
         )
 
-        # parser.add_argument(
-        #     "--ru-app-id",
-        #     type=str,
-        #     default=LESTA_APP_ID,
-        #     metavar="APP_ID",
-        #     help="Set Lesta (RU) APP ID",
-        # )
-        # parser.add_argument(
-        #     "--ru-rate-limit",
-        #     type=float,
-        #     default=LESTA_RATE_LIMIT,
-        #     metavar="RATE_LIMIT",
-        #     help="Rate limit for Lesta (RU) API",
-        # )
         return True
     except Exception as err:
         error(f"{err}")
