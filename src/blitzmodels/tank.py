@@ -43,6 +43,22 @@ class EnumVehicleTypeInt(IntEnum):
         return EnumVehicleTypeStr(t).as_int
 
 
+__str_type_mapping: dict[str, str] = {
+    "lt": "lightTank",
+    "light": "lightTank",
+    "light_tank": "lightTank",
+    "mt": "mediumTank",
+    "med": "mediumTank",
+    "medium": "mediumTank",
+    "medium_tank": "mediumTank",
+    "ht": "heavyTank",
+    "heavy": "heavyTank",
+    "heavy_tank": "heavyTank",
+    "td": "AT-SPG",
+    "tank_destroyer": "AT-SPG",
+}
+
+
 class EnumVehicleTypeStr(StrEnum):
     # fmt: off
     light_tank 		= 'lightTank'
@@ -61,6 +77,13 @@ class EnumVehicleTypeStr(StrEnum):
     @classmethod
     def from_int(cls, t: int) -> "EnumVehicleTypeStr":
         return EnumVehicleTypeInt(t).as_str
+
+    @classmethod
+    def from_str(cls, s: str) -> "EnumVehicleTypeStr":
+        try:
+            return EnumVehicleTypeStr(__str_type_mapping[s])
+        except (IndexError, ValueError):
+            raise ValueError(f"could not map {s} to a tank type")
 
 
 class EnumVehicleTier(IntEnum):
@@ -178,11 +201,11 @@ class Tank(JSONExportable, CSVExportable, TXTExportable):
             return v
 
     def txt_row(self, format: str = "") -> str:
-        """export data as single row of text"""
+        """export data as a single row of text"""
         if format == "rich":
-            return f"({self.tank_id}) {self.name} tier {self.tier} {self.type} {self.nation}"
+            return f"({str(self.tank_id) + ')':<6} tier {str(self.tier):<4} {str(self.type):<15} {str(self.nation):<8} {self.name}"
         else:
-            return f"({self.tank_id}) {self.name}"
+            return f"({str(self.tank_id) + ')':<6} {self.name}"
 
     # def update(self, new: "Tank") -> bool:
     #     """update Tank with a new info"""
