@@ -202,12 +202,39 @@ class Tank(JSONExportable, CSVExportable, TXTExportable):
         else:
             return v
 
+    _txt_row_format_rich: ClassVar[str] = "{:<5} tier {:<4} {:<15} {:<8} {}"
+    _txt_row_format: ClassVar[str] = "{:<5} {}"
+
     def txt_row(self, format: str = "") -> str:
         """export data as a single row of text"""
         if format == "rich":
-            return f"({str(self.tank_id) + ')':<6} tier {str(self.tier):<4} {str(self.type):<15} {str(self.nation):<8} {self.name}"
+            return self._txt_row_format_rich.format(
+                *[
+                    str(s)
+                    for s in [
+                        self.tank_id,
+                        self.tier,
+                        self.type,
+                        self.nation,
+                        self.name,
+                    ]
+                ]
+            )
+            # return f"({str(self.tank_id) + ')':<6} tier {str(self.tier):<4} {str(self.type):<15} {str(self.nation):<8} {self.name}"
         else:
-            return f"({str(self.tank_id) + ')':<6} {self.name}"
+            return self._txt_row_format.format(
+                *[str(s) for s in [self.tank_id, self.name]]
+            )
+
+    @classmethod
+    def txt_header(cls, format: str = "") -> str:
+        """export header for txt file"""
+        if format == "rich":
+            return cls._txt_row_format_rich.format(
+                *["Id", "Tier", "Type", "Nation", "Name"]
+            )
+        else:
+            return cls._txt_row_format.format(*["Id", "Name"])
 
     # def update(self, new: "Tank") -> bool:
     #     """update Tank with a new info"""

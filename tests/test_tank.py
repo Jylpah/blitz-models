@@ -145,23 +145,23 @@ def test_1_EnumVehicleTypeInt_create(enum_vehicle_type_names: list[str]) -> None
     for ndx in range(len(enum_vehicle_type_names)):
         tank_type: str = enum_vehicle_type_names[ndx]
         try:
-            assert (
-                EnumVehicleTypeInt(ndx) is EnumVehicleTypeInt[tank_type]
-            ), f"Creation of EnumVehicleTypeInt.{tank_type} failed"
+            assert EnumVehicleTypeInt(ndx) is EnumVehicleTypeInt[tank_type], (
+                f"Creation of EnumVehicleTypeInt.{tank_type} failed"
+            )
         except Exception:
             assert False, f"Could not create EnumVehicleTypeInt of {tank_type}"
 
 
 def test_2_EnumVehicleTypeInt_complete(enum_vehicle_type_names: list[str]) -> None:
     tank_types = set(EnumVehicleTypeInt)
-    assert len(tank_types) == len(
-        enum_vehicle_type_names
-    ), "EnumVehicleTypeInt has wrong number of tank types"
+    assert len(tank_types) == len(enum_vehicle_type_names), (
+        "EnumVehicleTypeInt has wrong number of tank types"
+    )
     for tank_type in enum_vehicle_type_names:
         tank_types.remove(EnumVehicleTypeInt[tank_type])
-    assert (
-        len(tank_types) == 0
-    ), f"EnumVehicleTypeInt does not have all the tank types: {' ,'.join([tti.name for tti in tank_types])}"
+    assert len(tank_types) == 0, (
+        f"EnumVehicleTypeInt does not have all the tank types: {' ,'.join([tti.name for tti in tank_types])}"
+    )
 
 
 def test_3_EnumVehicleTypeStr_create(
@@ -171,18 +171,18 @@ def test_3_EnumVehicleTypeStr_create(
         name: str = enum_vehicle_type_names[ndx]
         value: str = enum_vehicle_type_str_values[ndx]
         try:
-            assert (
-                EnumVehicleTypeStr(value) is EnumVehicleTypeStr[name]
-            ), f"Creation of EnumVehicleTypeStr.{name} failed"
+            assert EnumVehicleTypeStr(value) is EnumVehicleTypeStr[name], (
+                f"Creation of EnumVehicleTypeStr.{name} failed"
+            )
         except Exception:
             assert False, f"Could not create EnumVehicleTypeStr.{name}"
 
 
 def test_4_EnumVehicleTypestr_from_str(enum_vehicle_type_from_str: list[str]) -> None:
     for tank_type in enum_vehicle_type_from_str:
-        assert (
-            EnumVehicleTypeStr.from_str(tank_type) in EnumVehicleTypeStr
-        ), f"from_str() failed for {tank_type}"
+        assert EnumVehicleTypeStr.from_str(tank_type) in EnumVehicleTypeStr, (
+            f"from_str() failed for {tank_type}"
+        )
 
 
 def test_5_EnumVehicleTypestr_from_str_fail(
@@ -199,58 +199,58 @@ def test_5_EnumVehicleTypestr_from_str_fail(
 
 
 def test_6_EnumVehicleTypestr_complete(enum_vehicle_type_names: list[str]) -> None:
-    tank_types = set(EnumVehicleTypeStr)
-    assert len(tank_types) == len(
-        enum_vehicle_type_names
-    ), "EnumVehicleTypeStr has wrong number of tank types"
+    tank_types: set[EnumVehicleTypeStr] = set(EnumVehicleTypeStr)
+    assert len(tank_types) == len(enum_vehicle_type_names), (
+        "EnumVehicleTypeStr has wrong number of tank types"
+    )
     for tank_type in enum_vehicle_type_names:
         tank_types.remove(EnumVehicleTypeStr[tank_type])
-    assert (
-        len(tank_types) == 0
-    ), f"EnumVehicleTypeStr does not have all the tank types: {' ,'.join([tts.name for tts in tank_types])}"  # type: ignore
+    assert len(tank_types) == 0, (
+        f"EnumVehicleTypeStr does not have all the tank types: {' ,'.join([tts.name for tts in tank_types])}"
+    )
 
 
 def test_7_EnumVehicleType_conversion() -> None:
     """Test converstions between EnumVehicleTypeInt and EnumVehicleTypeStr"""
     for tt_int in EnumVehicleTypeInt:
         tt_str: EnumVehicleTypeStr = tt_int.as_str
-        assert (
-            tt_int.name == tt_str.name
-        ), f"Conversion from EnumVehicleTypeInt to EnumVehicleTypeStr failed: {tt_int.name}"
-        assert (
-            EnumVehicleTypeInt.from_str(tt_str.value) is tt_int
-        ), f"from_str() failed for {tt_str}"
-        assert (
-            tt_int is tt_str.as_int
-        ), f"Conversion from EnumVehicleTypeStr to EnumVehicleTypeInt failed: {tt_int.name}"
-        assert (
-            EnumVehicleTypeStr.from_int(tt_int.value) is tt_str
-        ), f"from_int() failed for {tt_int}"
+        assert tt_int.name == tt_str.name, (
+            f"Conversion from EnumVehicleTypeInt to EnumVehicleTypeStr failed: {tt_int.name}"
+        )
+        assert EnumVehicleTypeInt.from_str(tt_str.value) is tt_int, (
+            f"from_str() failed for {tt_str}"
+        )
+        assert tt_int is tt_str.as_int, (
+            f"Conversion from EnumVehicleTypeStr to EnumVehicleTypeInt failed: {tt_int.name}"
+        )
+        assert EnumVehicleTypeStr.from_int(tt_int.value) is tt_str, (
+            f"from_int() failed for {tt_int}"
+        )
 
 
 def test_8_EnumVehicleTier_create(enum_vehicle_tier) -> None:
     for ndx, tier_str in enumerate(enum_vehicle_tier):
         tier_int: int = ndx + 1
 
-        assert (
-            EnumVehicleTier(tier_int) is EnumVehicleTier[tier_str]
-        ), f"Failed to create EnumVehicleTier for {tier_str}"
-        assert (
-            EnumVehicleTier.read_tier(tier_str) is EnumVehicleTier[tier_str]
-        ), f"read_tier({tier_str}) failed"
-        assert (
-            EnumVehicleTier.read_tier(str(tier_int)) is EnumVehicleTier[tier_str]
-        ), f"read_tier({tier_int}) failed"
-        assert (
-            EnumVehicleTier(tier_int) == tier_int
-        ), f"EnumVehicleTier.N != N for {tier_int}"
+        assert EnumVehicleTier(tier_int) is EnumVehicleTier[tier_str], (
+            f"Failed to create EnumVehicleTier for {tier_str}"
+        )
+        assert EnumVehicleTier.read_tier(tier_str) is EnumVehicleTier[tier_str], (
+            f"read_tier({tier_str}) failed"
+        )
+        assert EnumVehicleTier.read_tier(str(tier_int)) is EnumVehicleTier[tier_str], (
+            f"read_tier({tier_int}) failed"
+        )
+        assert EnumVehicleTier(tier_int) == tier_int, (
+            f"EnumVehicleTier.N != N for {tier_int}"
+        )
 
 
 def test_9_EnumNation_create(enum_nation: list[str]) -> None:
     for nation in enum_nation:
-        assert (
-            EnumNation[nation].name == nation
-        ), f"Failed to create EnumNation for {nation}"
+        assert EnumNation[nation].name == nation, (
+            f"Failed to create EnumNation for {nation}"
+        )
         assert (
             EnumNation(nation).name == nation  # type: ignore
         ), f"Failed to create EnumNation for {nation} from string"
@@ -265,16 +265,24 @@ async def test_10_Tank_import(datafiles: Path) -> None:
             try:
                 tanks_json = TanksJsonList.model_validate_json(await file.read())
             except Exception:
-                assert (
-                    False
-                ), f"Parsing test file List[Tank] failed: {basename(tanks_json_fn)}"
+                assert False, (
+                    f"Parsing test file List[Tank] failed: {basename(tanks_json_fn)}"
+                )
         tanks: set[int] = set([tank.tank_id for tank in tanks_json])
-        assert len(tanks) == len(
-            tanks_json
-        ), f"Parsing test file List[Tank] failed: {basename(tanks_json_fn)}"
-        assert (
-            len(tanks_json) > 0
-        ), f"could not parse any Tank from file: {basename(tanks_json_fn)}"
+        assert len(tanks) == len(tanks_json), (
+            f"Parsing test file List[Tank] failed: {basename(tanks_json_fn)}"
+        )
+        assert len(tanks_json) > 0, (
+            f"could not parse any Tank from file: {basename(tanks_json_fn)}"
+        )
+        assert len(Tank.txt_header(format="rich")) > len(Tank.txt_header()), (
+            "txt_header() failed"
+        )
+        rich: bool = False
+        for tank in tanks_json:
+            assert len(tank.txt_row("rich" if rich else "")) > 5, (
+                f"txt_row() failed: tank={tank.name}"
+            )
 
 
 def test_11_tank_example_instance() -> None:
@@ -297,26 +305,26 @@ async def test_12_WGApiTankopedia(
             try:
                 tanks_json = TanksJsonList.model_validate_json(await file.read())
             except Exception:
-                assert (
-                    False
-                ), f"Parsing test file List[Tank] failed: {basename(tanks_json_fn)}"
+                assert False, (
+                    f"Parsing test file List[Tank] failed: {basename(tanks_json_fn)}"
+                )
     N: int = 0
     for tier in range(1, 11):
         N += len(tankopedia.get_tank_ids_by_tier(tier=tier))
-    assert N == len(
-        tankopedia
-    ), f"incorrect number of tanks in the tier cache: {N} != {len(tankopedia)}"
+    assert N == len(tankopedia), (
+        f"incorrect number of tanks in the tier cache: {N} != {len(tankopedia)}"
+    )
     for tank in tanks_json:
         tankopedia.add(tank)
     debug("read %d tanks", len(tankopedia.data))
     assert tankopedia.meta is not None, "Failed to update meta"
     assert tankopedia.meta["count"] == len(tanks_json), "failed to update meta.count"
-    assert len(tanks_json) == len(
-        tankopedia.data
-    ), "could not add all the tanks to tankopedia"
-    assert (
-        len(tankopedia.data) == tanks_json_tanks
-    ), f"could not import all the tanks: got {tankopedia.data}, should be {tanks_json_tanks}"
+    assert len(tanks_json) == len(tankopedia.data), (
+        "could not add all the tanks to tankopedia"
+    )
+    assert len(tankopedia.data) == tanks_json_tanks, (
+        f"could not import all the tanks: got {tankopedia.data}, should be {tanks_json_tanks}"
+    )
 
     # test tankopedia export import
     tankopedia_file: str = f"{tmp_path.resolve()}/tankopedia.json"
@@ -331,9 +339,9 @@ async def test_12_WGApiTankopedia(
         tankopedia_imported = tp_imported
         imported = True
         debug("imported tankopedia has %d tanks", len(tankopedia_imported.data))
-        assert len(tankopedia.data) == len(
-            tankopedia_imported.data
-        ), "could not import all the tanks"
+        assert len(tankopedia.data) == len(tankopedia_imported.data), (
+            "could not import all the tanks"
+        )
 
     assert imported, "could not import anything"
 
@@ -353,18 +361,22 @@ async def test_13_WGApiTankopedia(
                     await file.read()
                 )
             except Exception:
-                assert False, f"Parsing test file WGApiWoTBlitzTankopedia() failed: {basename(tankopedia_fn)}"
+                assert False, (
+                    f"Parsing test file WGApiWoTBlitzTankopedia() failed: {basename(tankopedia_fn)}"
+                )
 
     debug("read %d tanks", len(tankopedia.data))
     assert tankopedia.meta is not None, "Failed to update meta"
-    assert tankopedia.meta["count"] == len(
-        tankopedia.data
-    ), "failed to update meta.count"
-    assert (
-        len(tankopedia.data) == tankopedia_tanks
-    ), f"could not import all the tanks: got {tankopedia.data}, should be {tankopedia_tanks}"
+    assert tankopedia.meta["count"] == len(tankopedia.data), (
+        "failed to update meta.count"
+    )
+    assert len(tankopedia.data) == tankopedia_tanks, (
+        f"could not import all the tanks: got {tankopedia.data}, should be {tankopedia_tanks}"
+    )
 
-    assert tankopedia.has_codes, f"could not generate all the codes: tanks={len(tankopedia.data)}, codes={len(tankopedia.codes)}"
+    assert tankopedia.has_codes, (
+        f"could not generate all the codes: tanks={len(tankopedia.data)}, codes={len(tankopedia.codes)}"
+    )
     # test tankopedia export import
     tankopedia_file: str = f"{tmp_path.resolve()}/tankopedia.json"
     try:
@@ -378,9 +390,9 @@ async def test_13_WGApiTankopedia(
         tankopedia_imported = tp_imported
         imported = True
         debug("imported tankopedia has %d tanks", len(tankopedia_imported.data))
-        assert len(tankopedia.data) == len(
-            tankopedia_imported.data
-        ), "could not import all the tanks"
+        assert len(tankopedia.data) == len(tankopedia_imported.data), (
+            "could not import all the tanks"
+        )
 
     assert imported, "could not import anything"
 
@@ -400,7 +412,9 @@ async def test_14_WGApiTankopedia_sorted(
                     await file.read()
                 )
             except Exception:
-                assert False, f"Parsing test file WGApiWoTBlitzTankopedia() failed: {basename(tankopedia_fn)}"
+                assert False, (
+                    f"Parsing test file WGApiWoTBlitzTankopedia() failed: {basename(tankopedia_fn)}"
+                )
 
     debug("read %d tanks", len(tankopedia.data))
     tanks: list[Tank] = list()
@@ -413,9 +427,9 @@ async def test_14_WGApiTankopedia_sorted(
     for tank in tanks:
         tankopedia_shuffled.add(tank)
 
-    assert len(tankopedia) == len(
-        tankopedia_shuffled
-    ), "tankopedias has different number of tanks"
+    assert len(tankopedia) == len(tankopedia_shuffled), (
+        "tankopedias has different number of tanks"
+    )
     tanks = list()
     for tank in tankopedia:
         tanks.append(tank)
@@ -424,14 +438,14 @@ async def test_14_WGApiTankopedia_sorted(
     for tank in tankopedia_shuffled:
         tanks2.append(tank)
 
-    assert (
-        tanks == tanks2
-    ), f"tankopedia does not keep tanks sorted: {type(tankopedia.data)}, {type(tankopedia_shuffled.data)}"
+    assert tanks == tanks2, (
+        f"tankopedia does not keep tanks sorted: {type(tankopedia.data)}, {type(tankopedia_shuffled.data)}"
+    )
 
 
 def test_15_WGApiTankopedia_default() -> None:
-    assert (
-        tankopedia := WGApiWoTBlitzTankopedia.open_default()
-    ) is not None, "could not open packaged tankopedia"
+    assert (tankopedia := WGApiWoTBlitzTankopedia.open_default()) is not None, (
+        "could not open packaged tankopedia"
+    )
     assert len(tankopedia) > 0, "packaged tankopedia is empty"
     assert len(tankopedia) > 500, "packaged tankopedia does not have enough tanks"
