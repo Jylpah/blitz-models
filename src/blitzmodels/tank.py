@@ -2,6 +2,7 @@ import logging
 from typing import Any, ClassVar
 from enum import IntEnum, StrEnum
 from pydantic import field_validator, ConfigDict, Field
+import re
 
 from pydantic_exportables import (
     CSVExportable,
@@ -43,19 +44,19 @@ class EnumVehicleTypeInt(IntEnum):
         return EnumVehicleTypeStr(t).as_int
 
 
-__str_type_mapping: dict[str, str] = {
+_str_type_mapping: dict[str, str] = {
     "lt": "lightTank",
     "light": "lightTank",
-    "light_tank": "lightTank",
+    "lighttank": "lightTank",
     "mt": "mediumTank",
     "med": "mediumTank",
     "medium": "mediumTank",
-    "medium_tank": "mediumTank",
+    "mediumtank": "mediumTank",
     "ht": "heavyTank",
     "heavy": "heavyTank",
-    "heavy_tank": "heavyTank",
+    "heavytank": "heavyTank",
     "td": "AT-SPG",
-    "tank_destroyer": "AT-SPG",
+    "tankdestroyer": "AT-SPG",
 }
 
 
@@ -81,7 +82,8 @@ class EnumVehicleTypeStr(StrEnum):
     @classmethod
     def from_str(cls, s: str) -> "EnumVehicleTypeStr":
         try:
-            return EnumVehicleTypeStr(__str_type_mapping[s.lower()])
+            s = re.sub("[_-]", "", s.lower())
+            return EnumVehicleTypeStr(_str_type_mapping[s])
         except (IndexError, ValueError):
             raise ValueError(f"could not map {s} to a tank type")
 
