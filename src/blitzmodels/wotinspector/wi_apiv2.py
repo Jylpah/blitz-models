@@ -895,7 +895,7 @@ class WoTinspector:
     @classmethod
     def get_url_replay_list(cls, page: int = 1, **kwargs) -> str:
         kwargs["page"] = page
-        return f"{cls.URL_REPLAYS}?{'&'.join([f'{k}={v}' for k,v in kwargs.items()])}"
+        return f"{cls.URL_REPLAYS}?{'&'.join([f'{k}={v}' for k, v in kwargs.items()])}"
 
     async def get_replay(self, id: str) -> Replay | None:
         """Get replay with id as Replay model"""
@@ -1013,13 +1013,10 @@ class WoTinspector:
             data = FormData()
             data.add_field(name="title", value=title)
             data.add_field(name="private", value=str(priv))
-            data.add_field(name="upload_file", value=replay_file.data)
+            data.add_field(
+                name="upload_file", value=replay_file.data, filename=filename
+            )
 
-            # data = {
-            #     "title": title,
-            #     "private": str(priv),
-            #     "upload_file": replay_file.data,
-            # }
         except BadZipFile:
             error(f"corrupted replay file: {filename}")
             return None
