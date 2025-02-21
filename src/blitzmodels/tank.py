@@ -43,6 +43,22 @@ class EnumVehicleTypeInt(IntEnum):
         return EnumVehicleTypeStr(t).as_int
 
 
+__str_type_mapping: dict[str, str] = {
+    "lt": "lightTank",
+    "light": "lightTank",
+    "light_tank": "lightTank",
+    "mt": "mediumTank",
+    "med": "mediumTank",
+    "medium": "mediumTank",
+    "medium_tank": "mediumTank",
+    "ht": "heavyTank",
+    "heavy": "heavyTank",
+    "heavy_tank": "heavyTank",
+    "td": "AT-SPG",
+    "tank_destroyer": "AT-SPG",
+}
+
+
 class EnumVehicleTypeStr(StrEnum):
     # fmt: off
     light_tank 		= 'lightTank'
@@ -61,6 +77,13 @@ class EnumVehicleTypeStr(StrEnum):
     @classmethod
     def from_int(cls, t: int) -> "EnumVehicleTypeStr":
         return EnumVehicleTypeInt(t).as_str
+
+    @classmethod
+    def from_str(cls, s: str) -> "EnumVehicleTypeStr":
+        try:
+            return EnumVehicleTypeStr(__str_type_mapping[s])
+        except (IndexError, ValueError):
+            raise ValueError(f"could not map {s} to a tank type")
 
 
 class EnumVehicleTier(IntEnum):
