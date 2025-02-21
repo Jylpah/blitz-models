@@ -47,6 +47,37 @@ def enum_vehicle_type_names() -> list[str]:
 
 
 @pytest.fixture
+def enum_vehicle_type_from_str() -> list[str]:
+    return [
+        "light",
+        "lt",
+        "light_tank",
+        "MT",
+        "med",
+        "medium_tank",
+        "heavy",
+        "Ht",
+        "TD",
+        "tank_destroyer",
+    ]
+
+
+@pytest.fixture
+def enum_vehicle_type_from_str_fail() -> list[str]:
+    return [
+        "lihgt",
+        "ltt",
+        "asedasdf",
+        "MTank",
+        "medikka",
+        "asdasdf",
+        "heavi",
+        " ht",
+        "T D",
+    ]
+
+
+@pytest.fixture
 def enum_vehicle_type_str_values() -> list[str]:
     return ["lightTank", "mediumTank", "heavyTank", "AT-SPG"]
 
@@ -147,7 +178,27 @@ def test_3_EnumVehicleTypeStr_create(
             assert False, f"Could not create EnumVehicleTypeStr.{name}"
 
 
-def test_4_EnumVehicleTypestr_complete(enum_vehicle_type_names: list[str]) -> None:
+def test_4_EnumVehicleTypestr_from_str(enum_vehicle_type_from_str: list[str]) -> None:
+    for tank_type in enum_vehicle_type_from_str:
+        assert (
+            EnumVehicleTypeStr.from_str(tank_type) in EnumVehicleTypeStr
+        ), f"from_str() failed for {tank_type}"
+
+
+def test_5_EnumVehicleTypestr_from_str_fail(
+    enum_vehicle_type_from_str_fail: list[str],
+) -> None:
+    for tank_type in enum_vehicle_type_from_str_fail:
+        try:
+            _ = EnumVehicleTypeStr.from_str(tank_type)
+            raise AssertionError(
+                f"from_str() succeeded for incorrect tank type: {tank_type}"
+            )
+        except (ValueError, KeyError):
+            pass
+
+
+def test_6_EnumVehicleTypestr_complete(enum_vehicle_type_names: list[str]) -> None:
     tank_types = set(EnumVehicleTypeStr)
     assert len(tank_types) == len(
         enum_vehicle_type_names
@@ -159,7 +210,7 @@ def test_4_EnumVehicleTypestr_complete(enum_vehicle_type_names: list[str]) -> No
     ), f"EnumVehicleTypeStr does not have all the tank types: {' ,'.join([tts.name for tts in tank_types])}"  # type: ignore
 
 
-def test_5_EnumVehicleType_conversion() -> None:
+def test_7_EnumVehicleType_conversion() -> None:
     """Test converstions between EnumVehicleTypeInt and EnumVehicleTypeStr"""
     for tt_int in EnumVehicleTypeInt:
         tt_str: EnumVehicleTypeStr = tt_int.as_str
@@ -177,7 +228,7 @@ def test_5_EnumVehicleType_conversion() -> None:
         ), f"from_int() failed for {tt_int}"
 
 
-def test_6_EnumVehicleTier_create(enum_vehicle_tier) -> None:
+def test_8_EnumVehicleTier_create(enum_vehicle_tier) -> None:
     for ndx, tier_str in enumerate(enum_vehicle_tier):
         tier_int: int = ndx + 1
 
@@ -195,7 +246,7 @@ def test_6_EnumVehicleTier_create(enum_vehicle_tier) -> None:
         ), f"EnumVehicleTier.N != N for {tier_int}"
 
 
-def test_7_EnumNation_create(enum_nation: list[str]) -> None:
+def test_9_EnumNation_create(enum_nation: list[str]) -> None:
     for nation in enum_nation:
         assert (
             EnumNation[nation].name == nation
@@ -207,7 +258,7 @@ def test_7_EnumNation_create(enum_nation: list[str]) -> None:
 
 @pytest.mark.asyncio
 @TANKS_JSON_FILES
-async def test_8_Tank_import(datafiles: Path) -> None:
+async def test_10_Tank_import(datafiles: Path) -> None:
     tanks_json = TanksJsonList()
     for tanks_json_fn in datafiles.iterdir():
         async with aiofiles.open(tanks_json_fn) as file:
@@ -226,7 +277,7 @@ async def test_8_Tank_import(datafiles: Path) -> None:
         ), f"could not parse any Tank from file: {basename(tanks_json_fn)}"
 
 
-def test_9_tank_example_instance() -> None:
+def test_11_tank_example_instance() -> None:
     try:
         _ = Tank.example_instance()
     except Exception as err:
@@ -235,7 +286,7 @@ def test_9_tank_example_instance() -> None:
 
 @pytest.mark.asyncio
 @TANKS_JSON_FILES
-async def test_10_WGApiTankopedia(
+async def test_12_WGApiTankopedia(
     tmp_path: Path, datafiles: Path, tanks_json_tanks: int
 ) -> None:
     tankopedia = WGApiWoTBlitzTankopedia()
@@ -289,7 +340,7 @@ async def test_10_WGApiTankopedia(
 
 @pytest.mark.asyncio
 @TANKOPEDIA_FILES
-async def test_11_WGApiTankopedia(
+async def test_13_WGApiTankopedia(
     tmp_path: Path, datafiles: Path, tankopedia_tanks: int
 ) -> None:
     tankopedia = WGApiWoTBlitzTankopedia()
@@ -336,7 +387,7 @@ async def test_11_WGApiTankopedia(
 
 @pytest.mark.asyncio
 @TANKOPEDIA_FILES
-async def test_12_WGApiTankopedia_sorted(
+async def test_14_WGApiTankopedia_sorted(
     tmp_path: Path, datafiles: Path, tankopedia_tanks: int
 ) -> None:
     tankopedia = WGApiWoTBlitzTankopedia()
@@ -378,7 +429,7 @@ async def test_12_WGApiTankopedia_sorted(
     ), f"tankopedia does not keep tanks sorted: {type(tankopedia.data)}, {type(tankopedia_shuffled.data)}"
 
 
-def test_13_WGApiTankopedia_default() -> None:
+def test_15_WGApiTankopedia_default() -> None:
     assert (
         tankopedia := WGApiWoTBlitzTankopedia.open_default()
     ) is not None, "could not open packaged tankopedia"
