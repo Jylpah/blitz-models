@@ -202,7 +202,7 @@ class Tank(JSONExportable, CSVExportable, TXTExportable):
         else:
             return v
 
-    _txt_row_format_rich: ClassVar[str] = "{:<5} tier {:<4} {:<15} {:<8} {}"
+    _txt_row_format_rich: ClassVar[str] = "{:<5} {:<4} {:<15} {:<8} {}"
     _txt_row_format: ClassVar[str] = "{:<5} {}"
 
     def txt_row(self, format: str = "") -> str:
