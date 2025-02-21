@@ -81,7 +81,7 @@ class EnumVehicleTypeStr(StrEnum):
     @classmethod
     def from_str(cls, s: str) -> "EnumVehicleTypeStr":
         try:
-            return EnumVehicleTypeStr(__str_type_mapping[s])
+            return EnumVehicleTypeStr(__str_type_mapping[s].lower())
         except (IndexError, ValueError):
             raise ValueError(f"could not map {s} to a tank type")
 
