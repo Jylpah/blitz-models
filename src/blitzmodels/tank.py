@@ -178,11 +178,11 @@ class Tank(JSONExportable, CSVExportable, TXTExportable):
             return v
 
     def txt_row(self, format: str = "") -> str:
-        """export data as single row of text"""
+        """export data as a single row of text"""
         if format == "rich":
-            return f"({self.tank_id}) {self.name} tier {self.tier} {self.type} {self.nation}"
+            return f"({str(self.tank_id) + ')':<6} tier {str(self.tier):<4} {str(self.type):<15} {str(self.nation):<8} {self.name}"
         else:
-            return f"({self.tank_id}) {self.name}"
+            return f"({str(self.tank_id) + ')':<6} {self.name}"
 
     # def update(self, new: "Tank") -> bool:
     #     """update Tank with a new info"""
