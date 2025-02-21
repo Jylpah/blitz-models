@@ -199,7 +199,7 @@ def test_5_EnumVehicleTypestr_from_str_fail(
 
 
 def test_6_EnumVehicleTypestr_complete(enum_vehicle_type_names: list[str]) -> None:
-    tank_types = set(EnumVehicleTypeStr)
+    tank_types: set[EnumVehicleTypeStr] = set(EnumVehicleTypeStr)
     assert len(tank_types) == len(enum_vehicle_type_names), (
         "EnumVehicleTypeStr has wrong number of tank types"
     )
@@ -207,7 +207,7 @@ def test_6_EnumVehicleTypestr_complete(enum_vehicle_type_names: list[str]) -> No
         tank_types.remove(EnumVehicleTypeStr[tank_type])
     assert len(tank_types) == 0, (
         f"EnumVehicleTypeStr does not have all the tank types: {' ,'.join([tts.name for tts in tank_types])}"
-    )  # type: ignore
+    )
 
 
 def test_7_EnumVehicleType_conversion() -> None:
