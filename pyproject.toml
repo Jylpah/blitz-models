@@ -70,10 +70,10 @@ extend-include = ["*.ipynb"]
 extend-exclude = [".venv", ".vscode"]
 lint.fixable = ["ALL"]
 
-
-# [tool.pyright]
-# reportGeneralTypeIssues = false
-# reportInvalidStringEscapeSequence = false
+[tool.pyright]
+reportGeneralTypeIssues = false
+reportInvalidStringEscapeSequence = false
+typeCheckingMode = "off"
 
 
 [tool.pytest.ini_options]
