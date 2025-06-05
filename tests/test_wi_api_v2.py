@@ -100,12 +100,12 @@ async def wotinspector() -> WoTinspector:
 @pytest.mark.asyncio
 async def test_1_models() -> None:
     """test for models"""
-    assert (
-        _ := Replay.example_instance()
-    ) is not None, "could not parse the Replay example instance"
-    assert (
-        _ := PlayerData.example_instance()
-    ) is not None, "could not parse the PlayerData example instance"
+    assert (_ := Replay.example_instance()) is not None, (
+        "could not parse the Replay example instance"
+    )
+    assert (_ := PlayerData.example_instance()) is not None, (
+        "could not parse the PlayerData example instance"
+    )
 
 
 @pytest.mark.skipif(
@@ -120,12 +120,12 @@ async def test_2_get_replay_list(
     rl: ReplaySummary
 
     async for rl in wotinspector.list_replays(max_pages=2, **replay_list_filters):
-        assert isinstance(
-            rl, ReplaySummary
-        ), f"WoTinspector.list_replays() did not return 'ReplaySummary', but {type(rl)}"
-        assert (
-            isinstance(rl.id, str) and len(rl.id) > 5
-        ), f"replay summary does not have proper id: {rl.id}"
+        assert isinstance(rl, ReplaySummary), (
+            f"WoTinspector.list_replays() did not return 'ReplaySummary', but {type(rl)}"
+        )
+        assert isinstance(rl.id, str) and len(rl.id) > 5, (
+            f"replay summary does not have proper id: {rl.id}"
+        )
     await wotinspector.close()
 
 
@@ -136,9 +136,9 @@ async def test_3_get_replay(
     """test /v2/blitz/replays/{id}"""
     r: Replay | None
     for replay_id in replay_ids_ok:
-        assert (
-            r := await wotinspector.get_replay(replay_id)
-        ) is not None, f"could not retrieve replay_id={replay_id}"
+        assert (r := await wotinspector.get_replay(replay_id)) is not None, (
+            f"could not retrieve replay_id={replay_id}"
+        )
         assert isinstance(r, Replay), f"replay_id={replay_id} is not type of 'Replay'"
     await wotinspector.close()
 
@@ -179,9 +179,9 @@ async def test_4_post_replay(
                 )
             ) is not None, f"could not POST replay: {replay_fn.name}"
 
-            assert (
-                len(replay.id) > 5
-            ), f"returned replay doesn't have proper id: {replay.id}"
+            assert len(replay.id) > 5, (
+                f"returned replay doesn't have proper id: {replay.id}"
+            )
 
             if (max_replays := max_replays - 1) <= 0:
                 break
