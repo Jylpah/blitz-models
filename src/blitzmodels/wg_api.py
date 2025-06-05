@@ -986,14 +986,20 @@ class WGApi:
             error(f"{err}")
         return None
 
-    def print(self) -> None:
+    def print(self, do_print: bool = True) -> str | None:
         """Print server stats"""
         try:
-            stats: dict[str, str] | None = self.stats()
-            if stats is not None:
-                message("WG API stats:")
-                for server in stats:
-                    message(f"{server.capitalize():7s}: {stats[server]}")
+            stats: dict[str, str] | None
+            if (stats := self.stats()) is not None:
+                if do_print:
+                    message("WG API stats:")
+                    for server in stats:
+                        message(f"{server.capitalize():7s}: {stats[server]}")
+                else:
+                    res: str = "WG API stats:\n"
+                    for server in stats:
+                        res += f"{server.capitalize():7s}: {stats[server]}\n"
+                    return res
         except Exception as err:
             error(f"{err}")
 
