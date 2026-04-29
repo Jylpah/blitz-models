@@ -4,15 +4,8 @@ from pydantic import field_validator, ConfigDict, Field, field_serializer
 import logging
 
 from pydantic_exportables import (
-    CSVExportable,
-    TXTExportable,
     JSONExportable,
-    Importable,
     Idx,
-    BackendIndex,
-    IndexSortOrder,
-    DESCENDING,
-    ASCENDING,
 )
 
 
@@ -38,10 +31,7 @@ def isodate2datetime(d: str) -> datetime:
 
 
 # fmt: off
-class Release(JSONExportable,
-                CSVExportable, 
-                TXTExportable, 
-                Importable):
+class Release(JSONExportable):
     release     : str               = Field(default=..., alias="_id")
     launch_date : datetime | None   = Field(default=None)
     # _export_DB_by_alias			: bool = False
@@ -62,16 +52,16 @@ class Release(JSONExportable,
     def index(self) -> Idx:
         return self.release
 
-    @property
-    def indexes(self) -> dict[str, Idx]:
-        """return backend indexes"""
-        return {"release": self.index}
+    # @property
+    # def indexes(self) -> dict[str, Idx]:
+    #     """return backend indexes"""
+    #     return {"release": self.index}
 
-    @classmethod
-    def backend_indexes(cls) -> list[list[tuple[str, IndexSortOrder]]]:
-        indexes: list[list[BackendIndex]] = list()
-        indexes.append([("release", ASCENDING), ("launch_date", DESCENDING)])
-        return indexes
+    # @classmethod
+    # def backend_indexes(cls) -> list[list[tuple[str, IndexSortOrder]]]:
+    #     indexes: list[list[BackendIndex]] = list()
+    #     indexes.append([("release", ASCENDING), ("launch_date", DESCENDING)])
+    #     return indexes
     
  
     @classmethod
@@ -112,12 +102,12 @@ class Release(JSONExportable,
         """Create a release string from list[int]"""
         return ".".join([str(r) for r in rel])
 
-    # TXTExportable()
-    def txt_row(self, format: str = "") -> str:
-        """export data as single row of text"""
-        if format == "rich" and self.launch_date is not None:
-            return f"{self.release}\t{self.launch_date.date()}"
-        return self.release
+    # # TXTExportable()
+    # def txt_row(self, format: str = "") -> str:
+    #     """export data as single row of text"""
+    #     if format == "rich" and self.launch_date is not None:
+    #         return f"{self.release}\t{self.launch_date.date()}"
+    #     return self.release
 
 
     def next(self, **kwargs) -> Self:

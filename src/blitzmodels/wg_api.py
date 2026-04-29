@@ -13,7 +13,6 @@ from typing import (
 )
 from types import TracebackType
 import logging
-import pyarrow  # type: ignore
 from bson import ObjectId
 from pydantic import (
     field_validator,
@@ -40,13 +39,8 @@ from pydantic_exportables import (
     PyObjectId,
     TypeExcludeDict,
     Idx,
-    IndexSortOrder,
-    BackendIndex,
-    DESCENDING,
-    ASCENDING,
-    TEXT,
 )
-from pydantic_exportables.utils import get_model
+
 from pyutils.utils import epoch_now
 from pyutils import ThrottledClientSession
 
@@ -162,31 +156,31 @@ class TankStat(JSONExportable):
     # _include_export_DB_fields	: ClassVar[Optional[TypeExcludeDict]] = None
     # _include_export_src_fields	: ClassVar[Optional[TypeExcludeDict]] = None
     # Example TankStat()
-    _example: ClassVar[str] = """{
-                                "r": "eu",
-                                "s": {
-                                    "b": 92,
-                                    "w": 55,
-                                    "l": 37,
-                                    "sp": 110,
-                                    "h": 606,
-                                    "k": 83,
-                                    "cp": 6,
-                                    "dd": 113782,
-                                    "dr": 75358,
-                                    "mk": 4,
-                                    "sh": 700,
-                                    "ws": 35,
-                                    "sb": 36,
-                                    "dp": 42
-                                },
-                                "lb": 1621494665,
-                                "a": 521458531,
-                                "t": 2625,
-                                "m": 3,
-                                "l": 14401,
-                                "u": "7.9"
-                                }"""
+    # _example: ClassVar[str] = """{
+    #                             "r": "eu",
+    #                             "s": {
+    #                                 "b": 92,
+    #                                 "w": 55,
+    #                                 "l": 37,
+    #                                 "sp": 110,
+    #                                 "h": 606,
+    #                                 "k": 83,
+    #                                 "cp": 6,
+    #                                 "dd": 113782,
+    #                                 "dr": 75358,
+    #                                 "mk": 4,
+    #                                 "sh": 700,
+    #                                 "ws": 35,
+    #                                 "sb": 36,
+    #                                 "dp": 42
+    #                             },
+    #                             "lb": 1621494665,
+    #                             "a": 521458531,
+    #                             "t": 2625,
+    #                             "m": 3,
+    #                             "l": 14401,
+    #                             "u": "7.9"
+    #                             }"""
     # fmt: on
     model_config = ConfigDict(
         # arbitrary_types_allowed=True,
@@ -204,71 +198,71 @@ class TankStat(JSONExportable):
         """return backend index"""
         return self.id
 
-    @property
-    def indexes(self) -> dict[str, Idx]:
-        """return backend indexes"""
-        return {
-            "account_id": self.account_id,
-            "last_battle_time": self.last_battle_time,
-            "tank_id": self.tank_id,
-        }
+    # @property
+    # def indexes(self) -> dict[str, Idx]:
+    #     """return backend indexes"""
+    #     return {
+    #         "account_id": self.account_id,
+    #         "last_battle_time": self.last_battle_time,
+    #         "tank_id": self.tank_id,
+    #     }
 
-    @classmethod
-    def backend_indexes(cls) -> list[list[tuple[str, IndexSortOrder]]]:
-        indexes: list[list[BackendIndex]] = list()
-        # indexes.append(
-        #     [
-        #         ("region", ASCENDING),
-        #         ("account_id", ASCENDING),
-        #         ("tank_id", ASCENDING),
-        #         ("last_battle_time", DESCENDING),
-        #     ]
-        # )
-        indexes.append(
-            [
-                ("region", ASCENDING),
-                ("account_id", ASCENDING),
-                ("last_battle_time", DESCENDING),
-                ("tank_id", ASCENDING),
-            ]
-        )
-        indexes.append(
-            [
-                ("region", ASCENDING),
-                ("release", DESCENDING),
-                ("tank_id", ASCENDING),
-                ("account_id", ASCENDING),
-            ]
-        )
-        return indexes
+    # @classmethod
+    # def backend_indexes(cls) -> list[list[tuple[str, IndexSortOrder]]]:
+    #     indexes: list[list[BackendIndex]] = list()
+    #     # indexes.append(
+    #     #     [
+    #     #         ("region", ASCENDING),
+    #     #         ("account_id", ASCENDING),
+    #     #         ("tank_id", ASCENDING),
+    #     #         ("last_battle_time", DESCENDING),
+    #     #     ]
+    #     # )
+    #     indexes.append(
+    #         [
+    #             ("region", ASCENDING),
+    #             ("account_id", ASCENDING),
+    #             ("last_battle_time", DESCENDING),
+    #             ("tank_id", ASCENDING),
+    #         ]
+    #     )
+    #     indexes.append(
+    #         [
+    #             ("region", ASCENDING),
+    #             ("release", DESCENDING),
+    #             ("tank_id", ASCENDING),
+    #             ("account_id", ASCENDING),
+    #         ]
+    #     )
+    #     return indexes
 
-    @classmethod
-    def arrow_schema(cls) -> pyarrow.schema:
-        return pyarrow.schema(
-            [
-                ("region", pyarrow.dictionary(pyarrow.uint8(), pyarrow.string())),
-                ("last_battle_time", pyarrow.int64()),
-                ("account_id", pyarrow.int64()),
-                ("tank_id", pyarrow.int32()),
-                ("mark_of_mastery", pyarrow.int32()),
-                ("battle_life_time", pyarrow.int32()),
-                ("release", pyarrow.string()),
-                ("all.spotted", pyarrow.int32()),
-                ("all.hits", pyarrow.int32()),
-                ("all.frags", pyarrow.int32()),
-                ("all.wins", pyarrow.int32()),
-                ("all.losses", pyarrow.int32()),
-                ("all.capture_points", pyarrow.int32()),
-                ("all.battles", pyarrow.int32()),
-                ("all.damage_dealt", pyarrow.int32()),
-                ("all.damage_received", pyarrow.int32()),
-                ("all.max_frags", pyarrow.int32()),
-                ("all.shots", pyarrow.int32()),
-                ("all.win_and_survived", pyarrow.int32()),
-                ("all.survived_battles", pyarrow.int32()),
-                ("all.dropped_capture_points", pyarrow.int32()),
-            ]
-        )
+    # @classmethod
+    # def arrow_schema(cls) -> pyarrow.schema:
+    #     return pyarrow.schema(
+    #         [
+    #             ("region", pyarrow.dictionary(pyarrow.uint8(), pyarrow.string())),
+    #             ("last_battle_time", pyarrow.int64()),
+    #             ("account_id", pyarrow.int64()),
+    #             ("tank_id", pyarrow.int32()),
+    #             ("mark_of_mastery", pyarrow.int32()),
+    #             ("battle_life_time", pyarrow.int32()),
+    #             ("release", pyarrow.string()),
+    #             ("all.spotted", pyarrow.int32()),
+    #             ("all.hits", pyarrow.int32()),
+    #             ("all.frags", pyarrow.int32()),
+    #             ("all.wins", pyarrow.int32()),
+    #             ("all.losses", pyarrow.int32()),
+    #             ("all.capture_points", pyarrow.int32()),
+    #             ("all.battles", pyarrow.int32()),
+    #             ("all.damage_dealt", pyarrow.int32()),
+    #             ("all.damage_received", pyarrow.int32()),
+    #             ("all.max_frags", pyarrow.int32()),
+    #             ("all.shots", pyarrow.int32()),
+    #             ("all.win_and_survived", pyarrow.int32()),
+    #             ("all.survived_battles", pyarrow.int32()),
+    #             ("all.dropped_capture_points", pyarrow.int32()),
+    #         ]
+    #     )
 
     @classmethod
     def mk_id(
@@ -346,60 +340,60 @@ class AccountInfo(JSONExportable):
             self._set_skip_validation("region", Region.from_id(self.account_id))
         return self
 
-    _example = """
-                {
-                "statistics": {
-                    "clan": {
-                        "spotted": 0,
-                        "max_frags_tank_id": 0,
-                        "hits": 0,
-                        "frags": 0,
-                        "max_xp": 0,
-                        "max_xp_tank_id": 0,
-                        "wins": 0,
-                        "losses": 0,
-                        "capture_points": 0,
-                        "battles": 0,
-                        "damage_dealt": 0,
-                        "damage_received": 0,
-                        "max_frags": 0,
-                        "shots": 0,
-                        "frags8p": 0,
-                        "xp": 0,
-                        "win_and_survived": 0,
-                        "survived_battles": 0,
-                        "dropped_capture_points": 0
-                    },
-                    "all": {
-                        "spotted": 43706,
-                        "max_frags_tank_id": 19025,
-                        "hits": 269922,
-                        "frags": 42016,
-                        "max_xp": 2628,
-                        "max_xp_tank_id": 6145,
-                        "wins": 23280,
-                        "losses": 15830,
-                        "capture_points": 14713,
-                        "battles": 39495,
-                        "damage_dealt": 66326446,
-                        "damage_received": 43773129,
-                        "max_frags": 7,
-                        "shots": 319045,
-                        "frags8p": 28114,
-                        "xp": 35144185,
-                        "win_and_survived": 17499,
-                        "survived_battles": 18157,
-                        "dropped_capture_points": 33297
-                    },
-                    "frags": null
-                },
-                "account_id": 521458531,
-                "created_at": 1407265587,
-                "updated_at": 1704554148,
-                "private": null,
-                "last_battle_time": 1704553843,
-                "nickname": "jylpah"
-            }"""
+    # _example = """
+    #             {
+    #             "statistics": {
+    #                 "clan": {
+    #                     "spotted": 0,
+    #                     "max_frags_tank_id": 0,
+    #                     "hits": 0,
+    #                     "frags": 0,
+    #                     "max_xp": 0,
+    #                     "max_xp_tank_id": 0,
+    #                     "wins": 0,
+    #                     "losses": 0,
+    #                     "capture_points": 0,
+    #                     "battles": 0,
+    #                     "damage_dealt": 0,
+    #                     "damage_received": 0,
+    #                     "max_frags": 0,
+    #                     "shots": 0,
+    #                     "frags8p": 0,
+    #                     "xp": 0,
+    #                     "win_and_survived": 0,
+    #                     "survived_battles": 0,
+    #                     "dropped_capture_points": 0
+    #                 },
+    #                 "all": {
+    #                     "spotted": 43706,
+    #                     "max_frags_tank_id": 19025,
+    #                     "hits": 269922,
+    #                     "frags": 42016,
+    #                     "max_xp": 2628,
+    #                     "max_xp_tank_id": 6145,
+    #                     "wins": 23280,
+    #                     "losses": 15830,
+    #                     "capture_points": 14713,
+    #                     "battles": 39495,
+    #                     "damage_dealt": 66326446,
+    #                     "damage_received": 43773129,
+    #                     "max_frags": 7,
+    #                     "shots": 319045,
+    #                     "frags8p": 28114,
+    #                     "xp": 35144185,
+    #                     "win_and_survived": 17499,
+    #                     "survived_battles": 18157,
+    #                     "dropped_capture_points": 33297
+    #                 },
+    #                 "frags": null
+    #             },
+    #             "account_id": 521458531,
+    #             "created_at": 1407265587,
+    #             "updated_at": 1704554148,
+    #             "private": null,
+    #             "last_battle_time": 1704553843,
+    #             "nickname": "jylpah"
+    #         }"""
 
 
 class WGApiWoTBlitz(JSONExportable):
@@ -498,13 +492,13 @@ class PlayerAchievementsMaxSeries(JSONExportable):
 
     _exclude_defaults : ClassVar[bool] = False
 
-    _example : ClassVar[str] = """{
-                "jv": 5825,
-                "a": 521458531,
-                "r": "eu",
-                "u": "10.2",
-                "t": 1692296001
-                }"""
+    # _example : ClassVar[str] = """{
+    #             "jv": 5825,
+    #             "a": 521458531,
+    #             "r": "eu",
+    #             "u": "10.2",
+    #             "t": 1692296001
+    #             }"""
     # fmt: on
     model_config = ConfigDict(
         frozen=False,
@@ -528,30 +522,30 @@ class PlayerAchievementsMaxSeries(JSONExportable):
             )
         return self.id
 
-    @property
-    def indexes(self) -> dict[str, Idx]:
-        """return backend indexes"""
-        return {
-            "account_id": self.account_id,
-            "region": str(self.region),
-            "added": self.added,
-        }
+    # @property
+    # def indexes(self) -> dict[str, Idx]:
+    #     """return backend indexes"""
+    #     return {
+    #         "account_id": self.account_id,
+    #         "region": str(self.region),
+    #         "added": self.added,
+    #     }
 
-    @classmethod
-    def backend_indexes(cls) -> list[list[tuple[str, IndexSortOrder]]]:
-        indexes: list[list[BackendIndex]] = list()
-        indexes.append(
-            [("region", ASCENDING), ("account_id", ASCENDING), ("added", DESCENDING)]
-        )
-        indexes.append(
-            [
-                ("release", DESCENDING),
-                ("region", ASCENDING),
-                ("account_id", ASCENDING),
-                ("added", DESCENDING),
-            ]
-        )
-        return indexes
+    # @classmethod
+    # def backend_indexes(cls) -> list[list[tuple[str, IndexSortOrder]]]:
+    #     indexes: list[list[BackendIndex]] = list()
+    #     indexes.append(
+    #         [("region", ASCENDING), ("account_id", ASCENDING), ("added", DESCENDING)]
+    #     )
+    #     indexes.append(
+    #         [
+    #             ("release", DESCENDING),
+    #             ("region", ASCENDING),
+    #             ("account_id", ASCENDING),
+    #             ("added", DESCENDING),
+    #         ]
+    #     )
+    #     return indexes
 
     @classmethod
     def mk_index(cls, account_id: int, region: Region | None, added: int) -> PyObjectId:
@@ -889,16 +883,16 @@ class WoTBlitzTankString(JSONExportable):
     def index(self) -> Idx:
         return self.code
 
-    @property
-    def indexes(self) -> dict[str, Idx]:
-        """return backend indexes"""
-        return {"code": self.index}
+    # @property
+    # def indexes(self) -> dict[str, Idx]:
+    #     """return backend indexes"""
+    #     return {"code": self.index}
 
-    @classmethod
-    def backend_indexes(cls) -> list[list[tuple[str, IndexSortOrder]]]:
-        indexes: list[list[tuple[str, IndexSortOrder]]] = list()
-        indexes.append([("code", TEXT)])
-        return indexes
+    # @classmethod
+    # def backend_indexes(cls) -> list[list[tuple[str, IndexSortOrder]]]:
+    #     indexes: list[list[tuple[str, IndexSortOrder]]] = list()
+    #     indexes.append([("code", TEXT)])
+    #     return indexes
 
 
 class WGApi:

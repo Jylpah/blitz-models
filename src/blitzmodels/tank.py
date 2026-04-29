@@ -5,14 +5,8 @@ from pydantic import field_validator, ConfigDict, Field
 import re
 
 from pydantic_exportables import (
-    CSVExportable,
-    TXTExportable,
     JSONExportable,
     Idx,
-    IndexSortOrder,
-    BackendIndex,
-    ASCENDING,
-    TEXT,
 )
 
 from .types import TankId
@@ -144,7 +138,7 @@ class EnumNation(IntEnum):
             return f"{self.name}".capitalize()
 
 
-class Tank(JSONExportable, CSVExportable, TXTExportable):
+class Tank(JSONExportable):
     # fmt: off
     tank_id 	: TankId			= Field(default=..., alias = '_id')
     name   		: str 				= Field(default="")
@@ -155,15 +149,15 @@ class Tank(JSONExportable, CSVExportable, TXTExportable):
     is_premium 	: bool 				= Field(default=False)
 
 
-    _example: ClassVar[str] = """{
-                                    "_id": 2849,
-                                    "name": "T34",
-                                    "code": "T34_hvy",
-                                    "nation": 2,
-                                    "type": "mediumTank",
-                                    "tier": 8,
-                                    "is_premium": true
-                                }"""
+    # _example: ClassVar[str] = """{
+    #                                 "_id": 2849,
+    #                                 "name": "T34",
+    #                                 "code": "T34_hvy",
+    #                                 "nation": 2,
+    #                                 "type": "mediumTank",
+    #                                 "tier": 8,
+    #                                 "is_premium": true
+    #                             }"""
     # fmt: on
     model_config = ConfigDict(
         validate_assignment=True, populate_by_name=True, extra="allow"
@@ -174,18 +168,18 @@ class Tank(JSONExportable, CSVExportable, TXTExportable):
         """return backend index"""
         return self.tank_id
 
-    @property
-    def indexes(self) -> dict[str, Idx]:
-        """return backend indexes"""
-        return {"tank_id": self.index}
+    # @property
+    # def indexes(self) -> dict[str, Idx]:
+    #     """return backend indexes"""
+    #     return {"tank_id": self.index}
 
-    @classmethod
-    def backend_indexes(cls) -> list[list[tuple[str, IndexSortOrder]]]:
-        indexes: list[list[BackendIndex]] = list()
-        indexes.append([("tier", ASCENDING), ("type", ASCENDING)])
-        indexes.append([("tier", ASCENDING), ("nation", ASCENDING)])
-        indexes.append([("name", TEXT), ("code", TEXT)])
-        return indexes
+    # @classmethod
+    # def backend_indexes(cls) -> list[list[tuple[str, IndexSortOrder]]]:
+    #     indexes: list[list[BackendIndex]] = list()
+    #     indexes.append([("tier", ASCENDING), ("type", ASCENDING)])
+    #     indexes.append([("tier", ASCENDING), ("nation", ASCENDING)])
+    #     indexes.append([("name", TEXT), ("code", TEXT)])
+    #     return indexes
 
     @field_validator("tank_id")
     @classmethod
