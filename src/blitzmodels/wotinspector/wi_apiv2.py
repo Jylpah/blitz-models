@@ -7,19 +7,15 @@ from __future__ import annotations
 from enum import Enum, IntEnum
 from typing import (
     Any,
-    AsyncIterable,
     ClassVar,
     Mapping,
     Optional,
     Sequence,
     Self,
-    Type,
     List,
     Dict,
 )
 from datetime import datetime
-from types import TracebackType
-from aiohttp import FormData
 from pydantic import (
     AnyUrl,
     ConfigDict,
@@ -28,24 +24,13 @@ from pydantic import (
     # field_serializer,
     model_validator,
 )
-from zipfile import BadZipFile
-from pathlib import Path
-
-from pyutils import ThrottledClientSession
-from pyutils.utils import post_url
 from pydantic_exportables import (
     JSONExportable,
     Idx,
 )
-from pydantic_exportables.utils import get_model
-
 import logging
 
 from .wi_apiv1 import ReplayDetail, EnumWinnerTeam, EnumBattleResult
-
-from ..wg_api import WGApiWoTBlitzTankopedia
-from ..map import Maps
-from ..replay import ReplayFile
 
 
 # Setup logging
@@ -842,198 +827,198 @@ class PaginatedReplayList(JSONExportable):
     )
     results: Optional[List[ReplaySummary]] = None
 
+# TODO: Refactor into a separate package
+# class WoTinspector:
+#     """WoTinspector.com API v2 client"""
 
-class WoTinspector:
-    """WoTinspector.com API v2 client"""
+#     URL_BASE: str = "https://api.wotinspector.com/v2"
+#     URL_REPLAYS: str = URL_BASE + "/blitz/replays/"
 
-    URL_BASE: str = "https://api.wotinspector.com/v2"
-    URL_REPLAYS: str = URL_BASE + "/blitz/replays/"
+#     DEFAULT_RATE_LIMIT: float = 20 / 3600  # 20 requests / hour
 
-    DEFAULT_RATE_LIMIT: float = 20 / 3600  # 20 requests / hour
+#     def __init__(
+#         self, rate_limit: float = DEFAULT_RATE_LIMIT, auth_token: Optional[str] = None
+#     ) -> None:
+#         debug(f"rate_limit={rate_limit}, auth_token={auth_token}")
+#         headers: Optional[dict[str, str]] = None
+#         if auth_token is not None:
+#             headers = dict()
+#             headers["Authorization"] = f"{auth_token}"
+#             headers["accept"] = "application/json"
 
-    def __init__(
-        self, rate_limit: float = DEFAULT_RATE_LIMIT, auth_token: Optional[str] = None
-    ) -> None:
-        debug(f"rate_limit={rate_limit}, auth_token={auth_token}")
-        headers: Optional[dict[str, str]] = None
-        if auth_token is not None:
-            headers = dict()
-            headers["Authorization"] = f"{auth_token}"
-            headers["accept"] = "application/json"
+#         self.session = ThrottledClientSession(
+#             rate_limit=rate_limit,
+#             filters=[("GET", self.URL_REPLAYS)],
+#             limit_filtered=True,
+#             headers=headers,
+#         )
 
-        self.session = ThrottledClientSession(
-            rate_limit=rate_limit,
-            filters=[("GET", self.URL_REPLAYS)],
-            limit_filtered=True,
-            headers=headers,
-        )
+#     async def close(self) -> None:
+#         if self.session is not None:
+#             debug("Closing aiohttp session")
+#             await self.session.close()
 
-    async def close(self) -> None:
-        if self.session is not None:
-            debug("Closing aiohttp session")
-            await self.session.close()
+#     async def __aenter__(self) -> Self:
+#         return self
 
-    async def __aenter__(self) -> Self:
-        return self
+#     async def __aexit__(
+#         self,
+#         exc_type: Optional[Type[BaseException]],
+#         exc_value: Optional[BaseException],
+#         traceback: Optional[TracebackType],
+#     ) -> None:
+#         await self.close()
 
-    async def __aexit__(
-        self,
-        exc_type: Optional[Type[BaseException]],
-        exc_value: Optional[BaseException],
-        traceback: Optional[TracebackType],
-    ) -> None:
-        await self.close()
+#     @classmethod
+#     def get_url_replay(cls, id: str) -> str:
+#         return f"{cls.URL_REPLAYS}{id}/"
 
-    @classmethod
-    def get_url_replay(cls, id: str) -> str:
-        return f"{cls.URL_REPLAYS}{id}/"
+#     @classmethod
+#     def get_url_replay_list(cls, page: int = 1, **kwargs) -> str:
+#         kwargs["page"] = page
+#         return f"{cls.URL_REPLAYS}?{'&'.join([f'{k}={v}' for k, v in kwargs.items()])}"
 
-    @classmethod
-    def get_url_replay_list(cls, page: int = 1, **kwargs) -> str:
-        kwargs["page"] = page
-        return f"{cls.URL_REPLAYS}?{'&'.join([f'{k}={v}' for k, v in kwargs.items()])}"
+#     async def get_replay(self, id: str) -> Replay | None:
+#         """Get replay with id as Replay model"""
+#         return await get_model(
+#             self.session,
+#             self.get_url_replay(id),
+#             resp_model=Replay,
+#         )
 
-    async def get_replay(self, id: str) -> Replay | None:
-        """Get replay with id as Replay model"""
-        return await get_model(
-            self.session,
-            self.get_url_replay(id),
-            resp_model=Replay,
-        )
+#     async def get_replay_list(
+#         self, page: int = 1, **kwargs
+#     ) -> List[ReplaySummary] | None:
+#         """Get list of replays"""
+#         debug(
+#             "starting: page=%d, %s",
+#             page,
+#             ", ".join([f"{k}={v}" for k, v in kwargs.items()]),
+#         )
+#         paginated_list: PaginatedReplayList | None
+#         if (
+#             paginated_list := await get_model(
+#                 self.session,
+#                 url=self.get_url_replay_list(page=page, **kwargs),
+#                 resp_model=PaginatedReplayList,
+#             )
+#         ) is not None:
+#             return paginated_list.results
+#         message("could not retrieve valid replay list")
+#         return None
 
-    async def get_replay_list(
-        self, page: int = 1, **kwargs
-    ) -> List[ReplaySummary] | None:
-        """Get list of replays"""
-        debug(
-            "starting: page=%d, %s",
-            page,
-            ", ".join([f"{k}={v}" for k, v in kwargs.items()]),
-        )
-        paginated_list: PaginatedReplayList | None
-        if (
-            paginated_list := await get_model(
-                self.session,
-                url=self.get_url_replay_list(page=page, **kwargs),
-                resp_model=PaginatedReplayList,
-            )
-        ) is not None:
-            return paginated_list.results
-        message("could not retrieve valid replay list")
-        return None
+#     class AsyncReplayIterable(AsyncIterable[ReplaySummary]):
+#         """Async iterable ovar API v2' replays list"""
 
-    class AsyncReplayIterable(AsyncIterable[ReplaySummary]):
-        """Async iterable ovar API v2' replays list"""
+#         def __init__(
+#             self, wi: WoTinspector, page: int = 1, max_pages: int = 10, **filter_args
+#         ) -> None:
+#             super().__init__()
+#             self._filter_args: Dict[str, Any] = filter_args
+#             self._wi: WoTinspector = wi
+#             self._replay_list: List[ReplaySummary] | None = None
+#             self._index: int = -1  # must be -1 to work during the first time
+#             self._page: int = page
+#             self._max_pages: int = max_pages
 
-        def __init__(
-            self, wi: WoTinspector, page: int = 1, max_pages: int = 10, **filter_args
-        ) -> None:
-            super().__init__()
-            self._filter_args: Dict[str, Any] = filter_args
-            self._wi: WoTinspector = wi
-            self._replay_list: List[ReplaySummary] | None = None
-            self._index: int = -1  # must be -1 to work during the first time
-            self._page: int = page
-            self._max_pages: int = max_pages
+#         def __aiter__(self) -> Self:
+#             return self
 
-        def __aiter__(self) -> Self:
-            return self
+#         async def __anext__(self) -> ReplaySummary:
+#             self._index += 1
+#             if self._replay_list is None or self._index == len(self._replay_list):
+#                 replay_list: List[ReplaySummary] | None
+#                 if (
+#                     self._max_pages == 0
+#                     or (
+#                         replay_list := await self._wi.get_replay_list(
+#                             page=self._page, **self._filter_args
+#                         )
+#                     )
+#                     is None
+#                 ):
+#                     raise StopAsyncIteration
+#                 self._replay_list = replay_list
+#                 self._page += 1
+#                 self._max_pages -= 1
+#                 self._index = -1
+#             if self._replay_list is not None and self._index < len(self._replay_list):
+#                 return self._replay_list[self._index]
+#             raise StopAsyncIteration
 
-        async def __anext__(self) -> ReplaySummary:
-            self._index += 1
-            if self._replay_list is None or self._index == len(self._replay_list):
-                replay_list: List[ReplaySummary] | None
-                if (
-                    self._max_pages == 0
-                    or (
-                        replay_list := await self._wi.get_replay_list(
-                            page=self._page, **self._filter_args
-                        )
-                    )
-                    is None
-                ):
-                    raise StopAsyncIteration
-                self._replay_list = replay_list
-                self._page += 1
-                self._max_pages -= 1
-                self._index = -1
-            if self._replay_list is not None and self._index < len(self._replay_list):
-                return self._replay_list[self._index]
-            raise StopAsyncIteration
+#     def list_replays(
+#         self, page: int = 1, max_pages: int = 10, **filter_args
+#     ) -> AsyncReplayIterable:
+#         return WoTinspector.AsyncReplayIterable(
+#             self, page=page, max_pages=max_pages, **filter_args
+#         )
 
-    def list_replays(
-        self, page: int = 1, max_pages: int = 10, **filter_args
-    ) -> AsyncReplayIterable:
-        return WoTinspector.AsyncReplayIterable(
-            self, page=page, max_pages=max_pages, **filter_args
-        )
+#     async def post_replay(
+#         self,
+#         replay: Path | str | bytes,
+#         title: str | None = None,
+#         priv: bool = False,
+#         tankopedia: WGApiWoTBlitzTankopedia | None = None,  # to auto-title
+#         maps: Maps | None = None,  # to auto-title
+#     ) -> Replay | None:
+#         """
+#         Post a WoT Blitz replay file to api.WoTinspector.com using API v2
 
-    async def post_replay(
-        self,
-        replay: Path | str | bytes,
-        title: str | None = None,
-        priv: bool = False,
-        tankopedia: WGApiWoTBlitzTankopedia | None = None,  # to auto-title
-        maps: Maps | None = None,  # to auto-title
-    ) -> Replay | None:
-        """
-        Post a WoT Blitz replay file to api.WoTinspector.com using API v2
+#         Returns 'Replay' model
+#         """
+#         filename: str = ""
+#         try:
+#             replay_file: ReplayFile = ReplayFile(replay=replay)
+#             if isinstance(replay, bytes):
+#                 filename = replay_file.hash + ".wotbreplay"
+#             else:
+#                 await replay_file.open()
+#                 if replay_file.path is None:
+#                     raise ValueError("error reading reaply file path")
+#                 filename = replay_file.path.name
 
-        Returns 'Replay' model
-        """
-        filename: str = ""
-        try:
-            replay_file: ReplayFile = ReplayFile(replay=replay)
-            if isinstance(replay, bytes):
-                filename = replay_file.hash + ".wotbreplay"
-            else:
-                await replay_file.open()
-                if replay_file.path is None:
-                    raise ValueError("error reading reaply file path")
-                filename = replay_file.path.name
+#             try:
+#                 if tankopedia is not None and maps is not None:
+#                     replay_file.meta.update_title(tankopedia=tankopedia, maps=maps)
+#                     debug("updated title=%s", replay_file.meta.title)
+#                 else:
+#                     debug("no tankopedia and maps give to update replay title")
+#             except ValueError:
+#                 pass
 
-            try:
-                if tankopedia is not None and maps is not None:
-                    replay_file.meta.update_title(tankopedia=tankopedia, maps=maps)
-                    debug("updated title=%s", replay_file.meta.title)
-                else:
-                    debug("no tankopedia and maps give to update replay title")
-            except ValueError:
-                pass
+#             if title is None:
+#                 title = replay_file.title
+#             if title == "":
+#                 title = f"{replay_file.meta.playerName}"
 
-            if title is None:
-                title = replay_file.title
-            if title == "":
-                title = f"{replay_file.meta.playerName}"
+#             data = FormData()
+#             data.add_field(name="title", value=title)
+#             data.add_field(name="private", value=str(priv))
+#             data.add_field(
+#                 name="upload_file", value=replay_file.data, filename=filename
+#             )
 
-            data = FormData()
-            data.add_field(name="title", value=title)
-            data.add_field(name="private", value=str(priv))
-            data.add_field(
-                name="upload_file", value=replay_file.data, filename=filename
-            )
+#         except BadZipFile:
+#             error(f"corrupted replay file: {filename}")
+#             return None
+#         except KeyError as err:
+#             error(f"Unexpected KeyError: {err}")
+#             return None
 
-        except BadZipFile:
-            error(f"corrupted replay file: {filename}")
-            return None
-        except KeyError as err:
-            error(f"Unexpected KeyError: {err}")
-            return None
-
-        try:
-            if (
-                res := await post_url(
-                    self.session,
-                    url=self.URL_REPLAYS,
-                    # headers=headers,
-                    data=data,
-                    retries=1,
-                )
-            ) is None:
-                error("received NULL response")
-            else:
-                debug("response from %s: %s", self.URL_REPLAYS, res)
-                return Replay.parse_str(res)
-        except Exception as err:
-            error(f"Unexpected Error: {type(err)}: {err}")
-        return None
+#         try:
+#             if (
+#                 res := await post_url(
+#                     self.session,
+#                     url=self.URL_REPLAYS,
+#                     # headers=headers,
+#                     data=data,
+#                     retries=1,
+#                 )
+#             ) is None:
+#                 error("received NULL response")
+#             else:
+#                 debug("response from %s: %s", self.URL_REPLAYS, res)
+#                 return Replay.parse_str(res)
+#         except Exception as err:
+#             error(f"Unexpected Error: {type(err)}: {err}")
+#         return None

@@ -3,17 +3,16 @@ from pathlib import Path
 import logging
 import json
 from bson import ObjectId
-from typing import Dict, List
+# from typing import Dict, List
 from blitzmodels import (
-    Account,
-    Region,
-    WGApi,
-    AccountInfo,
+    # Account,
+    # Region,
+    # AccountInfo,
     PlayerAchievementsMaxSeries,
     TankStat,
-    WGApiWoTBlitzTankopedia,
+    # WGApiWoTBlitzTankopedia,
     Tank,
-    WGApiTankString,
+    # WGApiTankString,
 )
 
 
@@ -163,77 +162,77 @@ def tanks_updated() -> list[Tank]:
 ########################################################
 
 
-@pytest.mark.asyncio
-@ACCOUNTS
-async def test_1_api_account_info(datafiles: Path) -> None:
-    assert (
-        acc_info := AccountInfo.example_instance()
-    ) is not None, "AccountInfo.example_instance() failed"
-    async with WGApi() as wg:
-        for account_fn in datafiles.iterdir():
-            accounts: Dict[int, Account] = dict()
-            async for account in Account.import_file(str(account_fn.resolve())):
-                accounts[account.id] = account
+# @pytest.mark.asyncio
+# @ACCOUNTS
+# async def test_1_api_account_info(datafiles: Path) -> None:
+#     assert (
+#         acc_info := AccountInfo.example_instance()
+#     ) is not None, "AccountInfo.example_instance() failed"
+#     async with WGApi() as wg:
+#         for account_fn in datafiles.iterdir():
+#             accounts: Dict[int, Account] = dict()
+#             async for account in Account.import_file(str(account_fn.resolve())):
+#                 accounts[account.id] = account
 
-            region: Region = next(iter(accounts.values())).region
+#             region: Region = next(iter(accounts.values())).region
 
-            account_infos = await wg.get_account_info(
-                account_ids=[a.id for a in accounts.values()], region=region
-            )
-            assert (
-                account_infos is not None
-            ), f"could no retrieve account infos for {region}"
+#             account_infos = await wg.get_account_info(
+#                 account_ids=[a.id for a in accounts.values()], region=region
+#             )
+#             assert (
+#                 account_infos is not None
+#             ), f"could no retrieve account infos for {region}"
 
-            assert (
-                len(account_infos) > 0
-            ), f"could no retrieve any account infos for {region}"
+#             assert (
+#                 len(account_infos) > 0
+#             ), f"could no retrieve any account infos for {region}"
 
-            assert type(account_infos[0]) is AccountInfo, "incorrect type returned"
+#             assert type(account_infos[0]) is AccountInfo, "incorrect type returned"
 
-            updated: bool = False
-            accounts_transformed: List[Account] = list()
-            for acc_info in account_infos:
-                if acc_info.account_id in accounts and accounts[
-                    acc_info.account_id
-                ].update_info(acc_info):
-                    updated = True
-                if (acc := Account.transform(acc_info)) is not None:
-                    accounts_transformed.append(acc)
+#             updated: bool = False
+#             accounts_transformed: List[Account] = list()
+#             for acc_info in account_infos:
+#                 if acc_info.account_id in accounts and accounts[
+#                     acc_info.account_id
+#                 ].update_info(acc_info):
+#                     updated = True
+#                 if (acc := Account.transform(acc_info)) is not None:
+#                     accounts_transformed.append(acc)
 
-            assert len(accounts_transformed) == len(
-                account_infos
-            ), "could not transform all account/infos"
-            assert (
-                updated
-            ), "did not manage to update any accounts with WG API account/info"
+#             assert len(accounts_transformed) == len(
+#                 account_infos
+#             ), "could not transform all account/infos"
+#             assert (
+#                 updated
+#             ), "did not manage to update any accounts with WG API account/info"
 
 
-@pytest.mark.asyncio
-@ACCOUNTS
-async def test_2_api_tank_stats(datafiles: Path) -> None:
-    async with WGApi() as wg:
-        for account_fn in datafiles.iterdir():
-            accounts: list[Account] = list()
-            async for account in Account.import_file(account_fn):
-                accounts.append(account)
+# @pytest.mark.asyncio
+# @ACCOUNTS
+# async def test_2_api_tank_stats(datafiles: Path) -> None:
+#     async with WGApi() as wg:
+#         for account_fn in datafiles.iterdir():
+#             accounts: list[Account] = list()
+#             async for account in Account.import_file(account_fn):
+#                 accounts.append(account)
 
-            region: Region = accounts[0].region
+#             region: Region = accounts[0].region
 
-            stats_ok: bool = False
-            for account in accounts[:20]:
-                tank_stats = await wg.get_tank_stats(
-                    account_id=account.id, region=region
-                )
-                if tank_stats is None:
-                    debug(f"account_id={account} ({region}) did not return tank stats")
-                    continue
-                stats_ok = True
-                assert (
-                    len(tank_stats) > 0
-                ), f"no tanks stats found for account_id={account}"
-                assert type(tank_stats[0]) is TankStat, "incorrect type returned"
+#             stats_ok: bool = False
+#             for account in accounts[:20]:
+#                 tank_stats = await wg.get_tank_stats(
+#                     account_id=account.id, region=region
+#                 )
+#                 if tank_stats is None:
+#                     debug(f"account_id={account} ({region}) did not return tank stats")
+#                     continue
+#                 stats_ok = True
+#                 assert (
+#                     len(tank_stats) > 0
+#                 ), f"no tanks stats found for account_id={account}"
+#                 assert type(tank_stats[0]) is TankStat, "incorrect type returned"
 
-            assert stats_ok, f"Could not find any stats for {region} region"
+#             assert stats_ok, f"Could not find any stats for {region} region"
 
 
 def test_3_tankstat() -> None:
@@ -256,29 +255,29 @@ def test_3_tankstat() -> None:
     assert len(TankStat.arrow_schema()) > 0, "could not get Arrow schema for TankStat"
 
 
-@pytest.mark.asyncio
-@ACCOUNTS
-async def test_4_api_player_achievements(datafiles: Path) -> None:
-    async with WGApi() as wg:
-        for account_fn in datafiles.iterdir():
-            accounts: list[Account] = list()
-            async for account in Account.import_file(account_fn):
-                accounts.append(account)
+# @pytest.mark.asyncio
+# @ACCOUNTS
+# async def test_4_api_player_achievements(datafiles: Path) -> None:
+#     async with WGApi() as wg:
+#         for account_fn in datafiles.iterdir():
+#             accounts: list[Account] = list()
+#             async for account in Account.import_file(account_fn):
+#                 accounts.append(account)
 
-            region: Region = accounts[0].region
+#             region: Region = accounts[0].region
 
-            account_ids: list[int] = list()
-            for account in accounts:
-                account_ids.append(account.id)
+#             account_ids: list[int] = list()
+#             for account in accounts:
+#                 account_ids.append(account.id)
 
-            pams = await wg.get_player_achievements(
-                account_ids=account_ids, region=region
-            )
-            assert pams is not None, f"could no retrieve account infos for {region}"
-            assert len(pams) > 0, f"could no retrieve any account infos for {region}"
-            assert (
-                type(pams[0]) is PlayerAchievementsMaxSeries
-            ), "incorrect type returned"
+#             pams = await wg.get_player_achievements(
+#                 account_ids=account_ids, region=region
+#             )
+#             assert pams is not None, f"could no retrieve account infos for {region}"
+#             assert len(pams) > 0, f"could no retrieve any account infos for {region}"
+#             assert (
+#                 type(pams[0]) is PlayerAchievementsMaxSeries
+#             ), "incorrect type returned"
 
 
 def test_5_player_achievements() -> None:
@@ -302,70 +301,70 @@ def test_5_player_achievements() -> None:
     # ), "could not get Arrow schema for PlayerAchievementsMaxSeries"
 
 
-@pytest.mark.asyncio
-@ACCOUNTS
-async def test_6_api_tankopedia(
-    datafiles: Path, tanks_remove: list[int], tanks_updated: list[Tank]
-) -> None:
-    tankopedia: WGApiWoTBlitzTankopedia | None
-    async with WGApi() as wg:
-        for region in Region.API_regions():
-            assert (
-                tankopedia := await wg.get_tankopedia(region=region)
-            ) is not None, f"could not fetch tankopedia for {region} server"
-            assert len(tankopedia) > 0, "API returned empty tankopedia"
+# @pytest.mark.asyncio
+# @ACCOUNTS
+# async def test_6_api_tankopedia(
+#     datafiles: Path, tanks_remove: list[int], tanks_updated: list[Tank]
+# ) -> None:
+#     tankopedia: WGApiWoTBlitzTankopedia | None
+#     async with WGApi() as wg:
+#         for region in Region.API_regions():
+#             assert (
+#                 tankopedia := await wg.get_tankopedia(region=region)
+#             ) is not None, f"could not fetch tankopedia for {region} server"
+#             assert len(tankopedia) > 0, "API returned empty tankopedia"
 
-        assert (
-            (tankopedia := await wg.get_tankopedia()) is not None
-        ), "could not fetch tankopedia from WG API from (default server = eu)"
-        for tank_id in tanks_remove:
-            tankopedia.pop(tank_id)
+#         assert (
+#             (tankopedia := await wg.get_tankopedia()) is not None
+#         ), "could not fetch tankopedia from WG API from (default server = eu)"
+#         for tank_id in tanks_remove:
+#             tankopedia.pop(tank_id)
 
-        assert (
-            tankopedia_new := await wg.get_tankopedia()
-        ) is not None, "could not fetch tankopedia from WG API (default server = eu)"
+#         assert (
+#             tankopedia_new := await wg.get_tankopedia()
+#         ) is not None, "could not fetch tankopedia from WG API (default server = eu)"
 
-        for wgtank in tanks_updated:
-            tankopedia_new.add(wgtank)
+#         for wgtank in tanks_updated:
+#             tankopedia_new.add(wgtank)
 
-        (added, updated) = tankopedia.update_tanks(tankopedia_new)
+#         (added, updated) = tankopedia.update_tanks(tankopedia_new)
 
-        assert (
-            len(added) == len(tanks_remove)
-        ), f"incorrect number of added tanks reported {len(added) } != {len(tanks_remove)}"
-        assert (
-            len(updated) == len(tanks_updated)
-        ), f"incorrect number of updated tanks reported {len(updated) } != {len(tanks_updated)}"
+#         assert (
+#             len(added) == len(tanks_remove)
+#         ), f"incorrect number of added tanks reported {len(added) } != {len(tanks_remove)}"
+#         assert (
+#             len(updated) == len(tanks_updated)
+#         ), f"incorrect number of updated tanks reported {len(updated) } != {len(tanks_updated)}"
 
 
-@pytest.mark.asyncio
-@WGAPI_TANKSTR
-async def test_7_api_tankstrs(
-    datafiles: Path, wgapi_tankstrs_user_strings: list[str]
-) -> None:
-    """test for WGApiTankString()"""
-    for fn in datafiles.iterdir():
-        try:
-            tank_str: WGApiTankString
-            if (res := await WGApiTankString.open_json(fn)) is not None:
-                tank_str = res
-            else:
-                raise ValueError(f"could read WGApiTankString from file: {fn}")
-        except Exception as err:
-            assert (
-                False
-            ), f"failed to parse test file as WGApiTankString(): {fn.name}: {err}"
-        if (tank := Tank.transform(tank_str)) is None:
-            assert False, f"could not transform WGApiTankString() to Tank(): {tank_str.user_string}"
+# @pytest.mark.asyncio
+# @WGAPI_TANKSTR
+# async def test_7_api_tankstrs(
+#     datafiles: Path, wgapi_tankstrs_user_strings: list[str]
+# ) -> None:
+#     """test for WGApiTankString()"""
+#     for fn in datafiles.iterdir():
+#         try:
+#             tank_str: WGApiTankString
+#             if (res := await WGApiTankString.open_json(fn)) is not None:
+#                 tank_str = res
+#             else:
+#                 raise ValueError(f"could read WGApiTankString from file: {fn}")
+#         except Exception as err:
+#             assert (
+#                 False
+#             ), f"failed to parse test file as WGApiTankString(): {fn.name}: {err}"
+#         if (tank := Tank.transform(tank_str)) is None:
+#             assert False, f"could not transform WGApiTankString() to Tank(): {tank_str.user_string}"
 
-    async with WGApi() as wg:
-        for user_str in wgapi_tankstrs_user_strings:
-            if (tank_str2 := await wg.get_tank_str(user_str)) is None:
-                assert False, f"could not fetch WGApiTankString() for: {user_str}"
-            assert (
-                tank := Tank.transform(tank_str2)
-            ) is not None, f"could not transform WGApiTankString({user_str}) to Tank()"
-            assert (
-                tank.name == tank_str2.user_string
-            ), f"incorrect tank name: {user_str}"
-            assert tank.tank_id == tank_str2.id, f"incorrect tank_id: {user_str}"
+#     async with WGApi() as wg:
+#         for user_str in wgapi_tankstrs_user_strings:
+#             if (tank_str2 := await wg.get_tank_str(user_str)) is None:
+#                 assert False, f"could not fetch WGApiTankString() for: {user_str}"
+#             assert (
+#                 tank := Tank.transform(tank_str2)
+#             ) is not None, f"could not transform WGApiTankString({user_str}) to Tank()"
+#             assert (
+#                 tank.name == tank_str2.user_string
+#             ), f"incorrect tank name: {user_str}"
+#             assert tank.tank_id == tank_str2.id, f"incorrect tank_id: {user_str}"
