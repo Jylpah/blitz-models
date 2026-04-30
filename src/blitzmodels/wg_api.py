@@ -1051,56 +1051,56 @@ class WGApi:
             debug(f"Failed to form url for account_id: {account_id}: {err}")
         return None
 
-    # TODO: refactor to use Result
-    async def get_tank_stats_full(
-        self,
-        account_id: int,
-        region: Region | None = None,
-        tank_ids: list[int] = [],
-        fields: list[str] = [],
-    ) -> WGApiWoTBlitzTankStats | None:
-        # assert isinstance(region, Region), "region must be type of Region"
-        try:
-            if region is None:
-                region = Region.from_id(account_id)
-            server_url: Tuple[str, Region] | None = self.get_tank_stats_url(
-                account_id=account_id, region=region, tank_ids=tank_ids, fields=fields
-            )
-            if server_url is None:
-                raise ValueError("No tank stats available")
-            url: str = server_url[0]
-            region = server_url[1]
+    # # TODO: refactor to use Result
+    # async def get_tank_stats_full(
+    #     self,
+    #     account_id: int,
+    #     region: Region | None = None,
+    #     tank_ids: list[int] = [],
+    #     fields: list[str] = [],
+    # ) -> WGApiWoTBlitzTankStats | None:
+    #     # assert isinstance(region, Region), "region must be type of Region"
+    #     try:
+    #         if region is None:
+    #             region = Region.from_id(account_id)
+    #         server_url: Tuple[str, Region] | None = self.get_tank_stats_url(
+    #             account_id=account_id, region=region, tank_ids=tank_ids, fields=fields
+    #         )
+    #         if server_url is None:
+    #             raise ValueError("No tank stats available")
+    #         url: str = server_url[0]
+    #         region = server_url[1]
 
-            return await get_model(
-                self.session[region.value], url, resp_model=WGApiWoTBlitzTankStats
-            )
+    #         return await get_model(
+    #             self.session[region.value], url, resp_model=WGApiWoTBlitzTankStats
+    #         )
 
-        except Exception as err:
-            error(f"Failed to fetch tank stats for account_id: {account_id}: {err}")
-        return None
+    #     except Exception as err:
+    #         error(f"Failed to fetch tank stats for account_id: {account_id}: {err}")
+    #     return None
 
-    # TODO: refactor to use Result
-    async def get_tank_stats(
-        self,
-        account_id: int,
-        region: Region | None = None,
-        tank_ids: list[int] = [],
-        fields: list[str] = [],
-    ) -> list[TankStat] | None:
-        try:
-            resp: WGApiWoTBlitzTankStats | None = await self.get_tank_stats_full(
-                account_id=account_id, region=region, tank_ids=tank_ids, fields=fields
-            )
-            if resp is None or resp.data is None:
-                verbose(
-                    f"could not fetch tank stats for account_id={account_id}:{Region.from_id(account_id)}"
-                )
-                return None
-            else:
-                return list(resp.data.values())[0]
-        except Exception as err:
-            debug(f"Failed to fetch tank stats for account_id: {account_id}: {err}")
-        return None
+    # # TODO: refactor to use Result
+    # async def get_tank_stats(
+    #     self,
+    #     account_id: int,
+    #     region: Region | None = None,
+    #     tank_ids: list[int] = [],
+    #     fields: list[str] = [],
+    # ) -> list[TankStat] | None:
+    #     try:
+    #         resp: WGApiWoTBlitzTankStats | None = await self.get_tank_stats_full(
+    #             account_id=account_id, region=region, tank_ids=tank_ids, fields=fields
+    #         )
+    #         if resp is None or resp.data is None:
+    #             verbose(
+    #                 f"could not fetch tank stats for account_id={account_id}:{Region.from_id(account_id)}"
+    #             )
+    #             return None
+    #         else:
+    #             return list(resp.data.values())[0]
+    #     except Exception as err:
+    #         debug(f"Failed to fetch tank stats for account_id: {account_id}: {err}")
+    #     return None
 
     ###########################################
     #
@@ -1140,64 +1140,64 @@ class WGApi:
             debug(f"Failed to form url: {err}")
         return None
 
-    # TODO: refactor to use Result
-    async def get_account_info_full(
-        self,
-        account_ids: Sequence[int],
-        region: Region,
-        fields: list[str] = [
-            "account_id",
-            "created_at",
-            "updated_at",
-            "last_battle_time",
-            "nickname",
-        ],
-    ) -> WGApiWoTBlitzAccountInfo | None:
-        """get WG API response for account/info"""
-        assert isinstance(region, Region), "region must be type of Region"
-        try:
-            url: str | None
-            if (
-                url := self.get_account_info_url(
-                    account_ids=account_ids, region=region, fields=fields
-                )
-            ) is None:
-                raise ValueError("No account info available")
-            debug(f"URL: {url}")
-            return await get_model(
-                self.session[region.value], url, resp_model=WGApiWoTBlitzAccountInfo
-            )
+    # # TODO: refactor to use Result
+    # async def get_account_info_full(
+    #     self,
+    #     account_ids: Sequence[int],
+    #     region: Region,
+    #     fields: list[str] = [
+    #         "account_id",
+    #         "created_at",
+    #         "updated_at",
+    #         "last_battle_time",
+    #         "nickname",
+    #     ],
+    # ) -> WGApiWoTBlitzAccountInfo | None:
+    #     """get WG API response for account/info"""
+    #     assert isinstance(region, Region), "region must be type of Region"
+    #     try:
+    #         url: str | None
+    #         if (
+    #             url := self.get_account_info_url(
+    #                 account_ids=account_ids, region=region, fields=fields
+    #             )
+    #         ) is None:
+    #             raise ValueError("No account info available")
+    #         debug(f"URL: {url}")
+    #         return await get_model(
+    #             self.session[region.value], url, resp_model=WGApiWoTBlitzAccountInfo
+    #         )
 
-        except Exception as err:
-            error(f"Failed to fetch account info: {err}")
-        return None
+    #     except Exception as err:
+    #         error(f"Failed to fetch account info: {err}")
+    #     return None
 
-    # TODO: refactor to use Result
-    async def get_account_info(
-        self,
-        account_ids: Sequence[int],
-        region: Region,
-        fields: list[str] = [
-            "account_id",
-            "created_at",
-            "updated_at",
-            "last_battle_time",
-            "nickname",
-        ],
-    ) -> list[AccountInfo] | None:
-        try:
-            resp: WGApiWoTBlitzAccountInfo | None
-            resp = await self.get_account_info_full(
-                account_ids=account_ids, region=region, fields=fields
-            )
-            if resp is None or resp.data is None:
-                verbose("No stats found")
-                return None
-            else:
-                return [info for info in resp.data.values() if info is not None]
-        except Exception as err:
-            debug(f"Failed to fetch player achievements: {err}")
-        return None
+    # # TODO: refactor to use Result
+    # async def get_account_info(
+    #     self,
+    #     account_ids: Sequence[int],
+    #     region: Region,
+    #     fields: list[str] = [
+    #         "account_id",
+    #         "created_at",
+    #         "updated_at",
+    #         "last_battle_time",
+    #         "nickname",
+    #     ],
+    # ) -> list[AccountInfo] | None:
+    #     try:
+    #         resp: WGApiWoTBlitzAccountInfo | None
+    #         resp = await self.get_account_info_full(
+    #             account_ids=account_ids, region=region, fields=fields
+    #         )
+    #         if resp is None or resp.data is None:
+    #             verbose("No stats found")
+    #             return None
+    #         else:
+    #             return [info for info in resp.data.values() if info is not None]
+    #     except Exception as err:
+    #         debug(f"Failed to fetch player achievements: {err}")
+    #     return None
 
     ###########################################
     #
@@ -1233,54 +1233,54 @@ class WGApi:
             debug(f"Failed to form url: {err}")
         return None
 
-    # TODO: refactor to use Result
-    async def get_player_achievements_full(
-        self,
-        account_ids: list[int],
-        region: Region,
-        fields: list[str] = list(),
-    ) -> WGApiWoTBlitzPlayerAchievements | None:
-        # assert isinstance(region, Region), "region must be type of Region"
-        try:
-            url: str | None
-            if (
-                url := self.get_player_achievements_url(
-                    account_ids=account_ids, region=region, fields=fields
-                )
-            ) is None:
-                raise ValueError("No player achievements available")
-            debug(f"URL: {url}")
-            return await get_model(
-                self.session[region.value],
-                url,
-                resp_model=WGApiWoTBlitzPlayerAchievements,
-            )
+    # # TODO: refactor to use Result
+    # async def get_player_achievements_full(
+    #     self,
+    #     account_ids: list[int],
+    #     region: Region,
+    #     fields: list[str] = list(),
+    # ) -> WGApiWoTBlitzPlayerAchievements | None:
+    #     # assert isinstance(region, Region), "region must be type of Region"
+    #     try:
+    #         url: str | None
+    #         if (
+    #             url := self.get_player_achievements_url(
+    #                 account_ids=account_ids, region=region, fields=fields
+    #             )
+    #         ) is None:
+    #             raise ValueError("No player achievements available")
+    #         debug(f"URL: {url}")
+    #         return await get_model(
+    #             self.session[region.value],
+    #             url,
+    #             resp_model=WGApiWoTBlitzPlayerAchievements,
+    #         )
 
-        except Exception as err:
-            error(f"Failed to fetch player achievements: {err}")
-        return None
+    #     except Exception as err:
+    #         error(f"Failed to fetch player achievements: {err}")
+    #     return None
 
-    # TODO: refactor to use Result
-    async def get_player_achievements(
-        self,
-        account_ids: list[int],
-        region: Region,
-        fields: list[str] = list(),
-    ) -> list[PlayerAchievementsMaxSeries] | None:
-        try:
-            resp: WGApiWoTBlitzPlayerAchievements | None
-            resp = await self.get_player_achievements_full(
-                account_ids=account_ids, region=region, fields=fields
-            )
-            if resp is None or resp.data is None:
-                verbose("No stats found")
-                return None
-            else:
-                resp.set_regions(region)
-                return resp.get_max_series()
-        except Exception as err:
-            debug(f"Failed to fetch player achievements: {err}")
-        return None
+    # # TODO: refactor to use Result
+    # async def get_player_achievements(
+    #     self,
+    #     account_ids: list[int],
+    #     region: Region,
+    #     fields: list[str] = list(),
+    # ) -> list[PlayerAchievementsMaxSeries] | None:
+    #     try:
+    #         resp: WGApiWoTBlitzPlayerAchievements | None
+    #         resp = await self.get_player_achievements_full(
+    #             account_ids=account_ids, region=region, fields=fields
+    #         )
+    #         if resp is None or resp.data is None:
+    #             verbose("No stats found")
+    #             return None
+    #         else:
+    #             resp.set_regions(region)
+    #             return resp.get_max_series()
+    #     except Exception as err:
+    #         debug(f"Failed to fetch player achievements: {err}")
+    #     return None
 
     ###########################################
     #
@@ -1316,51 +1316,51 @@ class WGApi:
             debug(f"Failed to form url: {err}")
         return None
 
-    # TODO: refactor to use Result
-    async def get_tankopedia(
-        self,
-        region: Region | None = None,
-        fields: list[str] = ["tank_id", "name", "tier", "type", "nation", "is_premium"],
-    ) -> WGApiWoTBlitzTankopedia | None:
-        try:
-            url: str | None
-            if region is None:
-                region = self.default_region
-            if (url := self.get_tankopedia_url(region=region, fields=fields)) is None:
-                raise ValueError("Could not create tankopedia URL")
-            return await get_model(
-                self.session[region.value], url, resp_model=WGApiWoTBlitzTankopedia
-            )
+    # # TODO: refactor to use Result
+    # async def get_tankopedia(
+    #     self,
+    #     region: Region | None = None,
+    #     fields: list[str] = ["tank_id", "name", "tier", "type", "nation", "is_premium"],
+    # ) -> WGApiWoTBlitzTankopedia | None:
+    #     try:
+    #         url: str | None
+    #         if region is None:
+    #             region = self.default_region
+    #         if (url := self.get_tankopedia_url(region=region, fields=fields)) is None:
+    #             raise ValueError("Could not create tankopedia URL")
+    #         return await get_model(
+    #             self.session[region.value], url, resp_model=WGApiWoTBlitzTankopedia
+    #         )
 
-        except Exception as err:
-            error(f"Failed to fetch tankopedia: {err}")
-        return None
+    #     except Exception as err:
+    #         error(f"Failed to fetch tankopedia: {err}")
+    #     return None
 
-    ###########################################
-    #
-    # get_tank_str()
-    #
-    ###########################################
-    # TODO: refactor to use Result
-    async def get_tank_str(
-        self,
-        user_string: str,
-        region: Region | None = None,
-    ) -> WGApiTankString | None:
-        """Return WGApiTankString() for 'user_string'"""
-        debug("starting")
-        if region is None:
-            region = self.default_region
-        assert isinstance(region, Region), "region must be type of Region"
-        try:
-            url: str = WGApiTankString.url(user_string=user_string, region=region)
-            debug(f"URL: {url}")
-            return await get_model(
-                self.session[region.value], url, resp_model=WGApiTankString
-            )
-        except Exception as err:
-            error(f"Failed to fetch tank info for {user_string}: {err}")
-        return None
+    # ###########################################
+    # #
+    # # get_tank_str()
+    # #
+    # ###########################################
+    # # TODO: refactor to use Result
+    # async def get_tank_str(
+    #     self,
+    #     user_string: str,
+    #     region: Region | None = None,
+    # ) -> WGApiTankString | None:
+    #     """Return WGApiTankString() for 'user_string'"""
+    #     debug("starting")
+    #     if region is None:
+    #         region = self.default_region
+    #     assert isinstance(region, Region), "region must be type of Region"
+    #     try:
+    #         url: str = WGApiTankString.url(user_string=user_string, region=region)
+    #         debug(f"URL: {url}")
+    #         return await get_model(
+    #             self.session[region.value], url, resp_model=WGApiTankString
+    #         )
+    #     except Exception as err:
+    #         error(f"Failed to fetch tank info for {user_string}: {err}")
+    #     return None
 
 
 def add_args_wg(parser: ArgumentParser, config: Optional[ConfigParser] = None) -> bool:
